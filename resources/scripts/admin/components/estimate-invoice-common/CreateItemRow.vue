@@ -168,6 +168,22 @@
               />
             </td>
           </tr>
+          <tr v-if="itemCustomFields.length > 0">
+            <td class="px-5 pb-4 text-left align-top" />
+            <td colspan="4" class="px-5 pb-4 text-left align-top">
+              <BaseInputGrid layout="three-column">
+                <CustomFieldSingle
+                  v-for="(field, fieldIndex) in itemCustomFields"
+                  :key="field.id"
+                  :custom-field-scope="`${itemValidationScope}.items.${index}.customFields`"
+                  :store="store"
+                  :store-prop="storeProp"
+                  :index="fieldIndex"
+                  :field="field"
+                />
+              </BaseInputGrid>
+            </td>
+          </tr>
         </tbody>
       </table>
     </td>
@@ -175,7 +191,7 @@
 </template>
 
 <script setup>
-import { computed, ref, inject } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Guid from 'guid'
@@ -193,7 +209,9 @@ import {
 import useVuelidate from '@vuelidate/core'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useItemStore } from '@/scripts/admin/stores/item'
+import { useCustomFieldStore } from '@/scripts/admin/stores/custom-field'
 import DragIcon from '@/scripts/components/icons/DragIcon.vue'
+import CustomFieldSingle from '@/scripts/admin/components/custom-fields/CreateCustomFieldsSingle.vue'
 
 const props = defineProps({
   store: {
@@ -238,6 +256,8 @@ const emit = defineEmits(['update', 'remove', 'itemValidate'])
 
 const companyStore = useCompanyStore()
 const itemStore = useItemStore()
+const customFieldStore = useCustomFieldStore()
+const itemCustomFields = computed(() => props.itemData.customFields || [])
 
 let route = useRoute()
 const { t } = useI18n()
@@ -347,6 +367,15 @@ const v$ = useVuelidate(
   rules,
   computed(() => props.store[props.storeProp].items[props.index]),
   { $scope: props.itemValidationScope }
+)
+
+onMounted(loadItemCustomFields)
+
+watch(
+  () => props.itemData.fields,
+  () => {
+    loadItemCustomFields()
+  }
 )
 
 //
@@ -479,5 +508,50 @@ function updateItemAttribute(attribute, value) {
   })
 
   syncItemToStore()
+}
+
+async function loadItemCustomFields() {
+  if (props.itemData.customFields?.length) {
+    return
+  }
+
+  const response = await customFieldStore.fetchCustomFields({
+    type: 'Item',
+    limit: 'all',
+  })
+
+  let fields = response.data.data.map((field) => ({
+    ...field,
+    value: field.default_answer,
+  }))
+
+  if (props.itemData.fields?.length) {
+    fields = fields.map((field) => {
+      const existingField = props.itemData.fields.find(
+        (_field) => _field.custom_field_id === field.id
+      )
+
+      if (!existingField) {
+        return field
+      }
+
+      return {
+        ...field,
+        ...existingField,
+        id: existingField.custom_field_id,
+        value: existingField.default_answer,
+        label: existingField.custom_field.label,
+        options: existingField.custom_field.options,
+        is_required: existingField.custom_field.is_required,
+        placeholder: existingField.custom_field.placeholder,
+        order: existingField.custom_field.order,
+      }
+    })
+  }
+
+  updateItemAttribute(
+    'customFields',
+    fields.sort((firstField, secondField) => firstField.order - secondField.order)
+  )
 }
 </script>

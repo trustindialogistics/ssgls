@@ -158,6 +158,8 @@ function getModelType(type) {
       return t('settings.custom_fields.model_type.customer')
     case 'Invoice':
       return t('settings.custom_fields.model_type.invoice')
+    case 'Item':
+      return 'Item'
     case 'Estimate':
       return t('settings.custom_fields.model_type.estimate')
     case 'Expense':

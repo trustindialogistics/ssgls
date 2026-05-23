@@ -327,6 +327,12 @@ async function submitForm() {
     total: invoiceStore.getTotal,
     tax: invoiceStore.getTotalTax,
   })
+
+  data.items = data.items.map((item) => ({
+    ...item,
+    custom_fields: item.customFields || [],
+  }))
+
   if (data.discount_per_item === 'YES') {
     data.items.forEach((item, index) => {
       if (item.discount_type === 'fixed'){
