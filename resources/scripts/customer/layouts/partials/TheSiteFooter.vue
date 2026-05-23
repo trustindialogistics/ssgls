@@ -16,12 +16,6 @@
       bg-white
     "
   >
-    Powered by
-    <a
-      href="http://bytefury.com/"
-      target="_blank"
-      class="pl-1 font-normal text-gray-900"
-      >Bytefury
-    </a>
+    SS Gujarat Logistics Services
   </footer>
 </template>

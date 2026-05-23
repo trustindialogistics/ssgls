@@ -280,6 +280,8 @@ class Invoice extends Model implements HasMedia
             $query->whereInvoice($invoiceId);
         })->when($filters['invoice_number'] ?? null, function ($query, $invoiceNumber) {
             $query->whereInvoiceNumber($invoiceNumber);
+        })->when($filters['template_name'] ?? null, function ($query, $templateName) {
+            $query->where('template_name', $templateName);
         })->when(($filters['from_date'] ?? null) && ($filters['to_date'] ?? null), function ($query) use ($filters) {
             $start = Carbon::parse($filters['from_date']);
             $end = Carbon::parse($filters['to_date']);

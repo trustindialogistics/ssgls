@@ -89,6 +89,8 @@ const InvoiceIndex = () => import('@/scripts/admin/views/invoices/Index.vue')
 const InvoiceCreate = () =>
   import('@/scripts/admin/views/invoices/create/InvoiceCreate.vue')
 const InvoiceView = () => import('@/scripts/admin/views/invoices/View.vue')
+const LrReceiptIndex = () =>
+  import('@/scripts/admin/views/lr-receipts/Index.vue')
 
 // Recurring Invoice
 const RecurringInvoiceIndex = () =>
@@ -444,6 +446,32 @@ export default [
       {
         path: 'invoices/:id/edit',
         name: 'invoices.edit',
+        meta: { ability: abilities.EDIT_INVOICE },
+        component: InvoiceCreate,
+      },
+
+      // LR Receipts
+      {
+        path: 'lr-receipts',
+        name: 'lr-receipts.index',
+        meta: { ability: abilities.VIEW_INVOICE },
+        component: LrReceiptIndex,
+      },
+      {
+        path: 'lr-receipts/create',
+        name: 'lr-receipts.create',
+        meta: { ability: abilities.CREATE_INVOICE },
+        component: InvoiceCreate,
+      },
+      {
+        path: 'lr-receipts/:id/view',
+        name: 'lr-receipts.view',
+        meta: { ability: abilities.VIEW_INVOICE },
+        component: InvoiceView,
+      },
+      {
+        path: 'lr-receipts/:id/edit',
+        name: 'lr-receipts.edit',
         meta: { ability: abilities.EDIT_INVOICE },
         component: InvoiceCreate,
       },

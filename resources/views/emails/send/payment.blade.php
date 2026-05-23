@@ -28,7 +28,7 @@
     {{-- Footer --}}
     @slot('footer')
         @component('mail::footer')
-            Powered by <a class="footer-link" href="https://invoiceshelf.com" target="_blank">InvoiceShelf</a>
+            SS Gujarat Logistics Services
         @endcomponent
     @endslot
 @endcomponent

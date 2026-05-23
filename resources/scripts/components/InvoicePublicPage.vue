@@ -63,10 +63,7 @@ I
         v-if="!customerLogo"
         class="flex items-center justify-center mt-4 text-gray-500 font-normal"
       >
-        Powered by
-        <a href="https://invoiceshelf.com" target="_blank">
-          <img :src="getLogo()" class="h-4 ml-1 mb-1" />
-        </a>
+        SS Gujarat Logistics Services
       </div>
     </div>
   </div>
@@ -92,11 +89,6 @@ async function loadInvoice() {
 const shareableLink = computed(() => {
   return route.path + '?pdf'
 })
-
-function getLogo() {
-  const imgUrl = new URL('$images/logo-gray.png', import.meta.url)
-  return imgUrl
-}
 
 const customerLogo = computed(() => {
   if (window.customer_logo) {

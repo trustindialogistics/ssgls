@@ -19,18 +19,18 @@
             to="/admin/dashboard"
           />
           <BaseBreadcrumbItem
-            :title="$t('invoices.invoice', 2)"
-            to="/admin/invoices"
+            :title="indexTitle"
+            :to="indexPath"
           />
           <BaseBreadcrumbItem
-            v-if="$route.name === 'invoices.edit'"
-            :title="$t('invoices.edit_invoice')"
+            v-if="isEdit"
+            :title="editTitle"
             to="#"
             active
           />
           <BaseBreadcrumbItem
             v-else
-            :title="$t('invoices.new_invoice')"
+            :title="createTitle"
             to="#"
             active
           />
@@ -38,7 +38,7 @@
 
         <template #actions>
           <router-link
-            v-if="$route.name === 'invoices.edit'"
+            v-if="isEdit"
             :to="`/invoices/pdf/${invoiceStore.newInvoice.unique_hash}`"
             target="_blank"
           >
@@ -196,9 +196,20 @@ let isLoadingContent = computed(
   () => invoiceStore.isFetchingInvoice || invoiceStore.isFetchingInitialSettings
 )
 
-let pageTitle = computed(() =>
-  isEdit.value ? t('invoices.edit_invoice') : t('invoices.new_invoice')
+const isLrReceipt = computed(() => route.path.includes('/admin/lr-receipts'))
+const indexTitle = computed(() =>
+  isLrReceipt.value ? 'LR Receipts' : t('invoices.invoice', 2)
 )
+const indexPath = computed(() =>
+  isLrReceipt.value ? '/admin/lr-receipts' : '/admin/invoices'
+)
+const createTitle = computed(() =>
+  isLrReceipt.value ? 'New LR Receipt' : t('invoices.new_invoice')
+)
+const editTitle = computed(() =>
+  isLrReceipt.value ? 'Edit LR Receipt' : t('invoices.edit_invoice')
+)
+let pageTitle = computed(() => (isEdit.value ? editTitle.value : createTitle.value))
 
 const salesTaxEnabled = computed(() => {
   return (
@@ -207,7 +218,23 @@ const salesTaxEnabled = computed(() => {
   )
 })
 
-let isEdit = computed(() => route.name === 'invoices.edit')
+let isEdit = computed(
+  () => route.name === 'invoices.edit' || route.name === 'lr-receipts.edit'
+)
+watch(
+  () => route.name,
+  () => {
+    // Keep original behavior: the create/edit component is shared across routes.
+    isMarkAsDefault.value = false
+  }
+)
+
+onMounted(() => {
+  // LR Receipts reuse invoices under the hood, but force a dedicated PDF layout.
+  if (isLrReceipt.value && !invoiceStore.newInvoice.template_name) {
+    invoiceStore.newInvoice.template_name = 'lr_receipt'
+  }
+})
 
 const rules = {
   invoice_date: {

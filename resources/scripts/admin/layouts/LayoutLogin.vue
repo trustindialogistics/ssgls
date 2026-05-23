@@ -20,36 +20,20 @@
       "
     >
       <div class="w-full">
-        <MainLogo
-          v-if="!loginPageLogo"
-          class="block w-48 h-auto max-w-full mb-32 text-primary-500"
-        />
+        <div class="flex items-center justify-center w-full mb-10">
+          <MainLogo
+            v-if="!loginPageLogo"
+            class="block h-auto max-w-full w-56"
+          />
 
-        <img
-          v-else
-          :src="loginPageLogo"
-          class="block w-48 h-auto max-w-full mb-32 text-primary-500"
-        />
+          <img
+            v-else
+            :src="loginPageLogo"
+            class="block h-auto max-w-full w-56"
+          />
+        </div>
 
         <router-view />
-
-        <div
-          class="
-            pt-24
-            mt-0
-            text-sm
-            not-italic
-            font-medium
-            leading-relaxed
-            text-left text-gray-400
-            md:pt-40
-          "
-        >
-          <p class="mb-3">
-            {{ copyrightText }}
-            {{ new Date().getFullYear() }}
-          </p>
-        </div>
       </div>
     </div>
     <div
@@ -149,14 +133,7 @@ const pageDescription = computed(() => {
     return window.login_page_description
   }
 
-  return 'InvoiceShelf helps you track expenses, record payments & generate beautiful invoices & estimates.'
-})
-
-const copyrightText = computed(() => {
-  if (window.copyright_text) {
-    return window.copyright_text
-  }
-  return 'Copyright @ IDEOLOGIX MEDIA DOOEL.'
+  return 'SS Gujarat Logistics Services'
 })
 
 const loginPageLogo = computed(() => {

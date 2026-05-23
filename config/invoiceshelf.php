@@ -357,6 +357,16 @@ return [
             'model' => Invoice::class,
         ],
         [
+            'title' => 'navigation.lr-receipts',
+            'group' => 2,
+            'link' => '/admin/lr-receipts',
+            'icon' => 'DocumentDuplicateIcon',
+            'name' => 'LR Receipts',
+            'owner_only' => false,
+            'ability' => 'view-invoice',
+            'model' => Invoice::class,
+        ],
+        [
             'title' => 'navigation.recurring-invoices',
             'group' => 2,
             'link' => '/admin/recurring-invoices',
