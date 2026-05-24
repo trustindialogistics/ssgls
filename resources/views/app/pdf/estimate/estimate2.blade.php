@@ -424,8 +424,8 @@
                     </td>
                 @else
                     <td width="60%" class="header-section-left" style="padding-top: 0px;">
-                        @if ($estimate->customer->company)
-                            <h1 class="header-logo"> {{ $estimate->customer->company->name }} </h1>
+                        @if ($estimate->company)
+                            <h1 class="header-logo"> {{ $estimate->company->name }} </h1>
                         @endif
                     </td>
                 @endif

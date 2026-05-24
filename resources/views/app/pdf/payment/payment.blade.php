@@ -290,9 +290,9 @@
                     <td width="50%" class="header-section-left">
                         <img style="height:50px" class="header-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                     @else
-                        @if ($payment->customer)
+                        @if ($payment->company)
                     <td class="header-section-left" style="padding-top:0px;">
-                        <h1 class="header-logo"> {{ $payment->customer->company->name }} </h1>
+                        <h1 class="header-logo"> {{ $payment->company->name }} </h1>
                 @endif
                 @endif
                 </td>

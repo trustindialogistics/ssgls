@@ -400,8 +400,8 @@
                     @if ($logo)
                         <img class="header-logo" style="height:50px" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                     @else
-                        @if ($estimate->customer->company)
-                            <h2 class="header-logo"> {{ $estimate->customer->company->name }} </h2>
+                        @if ($estimate->company)
+                            <h2 class="header-logo"> {{ $estimate->company->name }} </h2>
                         @endif
                     @endif
                 </td>
