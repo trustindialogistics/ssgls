@@ -70,8 +70,18 @@
             width: 34%;
         }
 
-        .brand-mark {
+        .brand-logo-cell {
             border: 0;
+            text-align: center;
+            width: 62px;
+        }
+
+        .company-logo {
+            max-height: 44px;
+            max-width: 58px;
+        }
+
+        .brand-mark {
             color: #27324a;
             font-size: 36px;
             font-weight: bold;
@@ -393,7 +403,7 @@
         return $fieldValue($item->fields, $keys);
     };
 
-    $companyName = $invoice->company->name ?: 'S S Gujarat Logistics';
+    $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
     $billingBranch = trim(strip_tags($company_address)) ? $companyName.'<br>'.$company_address : $companyName;
     $panNo = 'NBKPS0084L';
     $companyGstin = '24NBKPS0084L1ZZ';
@@ -407,7 +417,8 @@
     $checkedBy = '';
     $signatureName = $invoiceField(['signature_name']);
     $partyAddress = trim(strip_tags($billing_address)) ? $billing_address : e($invoice->customer->name ?? '');
-    $mobile = $invoiceField(['mobile', 'phone']) ?: '6355071130';
+    $companyPhone = $invoice->company?->address?->phone;
+    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
     $blankRows = max(1, 11 - $invoice->items->count());
     $blankFillHeight = max(122, $blankRows * 17);
@@ -422,9 +433,15 @@
                 <td class="header-left">
                     <table>
                         <tr>
-                            <td class="brand-mark">
-                                SS
-                                <span class="brand-small">GUJARAT LOGISTICS</span>
+                            <td class="brand-logo-cell">
+                                @if ($logo)
+                                    <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
+                                @else
+                                    <div class="brand-mark">
+                                        SS
+                                        <span class="brand-small">GUJARAT LOGISTICS</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="no-border">
                                 <div class="company-name">{{ $companyName }}</div>

@@ -64,8 +64,18 @@
             width: 39%;
         }
 
-        .brand-mark {
+        .brand-logo-cell {
             border: 0;
+            text-align: center;
+            width: 82px;
+        }
+
+        .company-logo {
+            max-height: 52px;
+            max-width: 76px;
+        }
+
+        .brand-mark {
             color: #27324a;
             font-size: 48px;
             font-weight: bold;
@@ -323,11 +333,12 @@
         return $paise ? format_money_pdf((int) round($paise), $invoice->customer->currency) : '';
     };
 
-    $companyName = $invoice->company->name ?: 'S S Gujarat Logistics';
+    $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
     $companyAddress = trim(strip_tags($company_address))
         ? $company_address
         : '1953, Ground Floor, Mehsana Steel Compound, Umbergaon,<br>Dist. Valsad, Gujarat - 396171';
-    $mobile = $invoiceField(['mobile', 'phone']) ?: '6355071130';
+    $companyPhone = $invoice->company?->address?->phone;
+    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
     $panNo = 'NBKPS0084L';
     $gstin = '24NBKPS0084L1ZZ';
@@ -367,9 +378,15 @@
                 <td class="header-left">
                     <table class="brand-block">
                         <tr>
-                            <td class="brand-mark">
-                                SS
-                                <span class="brand-small">GUJARAT LOGISTICS</span>
+                            <td class="brand-logo-cell">
+                                @if ($logo)
+                                    <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
+                                @else
+                                    <div class="brand-mark">
+                                        SS
+                                        <span class="brand-small">GUJARAT LOGISTICS</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="no-border">
                                 <div class="company-name">{{ $companyName }}</div>

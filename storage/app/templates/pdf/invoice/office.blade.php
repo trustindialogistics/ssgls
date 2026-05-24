@@ -32,6 +32,7 @@
         $companyPan = $invoice->company?->vat_id ?? '';
         $companyGstin = $invoice->company?->tax_id ?? '';
         $customerGstin = $invoice->customer?->tax_id ?: $cust('gstin');
+        $companyPhone = $invoice->company?->address?->phone;
 
         // Shared view variables come from Invoice::getPDFData(). Guard against null/false.
         $company_address = $company_address ?: '';
@@ -103,6 +104,34 @@
             border: 0;
         }
 
+        .company-header td {
+            border: 0;
+            padding: 0;
+        }
+
+        .company-logo-cell {
+            text-align: center;
+            width: 62pt;
+        }
+
+        .company-logo {
+            max-height: 44pt;
+            max-width: 56pt;
+        }
+
+        .company-fallback-logo {
+            color: #111827;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 18px;
+        }
+
+        .company-contact {
+            font-size: 8px;
+            line-height: 11px;
+            margin-top: 3pt;
+        }
+
         .items th {
             font-size: 8px;
             font-weight: 700;
@@ -132,8 +161,24 @@
     <table class="box">
         <tr>
             <td class="cell" style="width: 62%;">
-                <div class="title">{{ $companyName }}</div>
-                <div class="muted" style="margin-top: 2pt;">{!! $company_address !!}</div>
+                <table class="company-header">
+                    <tr>
+                        <td class="company-logo-cell">
+                            @if ($logo)
+                                <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
+                            @else
+                                <div class="company-fallback-logo">{{ $companyName }}</div>
+                            @endif
+                        </td>
+                        <td style="padding-left: 6pt;">
+                            <div class="title">{{ $companyName }}</div>
+                            <div class="muted" style="margin-top: 2pt;">{!! $company_address !!}</div>
+                            @if ($companyPhone)
+                                <div class="company-contact"><span class="label">Phone / Mobile :</span> {{ $companyPhone }}</div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
             </td>
             <td class="cell" style="width: 38%;">
                 <div class="label">Billing Br. Name &amp; Address :</div>

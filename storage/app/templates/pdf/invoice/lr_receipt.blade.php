@@ -80,6 +80,7 @@
         $companyName = $invoice->company?->name ?? '';
         $companyPan = 'NBKPS0084L';
         $companyGstin = '24NBKPS0084L1ZZ';
+        $companyPhone = $invoice->company?->address?->phone;
         $customerGstin = $invoice->customer?->tax_id ?: $cust('gstin');
         $consigneeName = $invoice->customer?->name ?: $inv('consignee');
         $consigneePhone = $invoice->customer?->phone ?: $inv('consignee_phone_no');
@@ -144,6 +145,34 @@
             color: #374151;
         }
 
+        .company-header td {
+            border: 0;
+            padding: 0;
+        }
+
+        .company-logo-cell {
+            text-align: center;
+            width: 62pt;
+        }
+
+        .company-logo {
+            max-height: 44pt;
+            max-width: 56pt;
+        }
+
+        .company-fallback-logo {
+            color: #111827;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 18px;
+        }
+
+        .company-contact {
+            font-size: 8px;
+            line-height: 11px;
+            margin-top: 3pt;
+        }
+
         .section-title {
             font-size: 10px;
             font-weight: 800;
@@ -170,10 +199,24 @@
     <table class="box">
         <tr>
             <td class="cell" style="width: 62%; padding: 0;">
-                <div style="padding: 4pt 5pt;">
-                    <div style="font-size: 18px; font-weight: 800;">{{ $companyName }}</div>
-                    <div class="muted" style="margin-top: 2pt;">{!! $company_address !!}</div>
-                </div>
+                <table class="company-header" style="padding: 4pt 5pt;">
+                    <tr>
+                        <td class="company-logo-cell">
+                            @if ($logo)
+                                <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
+                            @else
+                                <div class="company-fallback-logo">{{ $companyName }}</div>
+                            @endif
+                        </td>
+                        <td style="padding-left: 6pt;">
+                            <div style="font-size: 18px; font-weight: 800;">{{ $companyName }}</div>
+                            <div class="muted" style="margin-top: 2pt;">{!! $company_address !!}</div>
+                            @if ($companyPhone)
+                                <div class="company-contact"><span class="label">Phone / Mobile :</span> {{ $companyPhone }}</div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
                 <table>
                     <tr>
                         <td class="cell party-cell" style="width: 50%;">
