@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\V1\Admin\General;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AbilityResource;
 use App\Http\Resources\CompanyResource;
+use App\Http\Resources\CurrencyResource;
 use App\Http\Resources\UserResource;
 use App\Models\Company;
 use App\Models\CompanySetting;
@@ -61,13 +63,15 @@ class BootstrapController extends Controller
         ]);
 
         return response()->json([
-            'current_user' => new UserResource($current_user),
+            'current_user' => (new UserResource($current_user))->resolve($request),
             'current_user_settings' => $current_user_settings,
-            'current_user_abilities' => $current_user->getAbilities(),
-            'companies' => CompanyResource::collection($companies),
-            'current_company' => new CompanyResource($current_company),
+            'current_user_abilities' => AbilityResource::collection($current_user->getAbilities())->resolve($request),
+            'companies' => CompanyResource::collection($companies)->resolve($request),
+            'current_company' => (new CompanyResource($current_company))->resolve($request),
             'current_company_settings' => $current_company_settings,
-            'current_company_currency' => $current_company_currency,
+            'current_company_currency' => $current_company_currency
+                ? (new CurrencyResource($current_company_currency))->resolve($request)
+                : null,
             'config' => config('invoiceshelf'),
             'global_settings' => $global_settings,
             'main_menu' => $main_menu,

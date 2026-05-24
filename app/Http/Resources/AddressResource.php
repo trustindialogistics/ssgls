@@ -32,7 +32,7 @@ class AddressResource extends JsonResource
             'country' => $this->when($this->country()->exists(), function () {
                 return new CountryResource($this->country);
             }),
-            'user' => $this->when($this->user()->exists(), function () {
+            'user' => $this->whenLoaded('user', function () {
                 return new UserResource($this->user);
             }),
         ];

@@ -32,7 +32,7 @@ class UserResource extends JsonResource
             'updated_at' => $this->updated_at,
             'avatar' => $this->avatar,
             'is_owner' => $this->isOwner(),
-            'roles' => $this->roles,
+            'roles' => RoleResource::collection($this->roles),
             'formatted_created_at' => $this->formattedCreatedAt,
             'currency' => $this->when($this->currency()->exists(), function () {
                 return new CurrencyResource($this->currency);

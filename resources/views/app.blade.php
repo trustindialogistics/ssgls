@@ -68,6 +68,8 @@
         @endif
     </script>
 
+    <div id="app"></div>
+
     @vite('resources/scripts/main.js')
 </body>
 

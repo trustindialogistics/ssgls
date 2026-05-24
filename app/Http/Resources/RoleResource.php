@@ -22,7 +22,7 @@ class RoleResource extends JsonResource
             'title' => $this->title,
             'level' => $this->level,
             'formatted_created_at' => $this->getFormattedAt(),
-            'abilities' => $this->getAbilities(),
+            'abilities' => AbilityResource::collection($this->getAbilities()),
         ];
     }
 

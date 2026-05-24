@@ -71,6 +71,6 @@ export default class InvoiceShelf {
     app.provide('utils', utils)
     app.directive('tooltip', VTooltip)
 
-    app.mount('body')
+    app.mount('#app')
   }
 }

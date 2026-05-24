@@ -35,18 +35,7 @@
         ><i></i><i></i> <i></i><i></i><i></i> <i></i><i></i><i></i>
       </div>
       <MainLogo
-        class="
-          absolute
-          block
-          h-auto
-          max-w-full
-          transform
-          -translate-x-1/2 -translate-y-1/2
-          w-28
-          text-primary-400
-          top-1/2
-          left-1/2
-        "
+        class="global-loader-logo text-primary-400"
         alt="InvoiceShelf Logo"
       />
     </div>
@@ -146,6 +135,17 @@ const props = defineProps({
   margin: 0 auto;
   font-size: 26px;
   color: #0a2639;
+}
+
+.global-loader-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 112px !important;
+  max-width: 112px !important;
+  height: auto !important;
+  transform: translate(-50%, -50%);
 }
 
 .pufs {
