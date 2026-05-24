@@ -39,21 +39,33 @@
             </a>
           </div>
           <div class="grid grid-cols-2 gap-8 mt-2">
-            <div class="flex flex-col">
+            <div v-if="selectedConsignor.billing" class="flex flex-col">
               <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
-                Phone
+                Bill To
               </label>
-              <label class="relative w-11/12 text-sm truncate">
-                {{ selectedConsignor.phone }}
-              </label>
+              <div class="flex flex-col flex-1 p-0 text-left">
+                <label
+                  v-for="(line, index) in formatAddressLines(selectedConsignor.billing)"
+                  :key="`billing-${index}-${line}`"
+                  class="relative w-11/12 text-sm truncate"
+                >
+                  {{ line }}
+                </label>
+              </div>
             </div>
-            <div class="flex flex-col">
+            <div v-if="selectedConsignor.shipping" class="flex flex-col">
               <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
-                GST No
+                Ship To
               </label>
-              <label class="relative w-11/12 text-sm truncate">
-                {{ selectedConsignor.tax_id }}
-              </label>
+              <div class="flex flex-col flex-1 p-0 text-left">
+                <label
+                  v-for="(line, index) in formatAddressLines(selectedConsignor.shipping)"
+                  :key="`shipping-${index}-${line}`"
+                  class="relative w-11/12 text-sm truncate"
+                >
+                  {{ line }}
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -261,21 +273,60 @@ function setInvoiceField(label, value) {
   }
 }
 
+function compact(value) {
+  return value ? String(value).trim() : ''
+}
+
+function formatAddressLines(address) {
+  if (!address) {
+    return []
+  }
+
+  const cityState = [compact(address.city), compact(address.state)]
+    .filter(Boolean)
+    .join(', ')
+
+  return [
+    compact(address.name),
+    compact(address.address_street_1),
+    compact(address.address_street_2),
+    cityState,
+    compact(address.zip),
+  ].filter(Boolean)
+}
+
+function formatPartyDetails(customer) {
+  if (!customer) {
+    return ''
+  }
+
+  const address = customer.billing || customer.shipping
+  const lines = [
+    compact(customer.name || customer.display_name),
+    ...formatAddressLines(address).filter(
+      (line) => line !== compact(customer.name || customer.display_name)
+    ),
+  ]
+
+  return lines.filter(Boolean).join('\n')
+}
+
 function syncConsigneeFields(customer) {
-  setInvoiceField('Consignee', customer?.name || customer?.display_name)
+  setInvoiceField('Consignee', formatPartyDetails(customer))
   setInvoiceField('Consignee Phone No', customer?.phone)
   setInvoiceField('Consignee GST No', customer?.tax_id)
 }
 
 function syncConsignorFields(customer) {
-  setInvoiceField('Consignor', customer?.name || customer?.display_name)
+  setInvoiceField('Consignor', formatPartyDetails(customer))
   setInvoiceField('Consignor Phone No', customer?.phone)
   setInvoiceField('Consignor GST No', customer?.tax_id)
 }
 
-function selectConsignor(customer, close) {
-  selectedConsignor.value = customer
-  syncConsignorFields(customer)
+async function selectConsignor(customer, close) {
+  const response = await customerStore.fetchCustomer(customer.id)
+  selectedConsignor.value = response.data.data
+  syncConsignorFields(selectedConsignor.value)
   close()
   consignorSearch.value = ''
 }

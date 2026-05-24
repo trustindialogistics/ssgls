@@ -91,6 +91,18 @@
             >
               {{ selectedCustomer.billing.name }}
             </label>
+            <label
+              v-if="selectedCustomer.billing.address_street_1"
+              class="relative w-11/12 text-sm truncate"
+            >
+              {{ selectedCustomer.billing.address_street_1 }}
+            </label>
+            <label
+              v-if="selectedCustomer.billing.address_street_2"
+              class="relative w-11/12 text-sm truncate"
+            >
+              {{ selectedCustomer.billing.address_street_2 }}
+            </label>
 
             <label class="relative w-11/12 text-sm truncate">
               <span v-if="selectedCustomer.billing.city">
@@ -140,6 +152,18 @@
               class="relative w-11/12 text-sm truncate"
             >
               {{ selectedCustomer.shipping.name }}
+            </label>
+            <label
+              v-if="selectedCustomer.shipping.address_street_1"
+              class="relative w-11/12 text-sm truncate"
+            >
+              {{ selectedCustomer.shipping.address_street_1 }}
+            </label>
+            <label
+              v-if="selectedCustomer.shipping.address_street_2"
+              class="relative w-11/12 text-sm truncate"
+            >
+              {{ selectedCustomer.shipping.address_street_2 }}
             </label>
 
             <label class="relative w-11/12 text-sm truncate">

@@ -150,15 +150,15 @@
         }
 
         .party-cell {
-            height: 50px;
+            height: 62px;
             padding: 4px 6px;
             width: 50%;
         }
 
         .party-lines {
             font-size: 9px;
-            line-height: 12px;
-            margin-top: 3px;
+            line-height: 11px;
+            margin-top: 2px;
         }
 
         .side-cell {
@@ -324,6 +324,38 @@
         return $fieldValue($invoice->fields, $keys);
     };
 
+    $addressLines = function ($address) {
+        if (! $address) {
+            return [];
+        }
+
+        $cityState = collect([$address->city, $address->state])->filter()->implode(', ');
+
+        return collect([
+            $address->name,
+            $address->address_street_1,
+            $address->address_street_2,
+            $cityState,
+            $address->zip,
+        ])->filter()->values()->all();
+    };
+
+    $partyDetails = function ($customer, $fallback = '') use ($addressLines) {
+        if (! $customer) {
+            return $fallback;
+        }
+
+        $name = $customer->name ?: $customer->display_name;
+        $address = $customer->billingAddress ?: $customer->shippingAddress;
+        $lines = collect([$name])
+            ->merge($addressLines($address))
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $lines->isNotEmpty() ? $lines->implode("\n") : $fallback;
+    };
+
     $item = $invoice->items->first();
     $itemField = function ($keys) use ($item, $fieldValue) {
         return $item ? $fieldValue($item->fields, $keys) : '';
@@ -362,7 +394,7 @@
 
     $modeOfPayment = $invoiceField(['mode_of_payment']) ?: 'TO PAY';
     $gstPayableBy = $invoiceField(['gst_tax_payable_by']) ?: 'Consignor / Consignee';
-    $consigneeName = $invoice->customer->name ?: $invoiceField(['consignee']);
+    $consigneeName = $partyDetails($invoice->customer, $invoiceField(['consignee']));
     $consigneePhone = $invoice->customer->phone ?: $invoiceField(['consignee_phone_no']);
     $consigneeGstin = $invoice->customer->tax_id ?: $invoiceField(['consignee_gst_no']);
     $consignorName = $invoiceField(['consignor']);
@@ -403,13 +435,13 @@
                         <tr>
                             <td class="party-cell">
                                 <span class="label">Consignor</span>
-                                <div class="party-lines">{{ $consignorName }}</div>
+                                <div class="party-lines">{!! nl2br(e($consignorName)) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
                                 <span class="label">Consignee</span>
-                                <div class="party-lines">{{ $consigneeName }}</div>
+                                <div class="party-lines">{!! nl2br(e($consigneeName)) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>

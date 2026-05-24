@@ -227,7 +227,10 @@ export const useInvoiceStore = (useWindow = false) => {
 
               notificationStore.showNotification({
                 type: 'success',
-                message: global.t('invoices.created_message'),
+                message:
+                  data.template_name === 'lr_receipt'
+                    ? 'LR Receipt created successfully.'
+                    : global.t('invoices.created_message'),
               })
 
               resolve(response)
@@ -300,7 +303,10 @@ export const useInvoiceStore = (useWindow = false) => {
 
               notificationStore.showNotification({
                 type: 'success',
-                message: global.t('invoices.updated_message'),
+                message:
+                  data.template_name === 'lr_receipt'
+                    ? 'LR Receipt updated successfully.'
+                    : global.t('invoices.updated_message'),
               })
 
               resolve(response)

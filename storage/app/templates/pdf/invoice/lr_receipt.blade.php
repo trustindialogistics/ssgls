@@ -82,7 +82,37 @@
         $companyGstin = '24NBKPS0084L1ZZ';
         $companyPhone = $invoice->company?->address?->phone;
         $customerGstin = $invoice->customer?->tax_id ?: $cust('gstin');
-        $consigneeName = $invoice->customer?->name ?: $inv('consignee');
+        $addressLines = function ($address): array {
+            if (! $address) {
+                return [];
+            }
+
+            $cityState = collect([$address->city, $address->state])->filter()->implode(', ');
+
+            return collect([
+                $address->name,
+                $address->address_street_1,
+                $address->address_street_2,
+                $cityState,
+                $address->zip,
+            ])->filter()->values()->all();
+        };
+        $partyDetails = function ($customer, string $fallback = '') use ($addressLines): string {
+            if (! $customer) {
+                return $fallback;
+            }
+
+            $name = $customer->name ?: $customer->display_name;
+            $address = $customer->billingAddress ?: $customer->shippingAddress;
+            $lines = collect([$name])
+                ->merge($addressLines($address))
+                ->filter()
+                ->unique()
+                ->values();
+
+            return $lines->isNotEmpty() ? $lines->implode("\n") : $fallback;
+        };
+        $consigneeName = $partyDetails($invoice->customer, $inv('consignee'));
         $consigneePhone = $invoice->customer?->phone ?: $inv('consignee_phone_no');
         $consigneeGstin = $invoice->customer?->tax_id ?: $inv('consignee_gst_no');
         $consignorName = $inv('consignor');
