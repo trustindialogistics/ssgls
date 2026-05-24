@@ -135,6 +135,35 @@
           <BaseTab :title="$t('general.sent')" filter="SENT" />
           <BaseTab :title="$t('general.due')" filter="DUE" />
         </BaseTabGroup>
+
+        <BaseDropdown
+          v-if="
+            invoiceStore.selectedInvoices.length &&
+            userStore.hasAbilities(abilities.DELETE_INVOICE)
+          "
+          class="absolute float-right"
+        >
+          <template #activator>
+            <span
+              class="
+                flex
+                text-sm
+                font-medium
+                cursor-pointer
+                select-none
+                text-primary-400
+              "
+            >
+              {{ $t('general.actions') }}
+              <BaseIcon name="ChevronDownIcon" />
+            </span>
+          </template>
+
+          <BaseDropdownItem @click="removeMultipleInvoices">
+            <BaseIcon name="TrashIcon" class="mr-3 text-gray-600" />
+            {{ $t('general.delete') }}
+          </BaseDropdownItem>
+        </BaseDropdown>
       </div>
 
       <BaseTable
@@ -145,6 +174,26 @@
         :key="tableKey"
         class="mt-10"
       >
+        <template #header>
+          <div class="absolute items-center left-6 top-2.5 select-none">
+            <BaseCheckbox
+              v-model="invoiceStore.selectAllField"
+              variant="primary"
+              @change="invoiceStore.selectAllInvoices"
+            />
+          </div>
+        </template>
+
+        <template #cell-checkbox="{ row }">
+          <div class="relative block">
+            <BaseCheckbox
+              :id="row.id"
+              v-model="selectField"
+              :value="row.data.id"
+            />
+          </div>
+        </template>
+
         <template #cell-name="{ row }">
           <BaseText :text="row.data.customer.name" />
         </template>
@@ -186,6 +235,16 @@
             </BasePaidStatusBadge>
           </div>
         </template>
+
+        <template v-if="hasAtleastOneAbility()" #cell-actions="{ row }">
+          <InvoiceDropdown
+            :row="row.data"
+            :table="table"
+            resource-base-path="/admin/lr-receipts"
+            after-delete-path="/admin/lr-receipts"
+            :show-payment-action="false"
+          />
+        </template>
       </BaseTable>
     </div>
   </BasePage>
@@ -194,20 +253,21 @@
 <script setup>
 import { computed, ref, reactive, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import { debouncedWatch } from '@vueuse/core'
 
 import abilities from '@/scripts/admin/stub/abilities'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
 import { useUserStore } from '@/scripts/admin/stores/user'
+import { useDialogStore } from '@/scripts/stores/dialog'
 
 import MoonwalkerIcon from '@/scripts/components/icons/empty/MoonwalkerIcon.vue'
+import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
 import SendInvoiceModal from '@/scripts/admin/components/modal-components/SendInvoiceModal.vue'
 
 const { t } = useI18n()
 const invoiceStore = useInvoiceStore()
 const userStore = useUserStore()
-const router = useRouter()
+const dialogStore = useDialogStore()
 
 const table = ref(null)
 const tableKey = ref(0)
@@ -247,14 +307,35 @@ const showEmptyScreen = computed(
   () => !invoiceStore.invoiceTotalCount && !isRequestOngoing.value
 )
 
+const selectField = computed({
+  get: () => invoiceStore.selectedInvoices,
+  set: (value) => {
+    return invoiceStore.selectInvoice(value)
+  },
+})
+
 const invoiceColumns = computed(() => {
   return [
+    {
+      key: 'checkbox',
+      thClass: 'extra w-10',
+      tdClass: 'font-medium text-gray-900',
+      placeholderClass: 'w-10',
+      sortable: false,
+    },
     { key: 'invoice_date', label: t('invoices.date'), thClass: 'extra', tdClass: 'font-medium' },
     { key: 'invoice_number', label: 'Docket No.' },
     { key: 'name', label: t('invoices.customer') },
     { key: 'status', label: t('invoices.status') },
     { key: 'due_amount', label: t('dashboard.recent_invoices_card.amount_due') },
     { key: 'total', label: t('invoices.total'), tdClass: 'font-medium text-gray-900' },
+    {
+      key: 'actions',
+      label: t('invoices.action'),
+      tdClass: 'text-right text-sm font-medium',
+      thClass: 'text-right',
+      sortable: false,
+    },
   ]
 })
 
@@ -267,8 +348,19 @@ debouncedWatch(
 )
 
 onUnmounted(() => {
-  // no-op
+  if (invoiceStore.selectAllField) {
+    invoiceStore.selectAllInvoices()
+  }
 })
+
+function hasAtleastOneAbility() {
+  return userStore.hasAbilities([
+    abilities.DELETE_INVOICE,
+    abilities.EDIT_INVOICE,
+    abilities.VIEW_INVOICE,
+    abilities.SEND_INVOICE,
+  ])
+}
 
 function refreshTable() {
   table.value && table.value.refresh()
@@ -335,6 +427,11 @@ function setActiveTab() {
 }
 
 function setFilters() {
+  invoiceStore.$patch((state) => {
+    state.selectedInvoices = []
+    state.selectAllField = false
+  })
+
   tableKey.value += 1
   refreshTable()
 }
@@ -346,6 +443,33 @@ function clearFilter() {
   filters.to_date = ''
   filters.invoice_number = ''
   activeTab.value = t('general.all')
+}
+
+async function removeMultipleInvoices() {
+  dialogStore
+    .openDialog({
+      title: t('general.are_you_sure'),
+      message: t('invoices.confirm_delete'),
+      yesLabel: t('general.ok'),
+      noLabel: t('general.cancel'),
+      variant: 'danger',
+      hideNoButton: false,
+      size: 'lg',
+    })
+    .then(async (res) => {
+      if (res) {
+        await invoiceStore.deleteMultipleInvoices().then((res) => {
+          if (res.data.success) {
+            refreshTable()
+
+            invoiceStore.$patch((state) => {
+              state.selectedInvoices = []
+              state.selectAllField = false
+            })
+          }
+        })
+      }
+    })
 }
 
 function toggleFilter() {

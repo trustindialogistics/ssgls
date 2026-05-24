@@ -10,7 +10,7 @@
     <!-- Edit Invoice  -->
     <router-link
       v-if="userStore.hasAbilities(abilities.EDIT_INVOICE)"
-      :to="`/admin/invoices/${row.id}/edit`"
+      :to="`${resourceBasePath}/${row.id}/edit`"
     >
       <BaseDropdownItem v-show="row.allow_edit">
         <BaseIcon
@@ -33,10 +33,10 @@
     <!-- View Invoice  -->
     <router-link
       v-if="
-        route.name !== 'invoices.view' &&
+        !isViewRoute &&
         userStore.hasAbilities(abilities.VIEW_INVOICE)
       "
-      :to="`/admin/invoices/${row.id}/view`"
+      :to="`${resourceBasePath}/${row.id}/view`"
     >
       <BaseDropdownItem>
         <BaseIcon
@@ -53,7 +53,7 @@
         name="PaperAirplaneIcon"
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
       />
-      {{ $t('invoices.send_invoice') }}
+      {{ sendLabel }}
     </BaseDropdownItem>
 
     <!-- Resend Invoice -->
@@ -62,13 +62,13 @@
         name="PaperAirplaneIcon"
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
       />
-      {{ $t('invoices.resend_invoice') }}
+      {{ resendLabel }}
     </BaseDropdownItem>
 
     <!-- Record payment  -->
-    <router-link :to="`/admin/payments/${row.id}/create`">
+    <router-link v-if="showPaymentAction" :to="`/admin/payments/${row.id}/create`">
       <BaseDropdownItem
-        v-if="row.status == 'SENT' && route.name !== 'invoices.view'"
+        v-if="row.status == 'SENT' && !isViewRoute"
       >
         <BaseIcon
           name="CreditCardIcon"
@@ -96,7 +96,7 @@
         name="DocumentTextIcon"
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
       />
-      {{ $t('invoices.clone_invoice') }}
+      {{ cloneLabel }}
     </BaseDropdownItem>
 
     <!--  Delete Invoice  -->
@@ -121,7 +121,7 @@ import { useModalStore } from '@/scripts/stores/modal'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/scripts/admin/stores/user'
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 import abilities from '@/scripts/admin/stub/abilities'
 
 const props = defineProps({
@@ -137,6 +137,18 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+  resourceBasePath: {
+    type: String,
+    default: '',
+  },
+  afterDeletePath: {
+    type: String,
+    default: '',
+  },
+  showPaymentAction: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const invoiceStore = useInvoiceStore()
@@ -149,6 +161,14 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const utils = inject('utils')
+const isLrReceiptRoute = computed(() => route.name?.startsWith('lr-receipts'))
+const resourceBasePath = computed(() => props.resourceBasePath || (isLrReceiptRoute.value ? '/admin/lr-receipts' : '/admin/invoices'))
+const afterDeletePath = computed(() => props.afterDeletePath || resourceBasePath.value)
+const isViewRoute = computed(() => route.name === 'invoices.view' || route.name === 'lr-receipts.view')
+const isLrReceipt = computed(() => isLrReceiptRoute.value || props.row?.template_name === 'lr_receipt')
+const sendLabel = computed(() => isLrReceipt.value ? 'Send LR Receipt' : t('invoices.send_invoice'))
+const resendLabel = computed(() => isLrReceipt.value ? 'Resend LR Receipt' : t('invoices.resend_invoice'))
+const cloneLabel = computed(() => isLrReceipt.value ? 'Clone LR Receipt' : t('invoices.clone_invoice'))
 
 function canReSendInvoice(row) {
   return (
@@ -160,7 +180,7 @@ function canReSendInvoice(row) {
 function canSendInvoice(row) {
   return (
     row.status == 'DRAFT' &&
-    route.name !== 'invoices.view' &&
+    !isViewRoute.value &&
     userStore.hasAbilities(abilities.SEND_INVOICE)
   )
 }
@@ -181,7 +201,7 @@ async function removeInvoice(id) {
       if (res) {
         invoiceStore.deleteInvoice({ ids: [id] }).then((res) => {
           if (res.data.success) {
-            router.push('/admin/invoices')
+            router.push(afterDeletePath.value)
             props.table && props.table.refresh()
 
             invoiceStore.$patch((state) => {
@@ -208,7 +228,8 @@ async function cloneInvoiceData(data) {
     .then((res) => {
       if (res) {
         invoiceStore.cloneInvoice(data).then((res) => {
-          router.push(`/admin/invoices/${res.data.data.id}/edit`)
+          const basePath = data.template_name === 'lr_receipt' ? '/admin/lr-receipts' : '/admin/invoices'
+          router.push(`${basePath}/${res.data.data.id}/edit`)
         })
       }
     })
