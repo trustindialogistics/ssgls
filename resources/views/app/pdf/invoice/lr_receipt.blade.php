@@ -284,7 +284,14 @@
             font-weight: bold;
             height: 36px;
             line-height: 18px;
-            text-align: right;
+            padding-top: 5px;
+            text-align: center;
+        }
+
+        .company-separator {
+            border-top: 1.5px solid #252b3d;
+            height: 0;
+            margin: -3px -5px 6px;
         }
 
         .label {
@@ -404,6 +411,9 @@
     $companyPhone = $invoice->company?->address?->phone;
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
+    $companyAddressHasEmail = preg_match('/\bE-?mail\b/i', strip_tags((string) $companyAddress));
+    $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $companyAddress);
+    $displayCompanyAddress = preg_replace('/^\s*<p[^>]*>\s*<strong>\s*\(A Cost Effective Distribution\)\s*<\/strong>\s*<\/p>\s*/i', '', $displayCompanyAddress);
     $panNo = 'BHLPS2943H';
     $gstin = '24BHLPS2943H1Z3';
 
@@ -456,11 +466,13 @@
                             <td class="no-border">
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">(A Cost Effective Distribution)</div>
-                                <div class="company-address">{!! $companyAddress !!}</div>
+                                <div class="company-address">{!! $displayCompanyAddress !!}</div>
                             </td>
                             <td class="header-contact">
-                                Mob. {{ $mobile }}<br>
-                                E-mail : {{ $email }}
+                                Mob. {{ $mobile }}
+                                @if (! $companyAddressHasEmail)
+                                    <br>E-mail : {{ $email }}
+                                @endif
                             </td>
                         </tr>
                     </table>
@@ -638,7 +650,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td class="for-company">For {{ $companyName }}</td>
+                            <td class="for-company"><div class="company-separator"></div>For {{ $companyName }}</td>
                         </tr>
                     </table>
                 </td>

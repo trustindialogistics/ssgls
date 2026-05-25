@@ -30,13 +30,13 @@ if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
         echo "**** Please make sure your database is on a persistent volume ****"
         cp /var/www/html/database/stubs/sqlite.empty.db "$DB_DATABASE"
     fi
-    chown www-data:www-data "$DB_DATABASE"
+    chown www-data:www-data "$DB_DATABASE" || true
 fi
 
 echo "**** Setting up folder permissions ****"
 chmod +x artisan
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R 775 storage bootstrap/cache || true
 
 if [ ! -L /var/www/html/public/storage ]; then
     echo "**** Creating storage symlink (public/storage) ****"

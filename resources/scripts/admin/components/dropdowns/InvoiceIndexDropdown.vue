@@ -184,6 +184,8 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['show-lr-copy'])
+
 const invoiceStore = useInvoiceStore()
 const modalStore = useModalStore()
 const notificationStore = useNotificationStore()
@@ -325,6 +327,11 @@ const lrCopyOptions = [
 ]
 
 function openLrCopy(copyType) {
+  if (isViewRoute.value && isLrReceipt.value) {
+    emit('show-lr-copy', copyType)
+    return
+  }
+
   window.open(
     `/invoices/pdf/${props.row.unique_hash}?copy=${copyType}`,
     '_blank',

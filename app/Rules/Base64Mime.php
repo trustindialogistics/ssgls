@@ -34,7 +34,7 @@ class Base64Mime implements ValidationRule
             $failed = true;
         }
 
-        $extension = pathinfo($name, PATHINFO_EXTENSION);
+        $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         if (! in_array($extension, $this->extensions)) {
             $failed = true;
         }
@@ -45,19 +45,36 @@ class Base64Mime implements ValidationRule
             $failed = true;
         }
 
-        $data = explode(',', $data);
+        $data = explode(',', $data, 2);
 
         if (! isset($data[1]) || empty($data[1])) {
             $failed = true;
         }
 
         try {
-            $data = base64_decode($data[1]);
+            $data = base64_decode($data[1], true);
+
+            if ($data === false) {
+                $failed = true;
+            }
+
+            if ($extension === 'pdf') {
+                $pdfOffset = strpos((string) $data, '%PDF');
+
+                if ($pdfOffset !== false) {
+                    $data = substr((string) $data, $pdfOffset);
+                }
+            }
+
             $f = finfo_open();
             $result = finfo_buffer($f, $data, FILEINFO_EXTENSION);
 
             if ($result === '???') {
                 $failed = true;
+            }
+
+            if ($extension === 'pdf' && str_starts_with((string) $data, '%PDF')) {
+                $failed = false;
             }
 
             if (strpos($result, '/')) {

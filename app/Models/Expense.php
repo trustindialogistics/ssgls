@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasCustomFieldsTrait;
+use App\Support\OfficialDocumentArchive;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -249,7 +250,8 @@ class Expense extends Model implements HasMedia
         }
 
         if ($request->hasFile('attachment_receipt')) {
-            $expense->addMediaFromRequest('attachment_receipt')->toMediaCollection('receipts');
+            $media = $expense->addMediaFromRequest('attachment_receipt')->toMediaCollection('receipts');
+            OfficialDocumentArchive::archiveExpenseReceipt($media->getPath(), $media->file_name);
         }
 
         if ($request->customFields) {
@@ -276,7 +278,8 @@ class Expense extends Model implements HasMedia
         }
         if ($request->hasFile('attachment_receipt')) {
             $this->clearMediaCollection('receipts');
-            $this->addMediaFromRequest('attachment_receipt')->toMediaCollection('receipts');
+            $media = $this->addMediaFromRequest('attachment_receipt')->toMediaCollection('receipts');
+            OfficialDocumentArchive::archiveExpenseReceipt($media->getPath(), $media->file_name);
         }
 
         if ($request->customFields) {

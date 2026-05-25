@@ -27,6 +27,7 @@ const route = useRoute()
 
 const isMarkAsSent = ref(false)
 const isLoading = ref(false)
+const selectedLrCopy = ref(null)
 
 const invoiceList = ref(null)
 const currentPageNumber = ref(1)
@@ -63,7 +64,13 @@ const getOrderName = computed(() => {
 })
 
 const shareableLink = computed(() => {
-  return `/invoices/pdf/${invoiceData.value.unique_hash}`
+  const baseUrl = `/invoices/pdf/${invoiceData.value.unique_hash}`
+
+  if (isLrReceiptRoute.value && selectedLrCopy.value) {
+    return `${baseUrl}?copy=${selectedLrCopy.value}`
+  }
+
+  return baseUrl
 })
 
 const getCurrentInvoiceId = computed(() => {
@@ -202,7 +209,12 @@ async function loadInvoice() {
   let response = await invoiceStore.fetchInvoice(route.params.id)
   if (response.data) {
     invoiceData.value = { ...response.data.data }
+    selectedLrCopy.value = null
   }
+}
+
+function showLrCopy(copyType) {
+  selectedLrCopy.value = copyType
 }
 
 async function onSearched() {
@@ -290,6 +302,7 @@ onSearched = debounce(onSearched, 500)
           class="ml-3"
           :row="invoiceData"
           :load-data="loadInvoice"
+          @show-lr-copy="showLrCopy"
         />
       </template>
     </BasePageHeader>

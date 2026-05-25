@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Models\Address;
 use App\Models\CompanySetting;
 use App\Models\FileDisk;
+use App\Support\OfficialDocumentArchive;
 use App\Support\PdfHtmlSanitizer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
@@ -71,17 +72,20 @@ trait GeneratesPdfTrait
     {
         $save_pdf_to_disk = CompanySetting::getSetting('save_pdf_to_disk', $this->company_id);
 
-        if ($save_pdf_to_disk == 'NO') {
-            return 0;
-        }
-
         $locale = CompanySetting::getSetting('language', $this->company_id);
 
         App::setLocale($locale);
 
         $pdf = $this->getPDFData();
+        $pdfOutput = $pdf->output();
 
-        \Storage::disk('local')->put('temp/'.$collection_name.'/'.$this->id.'/temp.pdf', $pdf->output());
+        OfficialDocumentArchive::archivePdf($this, $collection_name, $file_name, $pdfOutput);
+
+        if ($save_pdf_to_disk == 'NO') {
+            return true;
+        }
+
+        \Storage::disk('local')->put('temp/'.$collection_name.'/'.$this->id.'/temp.pdf', $pdfOutput);
 
         if ($deleteExistingFile) {
             $this->clearMediaCollection($this->id);

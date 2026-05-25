@@ -16,9 +16,9 @@
         }
 
         body {
-            color: #000;
+            color: #111827;
             font-family: "DejaVu Sans";
-            font-size: 8.5px;
+            font-size: 8.8px;
             margin: 0;
         }
 
@@ -29,8 +29,8 @@
 
         td,
         th {
-            border: 1px solid #000;
-            padding: 2px 4px;
+            border: 1px solid #1f2937;
+            padding: 3px 5px;
             vertical-align: top;
         }
 
@@ -39,19 +39,19 @@
         }
 
         .invoice-wrapper {
-            border: 1.5px solid #000;
+            border: 2px solid #111827;
             page-break-inside: avoid;
             width: 100%;
         }
 
         .jurisdiction-bar {
-            border-bottom: 1px solid #000;
+            border-bottom: 1.2px solid #111827;
             font-size: 8px;
-            padding: 1px 4px;
+            padding: 2px 5px;
         }
 
         .header-table {
-            border-bottom: 1.5px solid #000;
+            border-bottom: 2px solid #111827;
             table-layout: fixed;
         }
 
@@ -61,24 +61,25 @@
         }
 
         .header-left {
-            border-right: 1.5px solid #000 !important;
-            padding: 3px 6px !important;
-            width: 66%;
+            border-right: 2px solid #111827 !important;
+            padding: 5px 7px !important;
+            width: 65%;
         }
 
         .header-right {
-            width: 34%;
+            width: 35%;
         }
 
         .brand-logo-cell {
             border: 0;
+            padding-top: 4px !important;
             text-align: center;
-            width: 62px;
+            width: 74px;
         }
 
         .company-logo {
-            max-height: 44px;
-            max-width: 58px;
+            max-height: 56px;
+            max-width: 68px;
         }
 
         .brand-mark {
@@ -88,7 +89,7 @@
             letter-spacing: -4px;
             line-height: 34px;
             text-align: center;
-            width: 62px;
+            width: 74px;
         }
 
         .brand-small {
@@ -101,30 +102,31 @@
 
         .company-name {
             color: #26304a;
-            font-size: 23px;
+            font-size: 26px;
             font-weight: bold;
-            line-height: 23px;
+            line-height: 27px;
         }
 
         .company-tagline {
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: bold;
-            line-height: 11px;
+            line-height: 12px;
+            margin-bottom: 2px;
         }
 
         .company-address {
-            font-size: 8px;
-            line-height: 10px;
-            margin-top: 2px;
+            font-size: 8.3px;
+            line-height: 10.6px;
+            margin-top: 3px;
         }
 
         .header-party {
             border: 0;
-            border-left: 1px solid #000;
+            border-left: 1.2px solid #1f2937;
             font-size: 8.5px;
-            line-height: 11px;
-            padding-left: 7px;
-            width: 245px;
+            line-height: 11.4px;
+            padding-left: 8px;
+            width: 255px;
         }
 
         .header-party-address {
@@ -134,22 +136,27 @@
 
         .mobile {
             border: 0;
-            font-size: 8.5px;
+            font-size: 8px;
             text-align: right;
             white-space: nowrap;
             width: 82px;
         }
 
         .right-row {
-            border-bottom: 1px solid #000;
+            border-bottom: 1.2px solid #1f2937;
             font-size: 8.5px;
             min-height: 14px;
-            padding: 2px 5px;
+            padding: 3px 6px;
+        }
+
+        .billing-branch {
+            min-height: 42px;
         }
 
         .pan-gstin {
-            border-bottom: 1px solid #000;
-            padding: 4px 5px;
+            background: #f3f4f6;
+            border-bottom: 1.2px solid #1f2937;
+            padding: 5px 6px;
         }
 
         .pan-gstin div {
@@ -160,33 +167,34 @@
 
         .detail-table td {
             font-size: 8.5px;
-            height: 14px;
-            padding: 1px 5px;
+            height: 16px;
+            padding: 2px 6px;
             vertical-align: middle;
         }
 
         .payment-table td,
         .payment-table th {
             font-size: 8px;
-            height: 11px;
-            padding: 1px 2px;
+            height: 12px;
+            padding: 1px 3px;
             text-align: center;
             vertical-align: middle;
         }
 
         .items-table th {
-            font-size: 8px;
+            background: #eef2f7;
+            font-size: 8.2px;
             font-weight: bold;
-            height: 22px;
-            line-height: 10px;
-            padding: 2px;
+            height: 24px;
+            line-height: 10.5px;
+            padding: 3px 2px;
             text-align: center;
             vertical-align: middle;
         }
 
         .items-table td {
-            font-size: 8.5px;
-            height: 17px;
+            font-size: 8.4px;
+            height: 18px;
             padding: 2px 3px;
             text-align: center;
             vertical-align: middle;
@@ -197,18 +205,18 @@
         }
 
         .gt-table {
-            border-top: 1.5px solid #000;
+            border-top: 2px solid #111827;
         }
 
         .gt-table td {
             font-size: 8.5px;
-            height: 17px;
+            height: 18px;
             padding: 2px 6px;
             vertical-align: middle;
         }
 
         .gt-label {
-            background: #e0e0e0;
+            background: #e5e7eb;
             font-size: 9px;
             font-weight: bold;
             text-align: center;
@@ -216,7 +224,7 @@
         }
 
         .footer-top {
-            border-top: 1px solid #000;
+            border-top: 1.2px solid #1f2937;
         }
 
         .footer-top td {
@@ -226,7 +234,7 @@
         }
 
         .footer-bottom {
-            border-top: 1px solid #000;
+            border-top: 1.2px solid #1f2937;
             table-layout: fixed;
         }
 
@@ -264,7 +272,7 @@
         }
 
         .signature-line {
-            border-top: 1px solid #000;
+            border-top: 1.2px solid #1f2937;
             font-size: 8.5px;
             margin-left: 88px;
             margin-top: 9px;
@@ -404,7 +412,7 @@
     };
 
     $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
-    $billingBranch = trim(strip_tags($company_address)) ? $companyName.'<br>'.$company_address : $companyName;
+    $billingBranch = '';
     $panNo = 'BHLPS2943H';
     $companyGstin = '24BHLPS2943H1Z3';
     $partyGstin = $invoice->customer->tax_id ?? '';
@@ -420,6 +428,9 @@
     $companyPhone = $invoice->company?->address?->phone;
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
+    $companyAddressHasEmail = preg_match('/\bE-?mail\b/i', strip_tags((string) $company_address));
+    $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $company_address);
+    $displayCompanyAddress = preg_replace('/^\s*<p[^>]*>\s*<strong>\s*\(A Cost Effective Distribution\)\s*<\/strong>\s*<\/p>\s*/i', '', $displayCompanyAddress);
     $blankRows = max(1, 11 - $invoice->items->count());
     $blankFillHeight = max(122, $blankRows * 17);
     $officeGrandTotal = 0;
@@ -447,8 +458,10 @@
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">(A Cost Effective Distribution)</div>
                                 <div class="company-address">
-                                    {!! $company_address !!}<br>
-                                    E-mail : {{ $email }}
+                                    {!! $displayCompanyAddress !!}
+                                    @if (! $companyAddressHasEmail)
+                                        <br>E-mail : {{ $email }}
+                                    @endif
                                 </div>
                             </td>
                             <td class="header-party">
@@ -461,7 +474,7 @@
                     </table>
                 </td>
                 <td class="header-right">
-                    <div class="right-row">
+                    <div class="right-row billing-branch">
                         <span class="bold">Billing Br. Name &amp; Address :</span>
                         {!! $billingBranch !!}
                     </div>

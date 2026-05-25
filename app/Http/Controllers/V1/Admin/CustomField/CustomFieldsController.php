@@ -22,6 +22,10 @@ class CustomFieldsController extends Controller
 
         if ($this->isTransportInvoiceTemplate($request->template_name)) {
             $this->ensureTransportInvoiceFields($request);
+            $this->removeEmptyDuplicateTransportInvoiceFields(
+                (int) $request->header('company'),
+                $this->getTransportInvoiceSlugs($request->template_name)
+            );
         }
 
         $limit = $request->has('limit') ? $request->limit : 5;
@@ -323,6 +327,38 @@ class CustomFieldsController extends Controller
     private function makeTransportInvoiceSlug(string $modelType, string $name): string
     {
         return 'CUSTOM_'.$modelType.'_'.\Illuminate\Support\Str::upper(\Illuminate\Support\Str::slug($name, '_'));
+    }
+
+    private function removeEmptyDuplicateTransportInvoiceFields(int $companyId, array $slugs): void
+    {
+        if (! $companyId || $slugs === []) {
+            return;
+        }
+
+        CustomField::where('company_id', $companyId)
+            ->whereIn('slug', $slugs)
+            ->withCount('customFieldValues')
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn ($field) => $field->model_type.'|'.$field->slug)
+            ->each(function ($fields) {
+                if ($fields->count() < 2) {
+                    return;
+                }
+
+                $keep = $fields
+                    ->sortBy([
+                        ['custom_field_values_count', 'desc'],
+                        ['id', 'asc'],
+                    ])
+                    ->first();
+
+                $fields
+                    ->reject(fn ($field) => $field->id === $keep->id)
+                    ->filter(fn ($field) => $field->custom_field_values_count === 0)
+                    ->each
+                    ->delete();
+            });
     }
 
     private function isTransportInvoiceTemplate(?string $templateName): bool

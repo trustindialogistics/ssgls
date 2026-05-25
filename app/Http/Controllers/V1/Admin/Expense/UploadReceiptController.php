@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ExpenseRequest;
 use App\Http\Requests\UploadExpenseReceiptRequest;
 use App\Models\Expense;
+use App\Support\OfficialDocumentArchive;
 use Illuminate\Http\JsonResponse;
 
 class UploadReceiptController extends Controller
@@ -27,9 +28,11 @@ class UploadReceiptController extends Controller
                 $expense->clearMediaCollection('receipts');
             }
 
-            $expense->addMediaFromBase64($data->data)
+            $media = $expense->addMediaFromBase64($data->data)
                 ->usingFileName($data->name)
                 ->toMediaCollection('receipts');
+
+            OfficialDocumentArchive::archiveExpenseReceipt($media->getPath(), $media->file_name);
         }
 
         return response()->json([

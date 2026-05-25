@@ -7,7 +7,7 @@ function replace_or_insert() {
 replace_or_insert "CONTAINERIZED" "true"
 
 if [ "$APP_NAME" != '' ]; then
-   replace_or_insert "APP_NAME" "$APP_NAME"
+   replace_or_insert "APP_NAME" "\"$APP_NAME\""
 fi
 if [ "$APP_ENV" != '' ]; then
    replace_or_insert "APP_ENV" "$APP_ENV"
@@ -78,4 +78,6 @@ fi
 if [ "$SESSION_DOMAIN" != '' ]; then
    replace_or_insert "SESSION_DOMAIN" "$SESSION_DOMAIN"
 fi
-
+if [ "$OFFICIAL_DOCUMENT_ARCHIVE_PATH" != '' ]; then
+   replace_or_insert "OFFICIAL_DOCUMENT_ARCHIVE_PATH" "$OFFICIAL_DOCUMENT_ARCHIVE_PATH"
+fi

@@ -241,6 +241,9 @@
     };
 
     $companyName = $invoice->company->name ?: 'S S Gujarat Logistics';
+    $companyAddressHasEmail = preg_match('/\bE-?mail\b/i', strip_tags((string) $company_address));
+    $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $company_address);
+    $displayCompanyAddress = preg_replace('/^\s*<p[^>]*>\s*<strong>\s*\(A Cost Effective Distribution\)\s*<\/strong>\s*<\/p>\s*/i', '', $displayCompanyAddress);
     $billingBranch = $invoiceField(['billing_branch_name_address', 'billing_branch_address', 'billing_branch']);
     $panNo = $invoiceField(['pan_no', 'pan']) ?: $customerField(['pan_no', 'pan']);
     $gstin = $invoice->customer->tax_id ?: $invoiceField(['gstin', 'gst_no']);
@@ -272,8 +275,10 @@
                             <div class="company-title">{{ $companyName }}</div>
                             <div class="company-subtitle">(A Cost Effective Distribution)</div>
                             <div class="company-address">
-                                {!! $company_address !!}<br>
-                                E-mail : {{ $invoiceField(['email']) ?: ($invoice->company->email ?? '') }}
+                                {!! $displayCompanyAddress !!}
+                                @if (! $companyAddressHasEmail)
+                                    <br>E-mail : {{ $invoiceField(['email']) ?: ($invoice->company->email ?? '') }}
+                                @endif
                             </div>
                         </td>
                         <td class="no-border mobile">
