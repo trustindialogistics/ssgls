@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\CompanySetting;
 use App\Models\Customer;
+use App\Models\Invoice;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,12 +36,33 @@ class PaymentRequest extends FormRequest
             'amount' => [
                 'required',
             ],
+            'tds_amount' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'deduction_amount' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'invoice_paid_status' => [
+                'nullable',
+                Rule::in([
+                    Invoice::STATUS_UNPAID,
+                    Invoice::STATUS_PARTIALLY_PAID,
+                    Invoice::STATUS_PAID,
+                ]),
+            ],
             'payment_number' => [
                 'required',
                 Rule::unique('payments')->where('company_id', $this->header('company')),
             ],
             'invoice_id' => [
                 'nullable',
+                Rule::exists('invoices', 'id')
+                    ->where('company_id', $this->header('company'))
+                    ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE),
             ],
             'payment_method_id' => [
                 'nullable',
@@ -81,7 +103,14 @@ class PaymentRequest extends FormRequest
         $exchange_rate = $company_currency != $current_currency ? $this->exchange_rate : 1;
         $currency = Customer::find($this->customer_id)->currency_id;
 
-        return collect($this->validated())
+        $validated = collect($this->validated());
+        $hasDeduction = ((int) $this->tds_amount > 0) || ((int) $this->deduction_amount > 0);
+
+        if (! $hasDeduction) {
+            $validated['invoice_paid_status'] = null;
+        }
+
+        return $validated
             ->merge([
                 'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),

@@ -16,10 +16,15 @@ class EstimatePdfController extends Controller
      */
     public function __invoke(Request $request, Estimate $estimate)
     {
+        $pdf = $estimate->getPDFData();
+
         if ($request->has('preview')) {
-            return $estimate->getPDFData();
+            return $pdf;
         }
 
-        return $estimate->getGeneratedPDFOrStream('estimate');
+        return response()->make($pdf->stream(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$estimate->estimate_number.'.pdf"',
+        ]);
     }
 }

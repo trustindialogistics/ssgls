@@ -22,7 +22,7 @@ class CompanyController extends Controller
      */
     public function getUser(Request $request)
     {
-        return new UserResource($request->user());
+        return new UserResource($request->user()->load('companies'));
     }
 
     /**
@@ -37,7 +37,7 @@ class CompanyController extends Controller
 
         $user->update($request->validated());
 
-        return new UserResource($user);
+        return new UserResource($user->load('companies'));
     }
 
     /**

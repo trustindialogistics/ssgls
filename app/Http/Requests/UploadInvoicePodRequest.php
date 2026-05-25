@@ -17,7 +17,7 @@ class UploadInvoicePodRequest extends FormRequest
         return [
             'pod' => [
                 'required',
-                new Base64Mime(['gif', 'jpg', 'jpeg', 'png']),
+                new Base64Mime(['gif', 'jpg', 'jpeg', 'png', 'webp', 'pdf']),
             ],
         ];
     }

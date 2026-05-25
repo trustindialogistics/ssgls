@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Facades\Hashids;
 use App\Jobs\GeneratePaymentPdfJob;
 use App\Mail\SendPaymentMail;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Services\SerialNumberFormatter;
 use App\Traits\GeneratesPdfTrait;
 use App\Traits\HasCustomFieldsTrait;
@@ -135,7 +137,7 @@ class Payment extends Model implements HasMedia
         $data['user'] = $this->customer->toArray();
         $data['company'] = Company::find($this->company_id);
         $data['body'] = $this->getEmailBody($data['body']);
-        $data['attach']['data'] = ($this->getEmailAttachmentSetting()) ? $this->getPDFData() : null;
+        $data['attach']['data'] = $this->getPDFData();
 
         return $data;
     }
@@ -164,7 +166,11 @@ class Payment extends Model implements HasMedia
 
         if ($request->invoice_id) {
             $invoice = Invoice::find($request->invoice_id);
-            $invoice->subtractInvoicePayment($request->amount);
+            self::subtractInvoiceSettlement(
+                $invoice,
+                self::getSettlementAmountFromRequest($request),
+                $data['invoice_paid_status'] ?? null
+            );
         }
 
         $payment = Payment::create($data);
@@ -192,6 +198,8 @@ class Payment extends Model implements HasMedia
             $payment->addCustomFields($customFields);
         }
 
+        $payment->syncDeductionExpense();
+
         $payment = Payment::with([
             'customer',
             'invoice',
@@ -205,21 +213,31 @@ class Payment extends Model implements HasMedia
     public function updatePayment($request)
     {
         $data = $request->getPaymentPayload();
+        $oldSettlementAmount = $this->getSettlementAmount();
+        $newSettlementAmount = self::getSettlementAmountFromRequest($request);
+        $newPaidStatus = $data['invoice_paid_status'] ?? null;
 
         if ($request->invoice_id && (! $this->invoice_id || $this->invoice_id !== $request->invoice_id)) {
             $invoice = Invoice::find($request->invoice_id);
-            $invoice->subtractInvoicePayment($request->amount);
+            self::subtractInvoiceSettlement($invoice, $newSettlementAmount, $newPaidStatus);
         }
 
         if ($this->invoice_id && (! $request->invoice_id || $this->invoice_id !== $request->invoice_id)) {
             $invoice = Invoice::find($this->invoice_id);
-            $invoice->addInvoicePayment($this->amount);
+            $invoice->addInvoicePayment($oldSettlementAmount);
         }
 
-        if ($this->invoice_id && $this->invoice_id === $request->invoice_id && $request->amount !== $this->amount) {
+        if (
+            $this->invoice_id &&
+            $this->invoice_id === $request->invoice_id &&
+            (
+                $newSettlementAmount !== $oldSettlementAmount ||
+                ($this->invoice_paid_status ?? null) !== $newPaidStatus
+            )
+        ) {
             $invoice = Invoice::find($this->invoice_id);
-            $invoice->addInvoicePayment($this->amount);
-            $invoice->subtractInvoicePayment($request->amount);
+            $invoice->addInvoicePayment($oldSettlementAmount);
+            self::subtractInvoiceSettlement($invoice, $newSettlementAmount, $newPaidStatus);
         }
 
         $serial = (new SerialNumberFormatter)
@@ -244,6 +262,8 @@ class Payment extends Model implements HasMedia
             $this->updateCustomFields($customFields);
         }
 
+        $this->refresh()->syncDeductionExpense();
+
         $payment = Payment::with([
             'customer',
             'invoice',
@@ -259,9 +279,15 @@ class Payment extends Model implements HasMedia
         foreach ($ids as $id) {
             $payment = Payment::find($id);
 
+            if (! $payment) {
+                continue;
+            }
+
+            $payment->deleteDeductionExpense();
+
             if ($payment->invoice_id != null) {
                 $invoice = Invoice::find($payment->invoice_id);
-                $invoice->due_amount = ((int) $invoice->due_amount + (int) $payment->amount);
+                $invoice->due_amount = ((int) $invoice->due_amount + $payment->getSettlementAmount());
 
                 if ($invoice->due_amount == $invoice->total) {
                     $invoice->paid_status = Invoice::STATUS_UNPAID;
@@ -277,6 +303,122 @@ class Payment extends Model implements HasMedia
         }
 
         return true;
+    }
+
+    public function getSettlementAmount(): int
+    {
+        return (int) $this->amount + (int) $this->tds_amount + (int) $this->deduction_amount;
+    }
+
+    protected static function getSettlementAmountFromRequest($request): int
+    {
+        return (int) $request->amount + (int) $request->tds_amount + (int) $request->deduction_amount;
+    }
+
+    protected static function subtractInvoiceSettlement(Invoice $invoice, int $amount, ?string $paidStatus = null): void
+    {
+        $invoice->subtractInvoicePayment($amount);
+
+        if ($paidStatus) {
+            self::applyInvoicePaidStatus($invoice, $paidStatus);
+        }
+    }
+
+    protected static function applyInvoicePaidStatus(Invoice $invoice, string $paidStatus): void
+    {
+        if ($paidStatus === Invoice::STATUS_PAID) {
+            $invoice->due_amount = 0;
+            $invoice->base_due_amount = 0;
+            $invoice->paid_status = Invoice::STATUS_PAID;
+            $invoice->status = Invoice::STATUS_COMPLETED;
+            $invoice->overdue = false;
+        } elseif ($paidStatus === Invoice::STATUS_UNPAID) {
+            $invoice->due_amount = $invoice->total;
+            $invoice->base_due_amount = $invoice->due_amount * $invoice->exchange_rate;
+            $invoice->paid_status = Invoice::STATUS_UNPAID;
+            $invoice->status = $invoice->getPreviousStatus();
+        } elseif ($paidStatus === Invoice::STATUS_PARTIALLY_PAID) {
+            $invoice->due_amount = max(0, $invoice->due_amount);
+            $invoice->base_due_amount = $invoice->due_amount * $invoice->exchange_rate;
+            $invoice->paid_status = Invoice::STATUS_PARTIALLY_PAID;
+            $invoice->status = $invoice->getPreviousStatus();
+        }
+
+        $invoice->save();
+    }
+
+    public function syncDeductionExpense(): void
+    {
+        if (! $this->invoice_id) {
+            $this->deleteDeductionExpense();
+
+            return;
+        }
+
+        $deductionAmount = (int) $this->tds_amount + (int) $this->deduction_amount;
+
+        if ($deductionAmount <= 0) {
+            $this->deleteDeductionExpense();
+
+            return;
+        }
+
+        $invoice = $this->invoice ?: Invoice::find($this->invoice_id);
+        $category = ExpenseCategory::firstOrCreate(
+            [
+                'company_id' => $this->company_id,
+                'name' => 'Payment Deductions',
+            ],
+            [
+                'description' => 'Auto-created expenses for TDS and customer deductions recorded during payment entry.',
+            ]
+        );
+
+        Expense::updateOrCreate(
+            [
+                'payment_id' => $this->id,
+                'auto_generated' => true,
+            ],
+            [
+                'expense_date' => $this->payment_date,
+                'expense_number' => 'AUTO-PAY-'.$this->payment_number,
+                'amount' => $deductionAmount,
+                'notes' => $this->getDeductionExpenseNotes($invoice),
+                'expense_category_id' => $category->id,
+                'company_id' => $this->company_id,
+                'customer_id' => $this->customer_id,
+                'creator_id' => $this->creator_id,
+                'exchange_rate' => $this->exchange_rate,
+                'base_amount' => $deductionAmount * $this->exchange_rate,
+                'currency_id' => $this->currency_id,
+                'payment_method_id' => $this->payment_method_id,
+                'invoice_id' => $this->invoice_id,
+            ]
+        );
+    }
+
+    public function deleteDeductionExpense(): void
+    {
+        Expense::where('payment_id', $this->id)
+            ->where('auto_generated', true)
+            ->delete();
+    }
+
+    protected function getDeductionExpenseNotes(?Invoice $invoice): string
+    {
+        $parts = [];
+
+        if ((int) $this->tds_amount > 0) {
+            $parts[] = 'TDS: '.($this->tds_amount / 100);
+        }
+
+        if ((int) $this->deduction_amount > 0) {
+            $parts[] = 'Deduction: '.($this->deduction_amount / 100);
+        }
+
+        $invoiceNumber = $invoice?->invoice_number ?: $this->invoice_id;
+
+        return 'Auto expense for payment '.$this->payment_number.' against invoice '.$invoiceNumber.'. '.implode(', ', $parts);
     }
 
     public function scopeWhereSearch($query, $search)
@@ -422,12 +564,6 @@ class Payment extends Model implements HasMedia
 
     public function getEmailAttachmentSetting()
     {
-        $paymentAsAttachment = CompanySetting::getSetting('payment_email_attachment', $this->company_id);
-
-        if ($paymentAsAttachment == 'NO') {
-            return false;
-        }
-
         return true;
     }
 

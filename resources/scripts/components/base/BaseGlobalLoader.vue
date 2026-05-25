@@ -34,7 +34,14 @@
         ><i></i><i></i> <i></i><i></i><i></i> <i></i><i></i><i></i> <i></i
         ><i></i><i></i> <i></i><i></i><i></i> <i></i><i></i><i></i>
       </div>
+      <img
+        v-if="companyLogo"
+        :src="companyLogo"
+        class="global-loader-logo"
+        alt="Company Logo"
+      />
       <MainLogo
+        v-else
         class="global-loader-logo text-primary-400"
         alt="InvoiceShelf Logo"
       />
@@ -43,7 +50,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useCompanyStore } from '@/scripts/admin/stores/company'
 import MainLogo from '@/scripts/components/icons/MainLogo.vue'
+
+const companyStore = useCompanyStore()
+const companyLogo = computed(() => companyStore.selectedCompany?.logo)
 
 const props = defineProps({
   showBgOverlay: {

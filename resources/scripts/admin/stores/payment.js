@@ -74,6 +74,12 @@ export const usePaymentStore = (useWindow = false) => {
               if (res3.data.data.invoice) {
                 this.currentPayment.maxPayableAmount = parseInt(
                   res3.data.data.invoice.due_amount
+                ) + parseInt(
+                  res3.data.data.amount || 0
+                ) + parseInt(
+                  res3.data.data.tds_amount || 0
+                ) + parseInt(
+                  res3.data.data.deduction_amount || 0
                 )
               }
             }

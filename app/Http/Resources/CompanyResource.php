@@ -24,10 +24,12 @@ class CompanyResource extends JsonResource
             'unique_hash' => $this->unique_hash,
             'owner_id' => $this->owner_id,
             'slug' => $this->slug,
-            'address' => $this->when($this->address()->exists(), function () {
+            'address' => $this->whenLoaded('address', function () {
                 return new AddressResource($this->address);
             }),
-            'roles' => RoleResource::collection($this->roles),
+            'roles' => $this->whenLoaded('roles', function () {
+                return RoleResource::collection($this->roles);
+            }),
         ];
     }
 }

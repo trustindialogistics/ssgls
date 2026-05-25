@@ -1,7 +1,9 @@
 <table width="100%" class="items-table" cellspacing="0" border="0">
     <tr class="item-table-heading-row">
         <th width="2%" class="pr-20 text-right item-table-heading">#</th>
-        <th width="40%" class="pl-0 text-left item-table-heading">@lang('pdf_items_label')</th>
+        <th width="30%" class="pl-0 text-left item-table-heading">@lang('pdf_items_label')</th>
+        <th width="13%" class="text-left item-table-heading">Truck Type</th>
+        <th width="12%" class="text-left item-table-heading">Weight</th>
         @foreach($customFields as $field)
             <th class="text-right item-table-heading">{{ $field->label }}</th>
         @endforeach
@@ -32,6 +34,12 @@
                 >
                     {!! nl2br(htmlspecialchars($item->description)) !!}
                 </span>
+            </td>
+            <td class="text-left item-cell" style="vertical-align: top;">
+                {{ $item->truck_type }}
+            </td>
+            <td class="text-left item-cell" style="vertical-align: top;">
+                {{ $item->weight }}
             </td>
             @foreach($customFields as $field)
                 <td class="text-right item-cell" style="vertical-align: top;">

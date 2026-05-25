@@ -71,6 +71,14 @@ class EstimatesRequest extends FormRequest
             'items.*.description' => [
                 'nullable',
             ],
+            'items.*.truck_type' => [
+                'nullable',
+                'max:255',
+            ],
+            'items.*.weight' => [
+                'nullable',
+                'max:255',
+            ],
             'items.*' => [
                 'required',
                 'max:255',

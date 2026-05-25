@@ -24,7 +24,9 @@
   </div>
   <table class="text-center item-table min-w-full">
     <colgroup>
-      <col style="width: 40%; min-width: 280px" />
+      <col style="width: 34%; min-width: 260px" />
+      <col v-if="isEstimateEntry" style="width: 12%; min-width: 120px" />
+      <col v-if="isEstimateEntry" style="width: 12%; min-width: 120px" />
       <col style="width: 10%; min-width: 120px" />
       <col style="width: 15%; min-width: 120px" />
       <col
@@ -56,6 +58,42 @@
           <span v-else class="pl-7">
             {{ isTransportEntryTemplate ? 'Consignment' : $t('items.item', 2) }}
           </span>
+        </th>
+        <th
+          v-if="isEstimateEntry"
+          class="
+            px-5
+            py-3
+            text-sm
+            not-italic
+            font-medium
+            leading-5
+            text-left text-gray-700
+            border-t border-b border-gray-200 border-solid
+          "
+        >
+          <BaseContentPlaceholders v-if="isLoading">
+            <BaseContentPlaceholdersText :lines="1" class="w-16 h-5" />
+          </BaseContentPlaceholders>
+          <span v-else>Truck Type</span>
+        </th>
+        <th
+          v-if="isEstimateEntry"
+          class="
+            px-5
+            py-3
+            text-sm
+            not-italic
+            font-medium
+            leading-5
+            text-left text-gray-700
+            border-t border-b border-gray-200 border-solid
+          "
+        >
+          <BaseContentPlaceholders v-if="isLoading">
+            <BaseContentPlaceholdersText :lines="1" class="w-16 h-5" />
+          </BaseContentPlaceholders>
+          <span v-else>Weight</span>
         </th>
         <th
           class="
@@ -238,6 +276,10 @@ const isLrReceiptTemplate = computed(() => {
 
 const isTransportEntryTemplate = computed(() => {
   return isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value
+})
+
+const isEstimateEntry = computed(() => {
+  return props.storeProp === 'newEstimate' && !isTransportEntryTemplate.value
 })
 
 </script>

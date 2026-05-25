@@ -78,8 +78,8 @@
         };
 
         $companyName = $invoice->company?->name ?? '';
-        $companyPan = 'NBKPS0084L';
-        $companyGstin = '24NBKPS0084L1ZZ';
+        $companyPan = 'BHLPS2943H';
+        $companyGstin = '24BHLPS2943H1Z3';
         $companyPhone = $invoice->company?->address?->phone;
         $customerGstin = $invoice->customer?->tax_id ?: $cust('gstin');
         $addressLines = function ($address): array {
@@ -129,6 +129,7 @@
 
         $firstItem = $invoice->items->first();
         $totalPackages = (string) $invoice->items->sum(fn ($i) => (int) $i->quantity);
+        $docketNumber = preg_replace('/^INV/i', 'DOC', $invoice->invoice_number);
 
         // Shared view variables come from Invoice::getPDFData(). Guard against null/false.
         $company_address = $company_address ?: '';
@@ -258,6 +259,14 @@
             text-align: center;
         }
 
+        .top-detail-spacer {
+            height: 37pt;
+        }
+
+        .delivery-at-cell {
+            line-height: 11px;
+        }
+
         .goods-fill {
             height: 37pt;
         }
@@ -345,7 +354,9 @@
                     </tr>
                 </table>
             </td>
-            <td class="cell" style="width: 38%;">
+            <td class="cell" style="width: 38%; padding: 0;">
+                <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
+                <div class="top-detail-spacer">&nbsp;</div>
                 <table>
                     <tr>
                         <td class="cell" style="width: 45%;">
@@ -354,7 +365,7 @@
                         </td>
                         <td class="cell" style="width: 55%;">
                             <div class="label">Docket No. :</div>
-                            <div class="value" style="font-weight: 800; font-size: 12px;">{{ $invoice->invoice_number }}</div>
+                            <div class="value" style="font-weight: 800; font-size: 12px;">{{ $docketNumber }}</div>
                         </td>
                     </tr>
                     <tr>
@@ -389,7 +400,6 @@
                         </td>
                     </tr>
                 </table>
-                <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
             </td>
         </tr>
 
@@ -423,7 +433,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell" rowspan="2">
+                        <td class="cell delivery-at-cell" rowspan="4">
                             <div class="label">Delivery At. :</div>
                             <div class="value">{{ $itm('delivery_at') }}</div>
                         </td>
@@ -443,7 +453,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell">&nbsp;</td>
                         <td class="cell">
                             <div class="label">Goods Value</div>
                         </td>
@@ -452,11 +461,10 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell goods-fill">&nbsp;</td>
-                        <td class="cell">
+                        <td class="cell goods-fill">
                             <div class="label">POD Required.</div>
                         </td>
-                        <td class="cell">
+                        <td class="cell goods-fill">
                             <div class="value">{{ $itm('pod_required') }}</div>
                         </td>
                     </tr>

@@ -38,7 +38,12 @@ class EstimatePdfController extends Controller
                 }
             }
 
-            return $estimate->getGeneratedPDFOrStream('estimate');
+            $pdf = $estimate->getPDFData();
+
+            return response()->make($pdf->stream(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$estimate->estimate_number.'.pdf"',
+            ]);
         }
 
         abort(403, 'Link Expired.');

@@ -48,7 +48,7 @@ class CustomersController extends Controller
 
         $customer = Customer::createCustomer($request);
 
-        return new CustomerResource($customer);
+        return new CustomerResource($customer->load(['billingAddress', 'shippingAddress', 'currency', 'fields.customField']));
     }
 
     /**
@@ -60,7 +60,7 @@ class CustomersController extends Controller
     {
         $this->authorize('view', $customer);
 
-        return new CustomerResource($customer);
+        return new CustomerResource($customer->load(['billingAddress', 'shippingAddress', 'currency', 'fields.customField']));
     }
 
     /**
@@ -79,7 +79,7 @@ class CustomersController extends Controller
             return respondJson('you_cannot_edit_currency', 'Cannot change currency once transactions created');
         }
 
-        return new CustomerResource($customer);
+        return new CustomerResource($customer->load(['billingAddress', 'shippingAddress', 'currency', 'fields.customField']));
     }
 
     /**

@@ -17,11 +17,6 @@
     @slot('subcopy')
         @component('mail::subcopy')
             {!! $data['body'] !!}
-            @if(!$data['attach']['data'])
-                @component('mail::button', ['url' => $data['url']])
-                    @lang('mail_view_estimate')
-                @endcomponent
-            @endif
         @endcomponent
     @endslot
 

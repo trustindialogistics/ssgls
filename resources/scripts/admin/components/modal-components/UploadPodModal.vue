@@ -25,10 +25,10 @@
       />
 
       <div class="px-8 py-6 sm:p-6">
-        <BaseInputGroup label="POD Image" variant="vertical" required>
+        <BaseInputGroup label="POD File" variant="vertical" required>
           <BaseFileUploader
             v-model="selectedFiles"
-            accept="image/*"
+            accept="image/*,application/pdf"
             base64
             input-field-name="pod"
             @change="onFileInputChange"

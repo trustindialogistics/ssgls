@@ -1,9 +1,11 @@
 <template>
   <tr class="box-border bg-white border border-gray-200 border-solid rounded-b">
-    <td colspan="5" class="p-0 text-left align-top">
+    <td :colspan="itemTableColumnCount" class="p-0 text-left align-top">
       <table class="w-full">
         <colgroup>
-          <col style="width: 40%; min-width: 280px" />
+          <col style="width: 34%; min-width: 260px" />
+          <col v-if="isEstimateEntry" style="width: 12%; min-width: 120px" />
+          <col v-if="isEstimateEntry" style="width: 12%; min-width: 120px" />
           <col style="width: 10%; min-width: 120px" />
           <col style="width: 15%; min-width: 120px" />
           <col
@@ -45,6 +47,24 @@
                   @select="onSelectItem"
                 />
               </div>
+            </td>
+            <td v-if="isEstimateEntry" class="px-5 py-4 text-left align-top">
+              <BaseInput
+                v-model="truckType"
+                :content-loading="loading"
+                small
+                placeholder="Truck Type"
+                @change="syncItemToStore()"
+              />
+            </td>
+            <td v-if="isEstimateEntry" class="px-5 py-4 text-left align-top">
+              <BaseInput
+                v-model="weight"
+                :content-loading="loading"
+                small
+                placeholder="Weight"
+                @change="syncItemToStore()"
+              />
             </td>
             <td class="px-5 py-4 text-right align-top">
               <BaseInput
@@ -185,7 +205,7 @@
               class="px-5 pb-4 text-left align-top"
             />
             <td
-              :colspan="isTransportEntryTemplate ? 5 : 4"
+              :colspan="itemDetailColspan"
               class="px-5 pb-4 text-left align-top"
             >
               <div
@@ -239,7 +259,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Guid from 'guid'
@@ -315,7 +335,21 @@ const isLrReceiptTemplate = computed(
 const isTransportEntryTemplate = computed(
   () => isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value
 )
-const lastMirroredPkg = ref(null)
+const isEstimateEntry = computed(
+  () => props.storeProp === 'newEstimate' && !isTransportEntryTemplate.value
+)
+const itemTableColumnCount = computed(() => {
+  let count = isEstimateEntry.value ? 7 : 5
+
+  if (props.store[props.storeProp].discount_per_item === 'YES') {
+    count += 1
+  }
+
+  return count
+})
+const itemDetailColspan = computed(() => {
+  return isTransportEntryTemplate.value ? 5 : itemTableColumnCount.value - 1
+})
 
 let route = useRoute()
 const { t } = useI18n()
@@ -335,6 +369,24 @@ const manualItemName = computed({
   },
   set: (newValue) => {
     updateItemAttribute('name', newValue)
+  },
+})
+
+const truckType = computed({
+  get: () => {
+    return props.itemData.truck_type
+  },
+  set: (newValue) => {
+    updateItemAttribute('truck_type', newValue)
+  },
+})
+
+const weight = computed({
+  get: () => {
+    return props.itemData.weight
+  },
+  set: (newValue) => {
+    updateItemAttribute('weight', newValue)
   },
 })
 
@@ -491,7 +543,6 @@ watch(
 watch(
   () => itemCustomFields.value.map((field) => field.value),
   () => {
-    syncChargedWeightFromPkg()
     syncTransportAmountToStore()
   },
   { deep: true }
@@ -571,34 +622,6 @@ function getOfficeFieldNumber(label) {
 
 function getOfficeField(label) {
   return itemCustomFields.value.find((_field) => _field.label === label)
-}
-
-function syncChargedWeightFromPkg() {
-  if (!isOfficeInvoiceTemplate.value) {
-    return
-  }
-
-  const pkgField = getOfficeField('Pkg')
-  const chargedWeightField = getOfficeField('Charged Weight Kgs')
-
-  if (!pkgField || !chargedWeightField) {
-    return
-  }
-
-  const pkgValue = pkgField.value
-  const chargedWeightValue = chargedWeightField.value
-
-  if (
-    chargedWeightValue !== '' &&
-    chargedWeightValue !== null &&
-    chargedWeightValue !== undefined &&
-    chargedWeightValue !== lastMirroredPkg.value
-  ) {
-    return
-  }
-
-  chargedWeightField.value = pkgValue
-  lastMirroredPkg.value = pkgValue
 }
 
 function syncTransportAmountToStore() {
@@ -749,7 +772,6 @@ async function loadItemCustomFields() {
     fields.sort((firstField, secondField) => firstField.order - secondField.order)
   )
 
-  syncChargedWeightFromPkg()
   syncTransportAmountToStore()
 }
 </script>

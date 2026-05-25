@@ -7,7 +7,6 @@ import { useRoute } from 'vue-router'
 import { useCompanyStore } from './company'
 import { useCustomerStore } from './customer'
 import { useNotificationStore } from '@/scripts/stores/notification'
-import { useItemStore } from './item'
 import { useTaxTypeStore } from './tax-type'
 import { handleError } from '@/scripts/helpers/error-handling'
 import estimateStub from '../stub/estimate'
@@ -558,7 +557,6 @@ export const useEstimateStore = (useWindow = false) => {
       async fetchEstimateInitialSettings(isEdit) {
         const companyStore = useCompanyStore()
         const customerStore = useCustomerStore()
-        const itemStore = useItemStore()
         const taxTypeStore = useTaxTypeStore()
         const route = useRoute()
         const userStore = useUserStore()
@@ -588,45 +586,34 @@ export const useEstimateStore = (useWindow = false) => {
           this.newEstimate.discount_per_item =
             companyStore.selectedCompanySettings.discount_per_item
           this.newEstimate.estimate_date = moment().format('YYYY-MM-DD')
-          if (
-            companyStore.selectedCompanySettings
-              .estimate_set_expiry_date_automatically === 'YES'
-          ) {
-            this.newEstimate.expiry_date = moment()
-              .add(
-                companyStore.selectedCompanySettings.estimate_expiry_date_days,
-                'days',
-              )
-              .format('YYYY-MM-DD')
-          }
+          this.newEstimate.expiry_date = ''
         } else {
           editActions = [this.fetchEstimate(route.params.id)]
         }
 
         Promise.all([
-          itemStore.fetchItems({
-            filter: {},
-            orderByField: '',
-            orderBy: '',
-          }),
           this.resetSelectedNote(),
           this.fetchEstimateTemplates(),
           this.getNextNumber(),
           taxTypeStore.fetchTaxTypes({ limit: 'all' }),
           ...editActions,
         ])
-          .then(async ([res1, res2, res3, res4, res5, res6, res7]) => {
+          .then(async ([res1, res2, res3]) => {
             // Create
             if (!isEdit) {
-              if (res4.data) {
-                this.newEstimate.estimate_number = res4.data.nextNumber
+              if (res2.data) {
+                this.newEstimate.estimate_number = res2.data.nextNumber
               }
 
-              this.setTemplate(this.templates[0].name)
-              this.newEstimate.template_name = userStore.currentUserSettings
-                .default_estimate_template
-                ? userStore.currentUserSettings.default_estimate_template
-                : this.newEstimate.template_name
+              const templateNames = this.templates.map((template) => template.name)
+              const defaultTemplate =
+                userStore.currentUserSettings.default_estimate_template
+
+              this.setTemplate(
+                templateNames.includes(defaultTemplate)
+                  ? defaultTemplate
+                  : this.templates[0]?.name || 'estimate1'
+              )
             }
 
             if (isEdit) {

@@ -67,6 +67,7 @@ class DashboardController extends Controller
                     [$start->format('Y-m-d'), $end->format('Y-m-d')]
                 )
                     ->whereCompany()
+                    ->whereRegularInvoice()
                     ->sum('base_total')
             );
             array_push(
@@ -76,6 +77,12 @@ class DashboardController extends Controller
                     [$start->format('Y-m-d'), $end->format('Y-m-d')]
                 )
                     ->whereCompany()
+                    ->where(function ($query) {
+                        $query->whereNull('invoice_id')
+                            ->orWhereHas('invoice', function ($query) {
+                                $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+                            });
+                    })
                     ->sum('base_amount')
             );
             array_push(
@@ -106,6 +113,7 @@ class DashboardController extends Controller
             [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
         )
             ->whereCompany()
+            ->whereRegularInvoice()
             ->sum('base_total');
 
         $total_receipts = Payment::whereBetween(
@@ -113,6 +121,12 @@ class DashboardController extends Controller
             [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
         )
             ->whereCompany()
+            ->where(function ($query) {
+                $query->whereNull('invoice_id')
+                    ->orWhereHas('invoice', function ($query) {
+                        $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+                    });
+            })
             ->sum('base_amount');
 
         $total_expenses = Expense::whereBetween(
@@ -134,13 +148,16 @@ class DashboardController extends Controller
 
         $total_customer_count = Customer::whereCompany()->count();
         $total_invoice_count = Invoice::whereCompany()
+            ->whereRegularInvoice()
             ->count();
         $total_estimate_count = Estimate::whereCompany()->count();
         $total_amount_due = Invoice::whereCompany()
+            ->whereRegularInvoice()
             ->sum('base_due_amount');
 
         $recent_due_invoices = Invoice::with('customer')
             ->whereCompany()
+            ->whereRegularInvoice()
             ->where('base_due_amount', '>', 0)
             ->take(5)
             ->latest()

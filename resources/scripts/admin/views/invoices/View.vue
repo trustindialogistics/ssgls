@@ -41,6 +41,9 @@ const searchData = reactive({
 
 const pageTitle = computed(() => invoiceData.value.invoice_number)
 const isLrReceiptRoute = computed(() => route.name?.startsWith('lr-receipts'))
+const invoiceResourcePath = computed(() =>
+  isLrReceiptRoute.value ? '/admin/lr-receipts' : '/admin/invoices'
+)
 const sendButtonLabel = computed(() =>
   isLrReceiptRoute.value ? 'Send LR Receipt' : t('invoices.send_invoice')
 )
@@ -142,7 +145,7 @@ async function loadInvoices(pageNumber, fromScrollListener = false) {
   isLoading.value = true
   let response = await invoiceStore.fetchInvoices({
     page: pageNumber,
-    ...(isLrReceiptRoute.value ? { template_name: 'lr_receipt' } : {}),
+    template_name: isLrReceiptRoute.value ? 'lr_receipt' : 'office_invoice',
     ...params,
   })
   isLoading.value = false
@@ -417,7 +420,7 @@ onSearched = debounce(onSearched, 500)
           <router-link
             v-if="invoice"
             :id="'invoice-' + invoice.id"
-            :to="`/admin/invoices/${invoice.id}/view`"
+            :to="`${invoiceResourcePath}/${invoice.id}/view`"
             :class="[
               'flex justify-between side-invoice p-4 cursor-pointer hover:bg-gray-100 items-center border-l-4 border-l-transparent',
               {

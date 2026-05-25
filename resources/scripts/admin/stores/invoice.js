@@ -13,8 +13,9 @@ import { useNotificationStore } from '@/scripts/stores/notification'
 import { useCustomerStore } from './customer'
 import { useTaxTypeStore } from './tax-type'
 import { useCompanyStore } from './company'
-import { useItemStore } from './item'
 import { useNotesStore } from './note'
+
+const formatLrDocketNumber = (number) => String(number || '').replace(/^INV/i, 'DOC')
 
 export const useInvoiceStore = (useWindow = false) => {
   const defineStoreFunc = useWindow ? window.pinia.defineStore : defineStore
@@ -394,11 +395,20 @@ export const useInvoiceStore = (useWindow = false) => {
 
       getNextNumber(params, setState = false) {
         return new Promise((resolve, reject) => {
+          const route = useRoute()
           http
             .get(`/api/v1/next-number?key=invoice`, { params })
             .then((response) => {
               if (setState) {
-                this.newInvoice.invoice_number = response.data.nextNumber
+                const isLrReceipt =
+                  route.name === 'lr-receipts.create' ||
+                  route.name === 'lr-receipts.edit' ||
+                  route.path.includes('/lr-receipts') ||
+                  this.newInvoice.template_name === 'lr_receipt'
+
+                this.newInvoice.invoice_number = isLrReceipt
+                  ? formatLrDocketNumber(response.data.nextNumber)
+                  : response.data.nextNumber
               }
               resolve(response)
             })
@@ -520,7 +530,6 @@ export const useInvoiceStore = (useWindow = false) => {
       async fetchInvoiceInitialSettings(isEdit) {
         const companyStore = useCompanyStore()
         const customerStore = useCustomerStore()
-        const itemStore = useItemStore()
         const taxTypeStore = useTaxTypeStore()
         const route = useRoute()
         const notesStore = useNotesStore()
@@ -564,48 +573,26 @@ export const useInvoiceStore = (useWindow = false) => {
           }
 
           this.newInvoice.invoice_date = moment().format(dateFormat)
-          if (
-            companyStore.selectedCompanySettings
-              .invoice_set_due_date_automatically === 'YES'
-          ) {
-            this.newInvoice.due_date = moment()
-              .add(
-                companyStore.selectedCompanySettings.invoice_due_date_days,
-                'days',
-              )
-              .format('YYYY-MM-DD')
-          }
+          this.newInvoice.due_date = ''
         } else {
           editActions = [this.fetchInvoice(route.params.id)]
         }
 
         const loadActions = [
           this.resetSelectedNote(),
-          this.getNextNumber(),
           ...editActions,
         ]
 
         if (!isLrReceipt) {
           loadActions.push(
-            itemStore.fetchItems({
-              filter: {},
-              orderByField: '',
-              orderBy: '',
-            }),
             this.fetchInvoiceTemplates(),
             taxTypeStore.fetchTaxTypes({ limit: 'all' })
           )
         }
 
         return Promise.all(loadActions)
-          .then(async ([res1, res2, res3, res4, res5, res6]) => {
+          .then(async () => {
             if (!isEdit) {
-              const nextNumberResponse = res2
-
-              if (nextNumberResponse?.data) {
-                this.newInvoice.invoice_number = nextNumberResponse.data.nextNumber
-              }
-
               if (isLrReceipt) {
                 this.setTemplate('lr_receipt')
               } else {

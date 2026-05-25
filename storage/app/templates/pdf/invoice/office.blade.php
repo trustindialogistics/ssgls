@@ -29,8 +29,8 @@
         };
 
         $companyName = $invoice->company?->name ?? '';
-        $companyPan = $invoice->company?->vat_id ?? '';
-        $companyGstin = $invoice->company?->tax_id ?? '';
+        $companyPan = 'BHLPS2943H';
+        $companyGstin = '24BHLPS2943H1Z3';
         $customerGstin = $invoice->customer?->tax_id ?: $cust('gstin');
         $companyPhone = $invoice->company?->address?->phone;
 

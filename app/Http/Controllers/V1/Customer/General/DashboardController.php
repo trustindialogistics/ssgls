@@ -22,20 +22,28 @@ class DashboardController extends Controller
         $user = Auth::guard('customer')->user();
 
         $amountDue = Invoice::whereCustomer($user->id)
+            ->whereRegularInvoice()
             ->where('status', '<>', 'DRAFT')
             ->sum('due_amount');
         $invoiceCount = Invoice::whereCustomer($user->id)
+            ->whereRegularInvoice()
             ->where('status', '<>', 'DRAFT')
             ->count();
         $estimatesCount = Estimate::whereCustomer($user->id)
             ->where('status', '<>', 'DRAFT')
             ->count();
         $paymentCount = Payment::whereCustomer($user->id)
+            ->where(function ($query) {
+                $query->whereNull('invoice_id')
+                    ->orWhereHas('invoice', function ($query) {
+                        $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+                    });
+            })
             ->count();
 
         return response()->json([
             'due_amount' => $amountDue,
-            'recentInvoices' => Invoice::whereCustomer($user->id)->where('status', '<>', 'DRAFT')->take(5)->latest()->get(),
+            'recentInvoices' => Invoice::whereCustomer($user->id)->whereRegularInvoice()->where('status', '<>', 'DRAFT')->take(5)->latest()->get(),
             'recentEstimates' => Estimate::whereCustomer($user->id)->where('status', '<>', 'DRAFT')->take(5)->latest()->get(),
             'invoice_count' => $invoiceCount,
             'estimate_count' => $estimatesCount,

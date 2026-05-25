@@ -12,6 +12,8 @@ class CompanySetting extends Model
 
     protected $fillable = ['company_id', 'option', 'value'];
 
+    protected static array $settingsCache = [];
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -37,13 +39,19 @@ class CompanySetting extends Model
                 ]
             );
         }
+
+        unset(static::$settingsCache[$company_id]);
     }
 
     public static function getAllSettings($company_id)
     {
-        return static::whereCompany($company_id)->get()->mapWithKeys(function ($item) {
+        $settings = static::whereCompany($company_id)->get()->mapWithKeys(function ($item) {
             return [$item['option'] => $item['value']];
         });
+
+        static::$settingsCache[$company_id] = $settings->all();
+
+        return $settings;
     }
 
     public static function getSettings($settings, $company_id)
@@ -56,12 +64,20 @@ class CompanySetting extends Model
 
     public static function getSetting($key, $company_id)
     {
+        if (array_key_exists($key, static::$settingsCache[$company_id] ?? [])) {
+            return static::$settingsCache[$company_id][$key];
+        }
+
         $setting = static::whereOption($key)->whereCompany($company_id)->first();
 
         if ($setting) {
+            static::$settingsCache[$company_id][$key] = $setting->value;
+
             return $setting->value;
-        } else {
-            return null;
         }
+
+        static::$settingsCache[$company_id][$key] = null;
+
+        return null;
     }
 }

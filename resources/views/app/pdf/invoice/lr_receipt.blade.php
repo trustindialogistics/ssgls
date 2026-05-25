@@ -243,8 +243,8 @@
         .copy-label-box {
             font-size: 18px;
             font-weight: bold;
-            height: 48px;
-            line-height: 48px;
+            height: 44px;
+            line-height: 44px;
             text-align: center;
         }
 
@@ -404,8 +404,8 @@
     $companyPhone = $invoice->company?->address?->phone;
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
-    $panNo = 'NBKPS0084L';
-    $gstin = '24NBKPS0084L1ZZ';
+    $panNo = 'BHLPS2943H';
+    $gstin = '24BHLPS2943H1Z3';
 
     $basicFreight = $itemField(['basic_freight']);
     $localCollection = $itemField(['local_collection']);
@@ -432,6 +432,7 @@
     $consignorName = $invoiceField(['consignor']);
     $consignorPhone = $invoiceField(['consignor_phone_no']);
     $consignorGstin = $invoiceField(['consignor_gst_no']);
+    $docketNumber = preg_replace('/^INV/i', 'DOC', $invoice->invoice_number);
 @endphp
 
     <div class="wrapper">
@@ -481,17 +482,11 @@
                     </table>
                 </td>
                 <td class="header-right">
-                    <table class="copy-table">
-                        <tr><td>ORIGINAL WHITE</td><td>: CONSIGNEE COPY</td></tr>
-                        <tr><td>DUPLICATE GREEN</td><td>: DRIVER COPY</td></tr>
-                        <tr><td>TRIPALICATE PINK</td><td>: CONSIGNOR COPY</td></tr>
-                        <tr><td>YELLOW</td><td>: H. O. COPY</td></tr>
-                        <tr><td>DUPLICATE WHITE</td><td>: FILE COPY</td></tr>
-                    </table>
+                    <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
                     <table class="top-detail-table">
                         <tr>
                             <td width="36%"><span class="label">Date :</span> {{ $invoice->formattedInvoiceDate }}</td>
-                            <td><span class="label">Docket No.:</span> <span class="docket-no">{{ $invoice->invoice_number }}</span></td>
+                            <td><span class="label">Docket No.:</span> <span class="docket-no">{{ $docketNumber }}</span></td>
                         </tr>
                         <tr>
                             <td width="36%"><span class="label">Time :</span> {{ $invoiceField(['time']) }}</td>
@@ -504,7 +499,13 @@
                         <tr><td colspan="2"><span class="label">Truck No.:</span> {{ $invoiceField(['truck_no']) }}</td></tr>
                         <tr><td colspan="2" class="tax-line"><span class="label">PAN No.:</span> {{ $panNo }}<br><span class="label">GSTIN :</span> {{ $gstin }}</td></tr>
                     </table>
-                    <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
+                    <table class="copy-table">
+                        <tr><td>ORIGINAL WHITE</td><td>: CONSIGNEE COPY</td></tr>
+                        <tr><td>DUPLICATE GREEN</td><td>: DRIVER COPY</td></tr>
+                        <tr><td>TRIPALICATE PINK</td><td>: CONSIGNOR COPY</td></tr>
+                        <tr><td>YELLOW</td><td>: H. O. COPY</td></tr>
+                        <tr><td>DUPLICATE WHITE</td><td>: FILE COPY</td></tr>
+                    </table>
                 </td>
             </tr>
         </table>
@@ -530,13 +531,20 @@
                             </td>
                         </tr>
                         <tr>
-                            <td rowspan="2"><span class="label">Delivery At.:</span><br>{{ $itemField(['delivery_at']) }}</td>
-                            <td><span class="label">Invoice No. :</span><br>{{ $itemField(['invoice_no']) }}</td>
-                            <td><span class="label">Goods Value</span><br>{{ $itemField(['goods_value']) }}</td>
+                            <td rowspan="4"><span class="label">Delivery At.:</span><br>{{ $itemField(['delivery_at']) }}</td>
+                            <td><span class="label">Charged Weight</span></td>
+                            <td>{{ $itemField(['charged_weight']) }}</td>
                         </tr>
                         <tr>
-                            <td class="goods-fill">&nbsp;</td>
-                            <td><span class="label">POD Required.</span></td>
+                            <td><span class="label">Invoice No. :</span></td>
+                            <td>{{ $itemField(['invoice_no']) }}</td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">Goods Value</span></td>
+                            <td>{{ $itemField(['goods_value']) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="goods-fill"><span class="label">POD Required.</span></td>
                             <td>{{ $itemField(['pod_required']) }}</td>
                         </tr>
                         <tr>

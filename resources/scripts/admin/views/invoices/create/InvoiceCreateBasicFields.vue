@@ -6,12 +6,12 @@
       :content-loading="isLoading"
       type="invoice"
       :label="isLrReceiptTemplate ? 'Consignee' : ''"
-      :class="isLrReceiptTemplate ? 'col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
+      :class="isLrReceiptTemplate ? 'order-2 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
     />
 
     <div
       v-if="isLrReceiptTemplate"
-      class="col-span-12 lg:col-span-4 pr-0"
+      class="order-1 col-span-12 lg:col-span-4 pr-0"
     >
       <BaseContentPlaceholders v-if="isLoading">
         <BaseContentPlaceholdersBox
@@ -153,7 +153,7 @@
       </div>
     </div>
 
-    <BaseInputGrid :class="isLrReceiptTemplate ? 'col-span-12 lg:col-span-4' : 'col-span-12 lg:col-span-7'">
+    <BaseInputGrid :class="isLrReceiptTemplate ? 'order-3 col-span-12 lg:col-span-4' : 'col-span-12 lg:col-span-7'">
       <BaseInputGroup
         :label="isLrReceiptTemplate ? 'Date' : $t('invoices.invoice_date')"
         :content-loading="isLoading"
@@ -171,7 +171,6 @@
       </BaseInputGroup>
 
       <BaseInputGroup
-        v-if="!isLrReceiptTemplate"
         :label="$t('invoices.due_date')"
         :content-loading="isLoading"
       >

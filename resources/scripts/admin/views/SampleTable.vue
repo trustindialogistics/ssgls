@@ -58,7 +58,7 @@
               class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
               aria-hidden="true"
             />
-            New Estimate
+            New Quotation
           </base-dropdown-item>
 
           <base-dropdown-item>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="grid grid-cols-1 gap-6 mt-10 xl:grid-cols-2">
-      <!-- Due Invoices -->
+      <!-- Due Invoices/LR -->
       <div
         v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
         class="due-invoices"
@@ -27,7 +27,7 @@
         >
           <template #cell-user="{ row }">
             <router-link
-              :to="{ path: `invoices/${row.data.id}/view` }"
+              :to="{ path: getDueInvoicePath(row.data) }"
               class="font-medium text-primary-500"
             >
               {{ row.data.customer.name }}
@@ -173,6 +173,12 @@ function hasAtleastOneInvoiceAbility() {
     abilities.VIEW_INVOICE,
     abilities.SEND_INVOICE,
   ])
+}
+
+function getDueInvoicePath(invoice) {
+  return invoice.template_name === 'lr_receipt'
+    ? `lr-receipts/${invoice.id}/view`
+    : `invoices/${invoice.id}/view`
 }
 
 function hasAtleastOneEstimateAbility() {

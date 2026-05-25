@@ -40,7 +40,12 @@
       </template>
     </BasePageHeader>
 
-    <BaseFilterWrapper :show="showFilters" class="mt-3" @clear="clearFilter">
+    <BaseFilterWrapper
+      v-if="showFilters"
+      :show="showFilters"
+      class="mt-3"
+      @clear="clearFilter"
+    >
       <BaseInputGroup :label="$t('payments.customer')">
         <BaseCustomerSelectInput
           v-model="filters.customer_id"
@@ -289,8 +294,6 @@ onUnmounted(() => {
     paymentStore.selectAllPayments()
   }
 })
-
-paymentStore.fetchPaymentModes({ limit: 'all' })
 
 async function searchPayment(search) {
   let res = await paymentStore.fetchPaymentModes({ search })

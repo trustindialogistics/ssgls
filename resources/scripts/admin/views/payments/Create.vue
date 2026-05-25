@@ -154,6 +154,44 @@
           </BaseInputGroup>
 
           <BaseInputGroup
+            label="TDS Amount"
+            :content-loading="isLoadingContent"
+          >
+            <BaseMoney
+              v-model="tdsAmount"
+              :currency="paymentStore.currentPayment.currency"
+              :content-loading="isLoadingContent"
+            />
+          </BaseInputGroup>
+
+          <BaseInputGroup
+            label="Deduction Amount"
+            :content-loading="isLoadingContent"
+          >
+            <BaseMoney
+              v-model="deductionAmount"
+              :currency="paymentStore.currentPayment.currency"
+              :content-loading="isLoadingContent"
+            />
+          </BaseInputGroup>
+
+          <BaseInputGroup
+            label="Invoice Paid Status"
+            :content-loading="isLoadingContent"
+          >
+            <BaseMultiselect
+              v-model="paymentStore.currentPayment.invoice_paid_status"
+              :content-loading="isLoadingContent"
+              :options="invoicePaidStatusOptions"
+              label="label"
+              value-prop="value"
+              track-by="value"
+              :disabled="!hasInvoiceDeduction"
+              placeholder="Select status"
+            />
+          </BaseInputGroup>
+
+          <BaseInputGroup
             :content-loading="isLoadingContent"
             :label="$t('payments.payment_mode')"
           >
@@ -258,7 +296,7 @@ import {
   reactive,
   computed,
   inject,
-  watchEffect,
+  watch,
   onBeforeUnmount,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -305,6 +343,7 @@ let isSaving = ref(false)
 let isLoadingInvoices = ref(false)
 let invoiceList = ref([])
 const selectedInvoice = ref(null)
+const lastLoadedCustomerId = ref(null)
 
 const paymentValidationScope = 'newEstimate'
 
@@ -322,6 +361,33 @@ const amount = computed({
     paymentStore.currentPayment.amount = Math.round(value * 100)
   },
 })
+
+const tdsAmount = computed({
+  get: () => (paymentStore.currentPayment.tds_amount || 0) / 100,
+  set: (value) => {
+    paymentStore.currentPayment.tds_amount = Math.round((value || 0) * 100)
+  },
+})
+
+const deductionAmount = computed({
+  get: () => (paymentStore.currentPayment.deduction_amount || 0) / 100,
+  set: (value) => {
+    paymentStore.currentPayment.deduction_amount = Math.round((value || 0) * 100)
+  },
+})
+
+const hasInvoiceDeduction = computed(() => {
+  return (
+    (paymentStore.currentPayment.tds_amount || 0) > 0 ||
+    (paymentStore.currentPayment.deduction_amount || 0) > 0
+  )
+})
+
+const invoicePaidStatusOptions = computed(() => [
+  { label: t('invoices.unpaid'), value: 'UNPAID' },
+  { label: t('invoices.partially_paid'), value: 'PARTIALLY_PAID' },
+  { label: t('invoices.paid'), value: 'PAID' },
+])
 
 const isLoadingContent = computed(() => paymentStore.isFetchingInitialData)
 
@@ -368,16 +434,6 @@ const v$ = useVuelidate(rules, paymentStore, {
   $scope: paymentValidationScope,
 })
 
-watchEffect(() => {
-  // fetch customer and its invoices
-  paymentStore.currentPayment.customer_id
-    ? onCustomerChange(paymentStore.currentPayment.customer_id)
-    : ''
-  if (route.query.customer) {
-    paymentStore.currentPayment.customer_id = route.query.customer
-  }
-})
-
 // Reset State on Create
 paymentStore.resetCurrentPayment()
 
@@ -390,6 +446,27 @@ paymentStore.fetchPaymentInitialData(isEdit.value)
 if (route.params.id && !isEdit.value) {
   setInvoiceFromUrl()
 }
+
+watch(
+  () => paymentStore.currentPayment.customer_id,
+  (customerId) => {
+    if (customerId) {
+      onCustomerChange(customerId)
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  hasInvoiceDeduction,
+  (hasDeduction) => {
+    if (!hasDeduction) {
+      paymentStore.currentPayment.invoice_paid_status = ''
+    } else if (!paymentStore.currentPayment.invoice_paid_status) {
+      paymentStore.currentPayment.invoice_paid_status = 'PAID'
+    }
+  }
+)
 
 async function addPaymentMode() {
   modalStore.openModal({
@@ -404,6 +481,11 @@ function onSelectNote(data) {
 
 async function setInvoiceFromUrl() {
   let res = await invoiceStore.fetchInvoice(route?.params?.id)
+
+  if (res.data.data.template_name !== 'office_invoice') {
+    router.push('/admin/payments/create')
+    return
+  }
 
   paymentStore.currentPayment.customer_id = res.data.data.customer.id
   paymentStore.currentPayment.invoice_id = res.data.data.id
@@ -421,9 +503,16 @@ async function onSelectInvoice(id) {
 
 function onCustomerChange(customer_id) {
   if (customer_id) {
+    if (lastLoadedCustomerId.value === customer_id && invoiceList.value.length) {
+      return
+    }
+
+    lastLoadedCustomerId.value = customer_id
+
     let data = {
       customer_id: customer_id,
       status: 'DUE',
+      template_name: 'office_invoice',
       limit: 'all',
     }
 
@@ -458,7 +547,9 @@ function onCustomerChange(customer_id) {
 
           paymentStore.currentPayment.maxPayableAmount =
             selectedInvoice.value.due_amount +
-            paymentStore.currentPayment.amount
+            paymentStore.currentPayment.amount +
+            (paymentStore.currentPayment.tds_amount || 0) +
+            (paymentStore.currentPayment.deduction_amount || 0)
 
           if (amount.value === 0) {
             amount.value = selectedInvoice.value.due_amount / 100
@@ -477,6 +568,7 @@ function onCustomerChange(customer_id) {
         isLoadingInvoices.value = false
       })
       .catch((error) => {
+        lastLoadedCustomerId.value = null
         isLoadingInvoices.value = false
         console.error(error, 'error')
       })
@@ -526,6 +618,7 @@ function selectNewCustomer(id) {
   paymentStore.currentPayment.invoice_id = selectedInvoice.value = null
   paymentStore.currentPayment.amount = 0
   invoiceList.value = []
+  lastLoadedCustomerId.value = null
   paymentStore.getNextNumber(params, true)
 }
 </script>

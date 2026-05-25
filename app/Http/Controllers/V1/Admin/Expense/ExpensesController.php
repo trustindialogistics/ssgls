@@ -23,7 +23,7 @@ class ExpensesController extends Controller
 
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $expenses = Expense::with('category', 'creator', 'fields')
+        $expenses = Expense::with(['category', 'creator', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media'])
             ->whereCompany()
             ->leftJoin('customers', 'customers.id', '=', 'expenses.customer_id')
             ->join('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')
@@ -48,7 +48,7 @@ class ExpensesController extends Controller
 
         $expense = Expense::createExpense($request);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load(['category', 'creator', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media']));
     }
 
     /**
@@ -60,7 +60,7 @@ class ExpensesController extends Controller
     {
         $this->authorize('view', $expense);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load(['category', 'creator', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media']));
     }
 
     /**
@@ -74,7 +74,7 @@ class ExpensesController extends Controller
 
         $expense->updateExpense($request);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load(['category', 'creator', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media']));
     }
 
     public function delete(DeleteExpensesRequest $request)

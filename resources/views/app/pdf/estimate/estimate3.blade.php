@@ -377,15 +377,8 @@
             <div class="customer-address-container">
                 <div class="billing-address-container billing-address">
                     @if ($billing_address)
-                        <b>@lang('pdf_bill_to')</b> <br>
+                        <b>To</b> <br>
                         {!! $billing_address !!}
-                    @endif
-                </div>
-
-                <div @if ($estimate->customer->billingaddress) class="shipping-address-container shipping-address" @else class="shipping-address-container--left shipping-address" @endif>
-                    @if ($shipping_address)
-                        <b>@lang('pdf_ship_to')</b> <br>
-                        {!! $shipping_address !!}
                     @endif
                 </div>
 

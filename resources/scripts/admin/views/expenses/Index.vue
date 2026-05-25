@@ -40,7 +40,12 @@
       </template>
     </BasePageHeader>
 
-    <BaseFilterWrapper :show="showFilters" class="mt-5" @clear="clearFilter">
+    <BaseFilterWrapper
+      v-if="showFilters"
+      :show="showFilters"
+      class="mt-5"
+      @clear="clearFilter"
+    >
       <BaseInputGroup :label="$t('expenses.customer')">
         <BaseCustomerSelectInput
           v-model="filters.customer_id"
@@ -221,7 +226,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive, onUnmounted } from 'vue'
+import { ref, computed, reactive, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useExpenseStore } from '@/scripts/admin/stores/expense'
 import { useCategoryStore } from '@/scripts/admin/stores/category'
@@ -323,10 +328,6 @@ onUnmounted(() => {
   if (expenseStore.selectAllField) {
     expenseStore.selectAllExpenses()
   }
-})
-
-onMounted(() => {
-  categoryStore.fetchCategories({ limit: 'all' })
 })
 
 async function searchCategory(search) {

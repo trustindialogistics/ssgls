@@ -20,6 +20,9 @@ class PaymentResource extends JsonResource
             'payment_date' => $this->payment_date,
             'notes' => $this->getNotes(),
             'amount' => $this->amount,
+            'tds_amount' => $this->tds_amount,
+            'deduction_amount' => $this->deduction_amount,
+            'invoice_paid_status' => $this->invoice_paid_status,
             'unique_hash' => $this->unique_hash,
             'invoice_id' => $this->invoice_id,
             'company_id' => $this->company_id,
@@ -34,25 +37,25 @@ class PaymentResource extends JsonResource
             'formatted_created_at' => $this->formattedCreatedAt,
             'formatted_payment_date' => $this->formattedPaymentDate,
             'payment_pdf_url' => $this->paymentPdfUrl,
-            'customer' => $this->when($this->customer()->exists(), function () {
+            'customer' => $this->whenLoaded('customer', function () {
                 return new CustomerResource($this->customer);
             }),
-            'invoice' => $this->when($this->invoice()->exists(), function () {
+            'invoice' => $this->whenLoaded('invoice', function () {
                 return new InvoiceResource($this->invoice);
             }),
-            'payment_method' => $this->when($this->paymentMethod()->exists(), function () {
+            'payment_method' => $this->whenLoaded('paymentMethod', function () {
                 return new PaymentMethodResource($this->paymentMethod);
             }),
-            'fields' => $this->when($this->fields()->exists(), function () {
+            'fields' => $this->whenLoaded('fields', function () {
                 return CustomFieldValueResource::collection($this->fields);
             }),
-            'company' => $this->when($this->company()->exists(), function () {
+            'company' => $this->whenLoaded('company', function () {
                 return new CompanyResource($this->company);
             }),
-            'currency' => $this->when($this->currency()->exists(), function () {
+            'currency' => $this->whenLoaded('currency', function () {
                 return new CurrencyResource($this->currency);
             }),
-            'transaction' => $this->when($this->transaction()->exists(), function () {
+            'transaction' => $this->whenLoaded('transaction', function () {
                 return new TransactionResource($this->transaction);
             }),
         ];

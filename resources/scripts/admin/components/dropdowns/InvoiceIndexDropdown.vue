@@ -114,7 +114,7 @@
     </BaseDropdownItem>
 
     <BaseDropdownItem
-      v-if="userStore.hasAbilities(abilities.EDIT_INVOICE)"
+      v-if="!isLrReceipt && userStore.hasAbilities(abilities.EDIT_INVOICE)"
       @click="openPodUpload(row)"
     >
       <BaseIcon
@@ -124,7 +124,7 @@
       Upload POD
     </BaseDropdownItem>
 
-    <BaseDropdownItem v-if="row.pod_url" @click="viewPod(row)">
+    <BaseDropdownItem v-if="!isLrReceipt && row.pod_url" @click="viewPod(row)">
       <BaseIcon
         name="PhotoIcon"
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"

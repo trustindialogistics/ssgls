@@ -405,8 +405,8 @@
 
     $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
     $billingBranch = trim(strip_tags($company_address)) ? $companyName.'<br>'.$company_address : $companyName;
-    $panNo = 'NBKPS0084L';
-    $companyGstin = '24NBKPS0084L1ZZ';
+    $panNo = 'BHLPS2943H';
+    $companyGstin = '24BHLPS2943H1Z3';
     $partyGstin = $invoice->customer->tax_id ?? '';
     $branchCode = '';
     $basisOfCharges = '';

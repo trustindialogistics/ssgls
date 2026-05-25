@@ -23,6 +23,7 @@ class InvoicesController extends Controller
 
         $invoices = Invoice::with(['items', 'customer', 'creator', 'taxes'])
             ->where('status', '<>', 'DRAFT')
+            ->whereRegularInvoice()
             ->applyFilters($request->all())
             ->whereCustomer(Auth::guard('customer')->id())
             ->latest()
@@ -30,7 +31,7 @@ class InvoicesController extends Controller
 
         return InvoiceResource::collection($invoices)
             ->additional(['meta' => [
-                'invoiceTotalCount' => Invoice::where('status', '<>', 'DRAFT')->whereCustomer(Auth::guard('customer')->id())->count(),
+                'invoiceTotalCount' => Invoice::where('status', '<>', 'DRAFT')->whereRegularInvoice()->whereCustomer(Auth::guard('customer')->id())->count(),
             ]]);
     }
 
@@ -38,6 +39,7 @@ class InvoicesController extends Controller
     {
         $invoice = $company->invoices()
             ->whereCustomer(Auth::guard('customer')->id())
+            ->whereRegularInvoice()
             ->where('id', $id)
             ->first();
 

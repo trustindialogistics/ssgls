@@ -19,6 +19,7 @@ class EstimatesController extends Controller
         $limit = $request->has('limit') ? $request->limit : 10;
 
         $estimates = Estimate::whereCompany()
+            ->with(['customer', 'currency'])
             ->join('customers', 'customers.id', '=', 'estimates.customer_id')
             ->applyFilters($request->all())
             ->select('estimates.*', 'customers.name')
@@ -43,14 +44,14 @@ class EstimatesController extends Controller
 
         GenerateEstimatePdfJob::dispatch($estimate);
 
-        return new EstimateResource($estimate);
+        return new EstimateResource($estimate->load(['customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     public function show(Request $request, Estimate $estimate)
     {
         $this->authorize('view', $estimate);
 
-        return new EstimateResource($estimate);
+        return new EstimateResource($estimate->load(['customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     public function update(EstimatesRequest $request, Estimate $estimate)
@@ -61,7 +62,7 @@ class EstimatesController extends Controller
 
         GenerateEstimatePdfJob::dispatch($estimate, true);
 
-        return new EstimateResource($estimate);
+        return new EstimateResource($estimate->load(['customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     public function delete(DeleteEstimatesRequest $request)

@@ -96,6 +96,18 @@
               {{ $t('invoices.new_invoice') }}
             </BaseDropdownItem>
           </router-link>
+          <router-link to="/admin/lr-receipts/create">
+            <BaseDropdownItem
+              v-if="userStore.hasAbilities(abilities.CREATE_INVOICE)"
+            >
+              <BaseIcon
+                name="TruckIcon"
+                class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+                aria-hidden="true"
+              />
+              New LR Receipt
+            </BaseDropdownItem>
+          </router-link>
           <router-link to="/admin/estimates/create">
             <BaseDropdownItem
               v-if="userStore.hasAbilities(abilities.CREATE_ESTIMATE)"

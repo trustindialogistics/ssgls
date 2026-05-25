@@ -4,6 +4,8 @@ export default {
   name: '',
   title: '',
   description: null,
+  truck_type: '',
+  weight: '',
   quantity: 1,
   price: 0,
   discount_type: 'fixed',

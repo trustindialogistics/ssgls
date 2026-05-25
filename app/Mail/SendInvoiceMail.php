@@ -54,9 +54,15 @@ class SendInvoiceMail extends Mailable
             ->markdown('emails.send.invoice', ['data', $this->data]);
 
         if ($this->data['attach']['data']) {
+            $fileName = $this->data['invoice']['invoice_number'];
+
+            if (($this->data['invoice']['template_name'] ?? null) === 'lr_receipt') {
+                $fileName = preg_replace('/^INV/i', 'DOC', $fileName);
+            }
+
             $mailContent->attachData(
                 $this->data['attach']['data']->output(),
-                $this->data['invoice']['invoice_number'].'.pdf'
+                $fileName.'.pdf'
             );
         }
 

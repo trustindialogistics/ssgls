@@ -51,6 +51,16 @@
           </router-link>
 
           <router-link
+            v-if="userStore.hasAbilities(abilities.CREATE_INVOICE)"
+            :to="`/admin/lr-receipts/create?customer=${$route.params.id}`"
+          >
+            <BaseDropdownItem>
+              <BaseIcon name="TruckIcon" class="mr-3 text-gray-600" />
+              New LR Receipt
+            </BaseDropdownItem>
+          </router-link>
+
+          <router-link
             v-if="userStore.hasAbilities(abilities.CREATE_PAYMENT)"
             :to="`/admin/payments/create?customer=${$route.params.id}`"
           >

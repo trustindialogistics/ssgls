@@ -472,7 +472,12 @@ async function loadData() {
     const expenseData = await expenseStore.fetchExpense(route.params.id)
 
     expenseStore.currentExpense.currency_id =
-      expenseStore.currentExpense.selectedCurrency.id
+      expenseStore.currentExpense.selectedCurrency?.id ||
+      expenseStore.currentExpense.currency_id ||
+      companyStore.selectedCompanyCurrency.id
+    expenseStore.currentExpense.selectedCurrency =
+      expenseStore.currentExpense.selectedCurrency ||
+      companyStore.selectedCompanyCurrency
 
     if(expenseData.data) {
       if(!categoryStore.editCategory && expenseData.data.data.expense_category) {

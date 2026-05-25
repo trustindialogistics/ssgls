@@ -109,6 +109,10 @@ class Estimate extends Model implements HasMedia
 
     public function getFormattedExpiryDateAttribute($value)
     {
+        if (empty($this->expiry_date)) {
+            return null;
+        }
+
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
 
         return Carbon::parse($this->expiry_date)->translatedFormat($dateFormat);
@@ -360,7 +364,7 @@ class Estimate extends Model implements HasMedia
         $data['user'] = $this->customer->toArray();
         $data['company'] = $this->company->toArray();
         $data['body'] = $this->getEmailBody($data['body']);
-        $data['attach']['data'] = ($this->getEmailAttachmentSetting()) ? $this->getPDFData() : null;
+        $data['attach']['data'] = $this->getPDFData();
 
         return $data;
     }
@@ -413,7 +417,10 @@ class Estimate extends Model implements HasMedia
 
         $company = Company::find($this->company_id);
         $locale = CompanySetting::getSetting('language', $company->id);
-        $customFields = CustomField::where('model_type', 'Item')->get();
+        $customFields = CustomField::where('model_type', 'Item')
+            ->where('company_id', $this->company_id)
+            ->whereNotIn('name', self::transportInvoiceItemFieldNames())
+            ->get();
 
         App::setLocale($locale);
 
@@ -431,6 +438,12 @@ class Estimate extends Model implements HasMedia
         ]);
 
         $template = PdfTemplateUtils::findFormattedTemplate('estimate', $estimateTemplate, '');
+
+        if (! $template) {
+            $estimateTemplate = 'estimate1';
+            $template = PdfTemplateUtils::findFormattedTemplate('estimate', $estimateTemplate, '');
+        }
+
         $templatePath = $template['custom'] ? sprintf('pdf_templates::estimate.%s', $estimateTemplate) : sprintf('app.pdf.estimate.%s', $estimateTemplate);
 
         if (request()->has('preview')) {
@@ -480,12 +493,6 @@ class Estimate extends Model implements HasMedia
 
     public function getEmailAttachmentSetting()
     {
-        $estimateAsAttachment = CompanySetting::getSetting('estimate_email_attachment', $this->company_id);
-
-        if ($estimateAsAttachment == 'NO') {
-            return false;
-        }
-
         return true;
     }
 
@@ -523,6 +530,40 @@ class Estimate extends Model implements HasMedia
         }
 
         return $templateName;
+    }
+
+    private static function transportInvoiceItemFieldNames(): array
+    {
+        return [
+            'Description of Goods',
+            'HSN Code',
+            'Delivery At',
+            'E-way Bill No',
+            'No of Articles',
+            'Packing',
+            'Actual Weight',
+            'Charged Weight',
+            'Invoice No',
+            'Goods Value',
+            'POD Required',
+            'Basic Freight',
+            'Local Collection',
+            'Door Delivery',
+            'Hamali',
+            'Docket Charge',
+            'Other Charge',
+            'FOV',
+            'Consignment Number',
+            'Consignment Date',
+            'From',
+            'Destination',
+            'Vehicle No',
+            'Pkg',
+            'Charged Weight Kgs',
+            'Rate',
+            'LR Charge',
+            'DD Charge',
+        ];
     }
 
     public function checkForEstimateConvertAction()

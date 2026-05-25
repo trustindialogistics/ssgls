@@ -41,6 +41,10 @@ class Invoice extends Model implements HasMedia
 
     public const STATUS_PAID = 'PAID';
 
+    public const TEMPLATE_OFFICE_INVOICE = 'office_invoice';
+
+    public const TEMPLATE_LR_RECEIPT = 'lr_receipt';
+
     protected $dates = [
         'created_at',
         'updated_at',
@@ -231,6 +235,11 @@ class Invoice extends Model implements HasMedia
             self::STATUS_UNPAID,
             self::STATUS_PARTIALLY_PAID,
         ]);
+    }
+
+    public function scopeWhereRegularInvoice($query)
+    {
+        return $query->where('invoices.template_name', self::TEMPLATE_OFFICE_INVOICE);
     }
 
     public function scopeWhereInvoiceNumber($query, $invoiceNumber)
@@ -459,7 +468,7 @@ class Invoice extends Model implements HasMedia
         $data['company'] = Company::find($this->company_id);
         $data['subject'] = $this->getEmailString($data['subject']);
         $data['body'] = $this->getEmailString($data['body']);
-        $data['attach']['data'] = ($this->getEmailAttachmentSetting()) ? $this->getPDFData() : null;
+        $data['attach']['data'] = $this->getPDFData();
 
         return $data;
     }
@@ -629,12 +638,6 @@ class Invoice extends Model implements HasMedia
 
     public function getEmailAttachmentSetting()
     {
-        $invoiceAsAttachment = CompanySetting::getSetting('invoice_email_attachment', $this->company_id);
-
-        if ($invoiceAsAttachment == 'NO') {
-            return false;
-        }
-
         return true;
     }
 

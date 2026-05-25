@@ -415,17 +415,15 @@ async function fetchData({ page, filter, sort }) {
     from_date: filters.from_date,
     to_date: filters.to_date,
     invoice_number: filters.invoice_number,
+    template_name: 'office_invoice',
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
     page,
   }
 
-  console.log(data)
-
   isRequestOngoing.value = true
 
   let response = await invoiceStore.fetchInvoices(data)
-  console.log('API response:', response.data.data)
 
   isRequestOngoing.value = false
 

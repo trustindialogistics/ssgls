@@ -149,10 +149,9 @@
 </template>
 
 <script setup>
-import { ref, watch, inject } from 'vue'
+import { defineAsyncComponent, ref, watch, inject } from 'vue'
 import { useDashboardStore } from '@/scripts/admin/stores/dashboard'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
-import LineChart from '@/scripts/admin/components/charts/LineChart.vue'
 import ChartPlaceholder from './DashboardChartPlaceholder.vue'
 import abilities from '@/scripts/admin/stub/abilities'
 import { useUserStore } from '@/scripts/admin/stores/user'
@@ -160,6 +159,9 @@ import { useI18n } from 'vue-i18n'
 
 const dashboardStore = useDashboardStore()
 const companyStore = useCompanyStore()
+const LineChart = defineAsyncComponent(() =>
+  import('@/scripts/admin/components/charts/LineChart.vue')
+)
 
 const { t } = useI18n()
 const utils = inject('utils')

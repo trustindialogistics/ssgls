@@ -265,7 +265,7 @@ async function next() {
       .replace(/^-+|-+$/g, '')                       // Trim dashes
   }
   
-  let res = companyStore.updateCompany(companyForm)
+  let res = await companyStore.updateCompany(companyForm)
   if (res) {
     if (logoFileBlob.value) {
       let logoData = new FormData()

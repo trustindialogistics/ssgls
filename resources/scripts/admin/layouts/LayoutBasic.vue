@@ -77,6 +77,23 @@ onMounted(() => {
         }
       })
     }
+
+    preloadCommonAdminPages()
   })
 })
+
+function preloadCommonAdminPages() {
+  const preload = () => {
+    import('@/scripts/admin/views/invoices/Index.vue')
+    import('@/scripts/admin/views/lr-receipts/Index.vue')
+    import('@/scripts/admin/views/payments/Index.vue')
+    import('@/scripts/admin/views/expenses/Index.vue')
+  }
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(preload, { timeout: 1500 })
+  } else {
+    window.setTimeout(preload, 800)
+  }
+}
 </script>
