@@ -362,6 +362,24 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
+      uploadPod(data) {
+        return new Promise((resolve, reject) => {
+          http
+            .post(`/api/v1/invoices/${data.id}/pod`, data)
+            .then((response) => {
+              notificationStore.showNotification({
+                type: 'success',
+                message: 'POD uploaded successfully.',
+              })
+              resolve(response)
+            })
+            .catch((err) => {
+              handleError(err)
+              reject(err)
+            })
+        })
+      },
+
       getNextNumber(params, setState = false) {
         return new Promise((resolve, reject) => {
           http

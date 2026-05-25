@@ -16,6 +16,7 @@ use App\Http\Controllers\V1\Modules\StyleController;
 use App\Http\Controllers\V1\PDF\DownloadReceiptController;
 use App\Http\Controllers\V1\PDF\EstimatePdfController;
 use App\Http\Controllers\V1\PDF\InvoicePdfController;
+use App\Http\Controllers\V1\PDF\InvoicePodController;
 use App\Http\Controllers\V1\PDF\PaymentPdfController;
 use App\Models\Company;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,10 @@ Route::middleware('auth:sanctum')->prefix('reports')->group(function () {
     // -------------------------------------------------
     Route::get('/expenses/{expense}/download-receipt', DownloadReceiptController::class);
     Route::get('/expenses/{expense}/receipt', ShowReceiptController::class);
+
+    // invoice proof of delivery
+    // -------------------------------------------------
+    Route::get('/invoices/{invoice}/pod', InvoicePodController::class);
 });
 
 // PDF Endpoints

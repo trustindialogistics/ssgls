@@ -285,13 +285,13 @@ function formatAddressLines(address) {
   const cityState = [compact(address.city), compact(address.state)]
     .filter(Boolean)
     .join(', ')
+  const cityStateZip = [cityState, compact(address.zip)].filter(Boolean).join(' ')
 
   return [
     compact(address.name),
     compact(address.address_street_1),
     compact(address.address_street_2),
-    cityState,
-    compact(address.zip),
+    cityStateZip,
   ].filter(Boolean)
 }
 

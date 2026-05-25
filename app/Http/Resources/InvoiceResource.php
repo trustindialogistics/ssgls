@@ -14,6 +14,8 @@ class InvoiceResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $pod = $this->getFirstMedia('pod');
+
         return [
             'id' => $this->id,
             'invoice_date' => $this->invoice_date,
@@ -50,6 +52,12 @@ class InvoiceResource extends JsonResource
             'currency_id' => $this->currency_id,
             'formatted_created_at' => $this->formattedCreatedAt,
             'invoice_pdf_url' => $this->invoicePdfUrl,
+            'pod_url' => $pod ? url('/reports/invoices/'.$this->id.'/pod') : null,
+            'pod_meta' => $pod ? [
+                'uuid' => $pod->uuid,
+                'file_name' => $pod->file_name,
+                'mime_type' => $pod->mime_type,
+            ] : null,
             'formatted_invoice_date' => $this->formattedInvoiceDate,
             'formatted_due_date' => $this->formattedDueDate,
             'allow_edit' => $this->allow_edit,

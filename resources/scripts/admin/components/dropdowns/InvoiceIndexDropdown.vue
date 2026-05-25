@@ -99,6 +99,25 @@
       {{ cloneLabel }}
     </BaseDropdownItem>
 
+    <BaseDropdownItem
+      v-if="userStore.hasAbilities(abilities.EDIT_INVOICE)"
+      @click="openPodUpload(row)"
+    >
+      <BaseIcon
+        name="ArrowUpTrayIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      Upload POD
+    </BaseDropdownItem>
+
+    <BaseDropdownItem v-if="row.pod_url" @click="viewPod(row)">
+      <BaseIcon
+        name="PhotoIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      View POD
+    </BaseDropdownItem>
+
     <!--  Delete Invoice  -->
     <BaseDropdownItem
       v-if="userStore.hasAbilities(abilities.DELETE_INVOICE)"
@@ -278,5 +297,23 @@ function copyPdfUrl() {
     type: 'success',
     message: t('general.copied_pdf_url_clipboard'),
   })
+}
+
+function openPodUpload(invoice) {
+  modalStore.openModal({
+    title: `Upload POD - ${invoice.invoice_number}`,
+    componentName: 'UploadPodModal',
+    id: invoice.id,
+    data: invoice,
+    size: 'sm',
+    refreshData: () => {
+      props.table && props.table.refresh()
+      props.loadData && props.loadData()
+    },
+  })
+}
+
+function viewPod(invoice) {
+  window.open(invoice.pod_url, '_blank', 'noopener')
 }
 </script>

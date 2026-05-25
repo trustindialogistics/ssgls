@@ -1,6 +1,7 @@
 <template>
   <BasePage>
     <SendInvoiceModal />
+    <UploadPodModal />
     <BasePageHeader :title="$t('invoices.title')">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="$t('general.home')" to="dashboard" />
@@ -278,6 +279,7 @@ import { debouncedWatch } from '@vueuse/core'
 import MoonwalkerIcon from '@/scripts/components/icons/empty/MoonwalkerIcon.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
 import SendInvoiceModal from '@/scripts/admin/components/modal-components/SendInvoiceModal.vue'
+import UploadPodModal from '@/scripts/admin/components/modal-components/UploadPodModal.vue'
 import BaseInvoiceStatusLabel from "@/scripts/components/base/BaseInvoiceStatusLabel.vue";
 // Stores
 const invoiceStore = useInvoiceStore()

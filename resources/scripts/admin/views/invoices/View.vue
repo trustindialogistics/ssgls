@@ -10,6 +10,7 @@ import { useUserStore } from '@/scripts/admin/stores/user'
 import { useDialogStore } from '@/scripts/stores/dialog'
 
 import SendInvoiceModal from '@/scripts/admin/components/modal-components/SendInvoiceModal.vue'
+import UploadPodModal from '@/scripts/admin/components/modal-components/UploadPodModal.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
 import LoadingIcon from '@/scripts/components/icons/LoadingIcon.vue'
 
@@ -230,6 +231,7 @@ onSearched = debounce(onSearched, 500)
 
 <template>
   <SendInvoiceModal @update="updateSentInvoice" />
+  <UploadPodModal />
 
   <BasePage v-if="invoiceData" class="xl:pl-96 xl:ml-8">
     <BasePageHeader :title="pageTitle">
@@ -279,7 +281,7 @@ onSearched = debounce(onSearched, 500)
         <InvoiceDropdown
           class="ml-3"
           :row="invoiceData"
-          :load-data="loadInvoices"
+          :load-data="loadInvoice"
         />
       </template>
     </BasePageHeader>

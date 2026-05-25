@@ -88,13 +88,13 @@
             }
 
             $cityState = collect([$address->city, $address->state])->filter()->implode(', ');
+            $cityStateZip = collect([$cityState, $address->zip])->filter()->implode(' ');
 
             return collect([
                 $address->name,
                 $address->address_street_1,
                 $address->address_street_2,
-                $cityState,
-                $address->zip,
+                $cityStateZip,
             ])->filter()->values()->all();
         };
         $partyDetails = function ($customer, string $fallback = '') use ($addressLines): string {
@@ -108,9 +108,17 @@
                 ->merge($addressLines($address))
                 ->filter()
                 ->unique()
+                ->take(4)
                 ->values();
 
             return $lines->isNotEmpty() ? $lines->implode("\n") : $fallback;
+        };
+        $fitPartyText = function ($value): string {
+            return collect(preg_split('/\R/', (string) $value))
+                ->map(fn ($line) => trim($line))
+                ->filter()
+                ->take(4)
+                ->implode("\n");
         };
         $consigneeName = $partyDetails($invoice->customer, $inv('consignee'));
         $consigneePhone = $invoice->customer?->phone ?: $inv('consignee_phone_no');
@@ -213,7 +221,20 @@
         }
 
         .party-cell {
-            height: 76pt;
+            height: 58pt;
+        }
+
+        .party-value {
+            font-size: 7.5px;
+            line-height: 9px;
+            height: 36pt;
+            overflow: hidden;
+        }
+
+        .party-meta {
+            font-size: 8px;
+            line-height: 10px;
+            margin-top: 1pt;
         }
 
         .mode-cell {
@@ -251,24 +272,24 @@
                     <tr>
                         <td class="cell party-cell" style="width: 50%;">
                             <div class="label">Consignor</div>
-                            <div class="value">{!! nl2br(e($consignorName)) !!}</div>
-                            <div style="margin-top: 6pt;">
+                            <div class="party-value">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
+                            <div class="party-meta">
                                 <span class="label">Phone No. :</span>
                                 <span class="value">{{ $consignorPhone }}</span>
                             </div>
-                            <div style="margin-top: 4pt;">
+                            <div class="party-meta">
                                 <span class="label">GST No. :</span>
                                 <span class="value">{{ $consignorGstin }}</span>
                             </div>
                         </td>
                         <td class="cell party-cell" style="width: 50%;">
                             <div class="label">Consignee</div>
-                            <div class="value">{!! nl2br(e($consigneeName)) !!}</div>
-                            <div style="margin-top: 6pt;">
+                            <div class="party-value">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
+                            <div class="party-meta">
                                 <span class="label">Phone No. :</span>
                                 <span class="value">{{ $consigneePhone }}</span>
                             </div>
-                            <div style="margin-top: 4pt;">
+                            <div class="party-meta">
                                 <span class="label">GST No. :</span>
                                 <span class="value">{{ $consigneeGstin }}</span>
                             </div>
@@ -447,7 +468,11 @@
         </tr>
 
         <tr>
-            <td class="cell" style="width: 62%;">
+            <td class="cell" style="width: 28%; font-size: 7px; line-height: 8.5px;">
+                <div><span class="label">DECLARATION :</span> We Have Not Taken Gst Credit As Per The Provisions Of Convat Credit Rule 2004 Of Only Paid On Inputs Or Capital Goods Used For Providing Taxable's Service To You And Have Also Availed The Benefits Of Notification No. 11 &amp; 13/2017 Dated 28th June 2017</div>
+                <div style="margin-top: 5pt; text-align: center; font-weight: 700;">It is taken in to consideration that agrees with all the terms and condition overleaf</div>
+            </td>
+            <td class="cell" style="width: 34%;">
                 <div class="label">Rubber Stamp and Signature of Consignee</div>
                 <div style="height: 50pt;"></div>
                 <div class="label">Phone / Mobile</div>

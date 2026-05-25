@@ -26,7 +26,7 @@ class InvoicesController extends Controller
 
         $invoices = Invoice::whereCompany()
             ->applyFilters($request->all())
-            ->with('customer')
+            ->with(['customer', 'media'])
             ->latest()
             ->paginateData($limit);
 
@@ -54,7 +54,7 @@ class InvoicesController extends Controller
 
         GenerateInvoicePdfJob::dispatch($invoice);
 
-        return new InvoiceResource($invoice);
+        return new InvoiceResource($invoice->load('media'));
     }
 
     /**
@@ -66,7 +66,7 @@ class InvoicesController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        return new InvoiceResource($invoice);
+        return new InvoiceResource($invoice->load('media'));
     }
 
     /**
@@ -87,7 +87,7 @@ class InvoicesController extends Controller
 
         GenerateInvoicePdfJob::dispatch($invoice, true);
 
-        return new InvoiceResource($invoice);
+        return new InvoiceResource($invoice->load('media'));
     }
 
     /**

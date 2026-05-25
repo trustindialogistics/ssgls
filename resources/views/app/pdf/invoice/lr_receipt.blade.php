@@ -150,15 +150,20 @@
         }
 
         .party-cell {
-            height: 62px;
+            height: 50px;
             padding: 4px 6px;
             width: 50%;
         }
 
         .party-lines {
-            font-size: 9px;
-            line-height: 11px;
-            margin-top: 2px;
+            font-size: 7.5px;
+            line-height: 8.5px;
+            margin-top: 1px;
+            overflow: hidden;
+        }
+
+        .party-details {
+            height: 34px;
         }
 
         .side-cell {
@@ -330,13 +335,13 @@
         }
 
         $cityState = collect([$address->city, $address->state])->filter()->implode(', ');
+        $cityStateZip = collect([$cityState, $address->zip])->filter()->implode(' ');
 
         return collect([
             $address->name,
             $address->address_street_1,
             $address->address_street_2,
-            $cityState,
-            $address->zip,
+            $cityStateZip,
         ])->filter()->values()->all();
     };
 
@@ -351,9 +356,18 @@
             ->merge($addressLines($address))
             ->filter()
             ->unique()
+            ->take(4)
             ->values();
 
         return $lines->isNotEmpty() ? $lines->implode("\n") : $fallback;
+    };
+
+    $fitPartyText = function ($value) {
+        return collect(preg_split('/\R/', (string) $value))
+            ->map(fn ($line) => trim($line))
+            ->filter()
+            ->take(4)
+            ->implode("\n");
     };
 
     $item = $invoice->items->first();
@@ -435,13 +449,13 @@
                         <tr>
                             <td class="party-cell">
                                 <span class="label">Consignor</span>
-                                <div class="party-lines">{!! nl2br(e($consignorName)) !!}</div>
+                                <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
                                 <span class="label">Consignee</span>
-                                <div class="party-lines">{!! nl2br(e($consigneeName)) !!}</div>
+                                <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>
