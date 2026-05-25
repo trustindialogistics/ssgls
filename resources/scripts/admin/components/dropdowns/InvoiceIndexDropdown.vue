@@ -30,6 +30,20 @@
       {{ $t('general.copy_pdf_url') }}
     </BaseDropdownItem>
 
+    <template v-if="isLrReceipt">
+      <BaseDropdownItem
+        v-for="copyOption in lrCopyOptions"
+        :key="copyOption.value"
+        @click="openLrCopy(copyOption.value)"
+      >
+        <BaseIcon
+          name="ArrowDownTrayIcon"
+          class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+        />
+        {{ copyOption.label }}
+      </BaseDropdownItem>
+    </template>
+
     <!-- View Invoice  -->
     <router-link
       v-if="
@@ -218,7 +232,10 @@ async function removeInvoice(id) {
     .then((res) => {
       id = id
       if (res) {
-        invoiceStore.deleteInvoice({ ids: [id] }).then((res) => {
+        invoiceStore.deleteInvoice({
+          ids: [id],
+          template_name: isLrReceipt.value ? 'lr_receipt' : props.row?.template_name,
+        }).then((res) => {
           if (res.data.success) {
             router.push(afterDeletePath.value)
             props.table && props.table.refresh()
@@ -297,6 +314,22 @@ function copyPdfUrl() {
     type: 'success',
     message: t('general.copied_pdf_url_clipboard'),
   })
+}
+
+const lrCopyOptions = [
+  { value: 'consignee', label: 'Download Consignee Copy' },
+  { value: 'driver', label: 'Download Driver Copy' },
+  { value: 'consignor', label: 'Download Consignor Copy' },
+  { value: 'ho', label: 'Download H.O. Copy' },
+  { value: 'file', label: 'Download File Copy' },
+]
+
+function openLrCopy(copyType) {
+  window.open(
+    `/invoices/pdf/${props.row.unique_hash}?copy=${copyType}`,
+    '_blank',
+    'noopener'
+  )
 }
 
 function openPodUpload(invoice) {

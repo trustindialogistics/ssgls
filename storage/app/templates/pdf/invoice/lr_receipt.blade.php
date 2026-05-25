@@ -250,6 +250,18 @@
             vertical-align: middle;
         }
 
+        .copy-label-box {
+            font-size: 16px;
+            font-weight: 800;
+            height: 42pt;
+            line-height: 42pt;
+            text-align: center;
+        }
+
+        .goods-fill {
+            height: 37pt;
+        }
+
         .declaration-cell {
             font-size: 6.7px;
             line-height: 8px;
@@ -377,6 +389,7 @@
                         </td>
                     </tr>
                 </table>
+                <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
             </td>
         </tr>
 
@@ -430,10 +443,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell">
-                            <div class="label">E-way Bill No. :</div>
-                            <div class="value">{{ $itm('e_way_bill_no') }}</div>
-                        </td>
+                        <td class="cell">&nbsp;</td>
                         <td class="cell">
                             <div class="label">Goods Value</div>
                         </td>
@@ -442,13 +452,21 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell">&nbsp;</td>
+                        <td class="cell goods-fill">&nbsp;</td>
                         <td class="cell">
                             <div class="label">POD Required.</div>
                         </td>
                         <td class="cell">
                             <div class="value">{{ $itm('pod_required') }}</div>
                         </td>
+                    </tr>
+                    <tr>
+                        <td class="cell">
+                            <div class="label">E-way Bill No. :</div>
+                            <div class="value">{{ $itm('e_way_bill_no') }}</div>
+                        </td>
+                        <td class="cell">&nbsp;</td>
+                        <td class="cell">&nbsp;</td>
                     </tr>
                 </table>
             </td>

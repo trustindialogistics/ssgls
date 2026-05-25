@@ -247,14 +247,20 @@ export const useInvoiceStore = (useWindow = false) => {
           http
             .post(`/api/v1/invoices/delete`, id)
             .then((response) => {
+              const isLrReceipt = id?.template_name === 'lr_receipt'
+              const deletedId = Array.isArray(id?.ids) ? id.ids[0] : id
               let index = this.invoices.findIndex(
-                (invoice) => invoice.id === id,
+                (invoice) => invoice.id === deletedId,
               )
-              this.invoices.splice(index, 1)
+              if (index >= 0) {
+                this.invoices.splice(index, 1)
+              }
 
               notificationStore.showNotification({
                 type: 'success',
-                message: global.t('invoices.deleted_message', 1),
+                message: isLrReceipt
+                  ? 'LR Receipt deleted successfully.'
+                  : global.t('invoices.deleted_message', 1),
               })
               resolve(response)
             })
@@ -265,22 +271,28 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
-      deleteMultipleInvoices(id) {
+      deleteMultipleInvoices(data = {}) {
         return new Promise((resolve, reject) => {
           http
             .post(`/api/v1/invoices/delete`, { ids: this.selectedInvoices })
             .then((response) => {
+              const isLrReceipt = data?.template_name === 'lr_receipt'
               this.selectedInvoices.forEach((invoice) => {
+                const invoiceId = typeof invoice === 'object' ? invoice.id : invoice
                 let index = this.invoices.findIndex(
-                  (_inv) => _inv.id === invoice.id,
+                  (_inv) => _inv.id === invoiceId,
                 )
-                this.invoices.splice(index, 1)
+                if (index >= 0) {
+                  this.invoices.splice(index, 1)
+                }
               })
               this.selectedInvoices = []
 
               notificationStore.showNotification({
                 type: 'success',
-                message: global.t('invoices.deleted_message', 2),
+                message: isLrReceipt
+                  ? 'LR Receipts deleted successfully.'
+                  : global.t('invoices.deleted_message', 2),
               })
               resolve(response)
             })

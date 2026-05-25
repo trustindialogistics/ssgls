@@ -460,7 +460,7 @@ async function removeMultipleInvoices() {
     })
     .then(async (res) => {
       if (res) {
-        await invoiceStore.deleteMultipleInvoices().then((res) => {
+        await invoiceStore.deleteMultipleInvoices({ template_name: 'lr_receipt' }).then((res) => {
           if (res.data.success) {
             refreshTable()
 

@@ -40,6 +40,10 @@ const searchData = reactive({
 })
 
 const pageTitle = computed(() => invoiceData.value.invoice_number)
+const isLrReceiptRoute = computed(() => route.name?.startsWith('lr-receipts'))
+const sendButtonLabel = computed(() =>
+  isLrReceiptRoute.value ? 'Send LR Receipt' : t('invoices.send_invoice')
+)
 
 const getOrderBy = computed(() => {
   if (searchData.orderBy === 'asc' || searchData.orderBy == null) {
@@ -67,7 +71,7 @@ const getCurrentInvoiceId = computed(() => {
 })
 
 watch(route, (to, from) => {
-  if (to.name === 'invoices.view') {
+  if (to.name === 'invoices.view' || to.name === 'lr-receipts.view') {
     loadInvoice()
   }
 })
@@ -138,6 +142,7 @@ async function loadInvoices(pageNumber, fromScrollListener = false) {
   isLoading.value = true
   let response = await invoiceStore.fetchInvoices({
     page: pageNumber,
+    ...(isLrReceiptRoute.value ? { template_name: 'lr_receipt' } : {}),
     ...params,
   })
   isLoading.value = false
@@ -259,7 +264,7 @@ onSearched = debounce(onSearched, 500)
           class="text-sm"
           @click="onSendInvoice"
         >
-          {{ $t('invoices.send_invoice') }}
+          {{ sendButtonLabel }}
         </BaseButton>
 
         <!-- Record Payment  -->

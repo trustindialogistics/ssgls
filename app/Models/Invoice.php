@@ -590,6 +590,14 @@ class Invoice extends Model implements HasMedia
         App::setLocale($locale);
 
         $logo = $company->logo_path;
+        $copyLabels = [
+            'consignee' => 'CONSIGNEE COPY',
+            'driver' => 'DRIVER COPY',
+            'consignor' => 'CONSIGNOR COPY',
+            'ho' => 'H. O. COPY',
+            'file' => 'FILE COPY',
+        ];
+        $copyLabel = $copyLabels[request()->query('copy')] ?? '';
 
         view()->share([
             'invoice' => $this,
@@ -600,6 +608,7 @@ class Invoice extends Model implements HasMedia
             'notes' => $this->getNotes(),
             'logo' => $logo ?? null,
             'taxes' => $taxes,
+            'copyLabel' => $copyLabel,
         ]);
 
         $template = PdfTemplateUtils::findFormattedTemplate('invoice', $invoiceTemplate, '');

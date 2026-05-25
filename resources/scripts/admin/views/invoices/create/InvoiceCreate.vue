@@ -62,7 +62,7 @@
                 :class="slotProps.class"
               />
             </template>
-            {{ $t('invoices.save_invoice') }}
+            {{ isLrReceipt ? 'Save LR' : $t('invoices.save_invoice') }}
           </BaseButton>
         </template>
       </BasePageHeader>

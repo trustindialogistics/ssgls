@@ -20,6 +20,15 @@ class InvoicePdfController extends Controller
             return $invoice->getPDFData();
         }
 
+        if ($request->has('copy')) {
+            $pdf = $invoice->getPDFData();
+
+            return response()->make($pdf->stream(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$invoice->invoice_number.'-'.$request->query('copy').'.pdf"',
+            ]);
+        }
+
         return $invoice->getGeneratedPDFOrStream('invoice');
     }
 }

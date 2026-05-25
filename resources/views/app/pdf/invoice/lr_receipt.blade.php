@@ -240,6 +240,18 @@
             vertical-align: middle;
         }
 
+        .copy-label-box {
+            font-size: 18px;
+            font-weight: bold;
+            height: 48px;
+            line-height: 48px;
+            text-align: center;
+        }
+
+        .goods-fill {
+            height: 44px;
+        }
+
         .declaration {
             font-size: 7.5px;
             line-height: 9px;
@@ -492,6 +504,7 @@
                         <tr><td colspan="2"><span class="label">Truck No.:</span> {{ $invoiceField(['truck_no']) }}</td></tr>
                         <tr><td colspan="2" class="tax-line"><span class="label">PAN No.:</span> {{ $panNo }}<br><span class="label">GSTIN :</span> {{ $gstin }}</td></tr>
                     </table>
+                    <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
                 </td>
             </tr>
         </table>
@@ -522,6 +535,7 @@
                             <td><span class="label">Goods Value</span><br>{{ $itemField(['goods_value']) }}</td>
                         </tr>
                         <tr>
+                            <td class="goods-fill">&nbsp;</td>
                             <td><span class="label">POD Required.</span></td>
                             <td>{{ $itemField(['pod_required']) }}</td>
                         </tr>
