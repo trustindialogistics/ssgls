@@ -64,15 +64,16 @@
             width: 39%;
         }
 
-        .brand-logo-cell {
+        .company-panel {
             border: 0;
-            text-align: center;
-            width: 82px;
+            padding: 4px 7px !important;
+            position: relative;
+            width: 100%;
         }
 
         .company-logo {
-            max-height: 52px;
-            max-width: 76px;
+            max-height: 68px;
+            max-width: 92px;
         }
 
         .brand-mark {
@@ -81,8 +82,8 @@
             font-weight: bold;
             letter-spacing: -5px;
             line-height: 42px;
-            text-align: center;
-            width: 82px;
+            text-align: left;
+            width: 92px;
         }
 
         .brand-small {
@@ -98,6 +99,7 @@
             font-size: 24px;
             font-weight: bold;
             line-height: 25px;
+            margin-top: 2px;
         }
 
         .company-tagline {
@@ -113,12 +115,13 @@
         }
 
         .header-contact {
-            border: 0;
             font-size: 9px;
             line-height: 12px;
+            position: absolute;
+            right: 7px;
             text-align: right;
+            top: 6px;
             white-space: nowrap;
-            width: 175px;
         }
 
         .brand-block {
@@ -280,6 +283,7 @@
         }
 
         .for-company {
+            border-top: 1.5px solid #252b3d !important;
             font-size: 13px;
             font-weight: bold;
             height: 36px;
@@ -289,9 +293,7 @@
         }
 
         .company-separator {
-            border-top: 1.5px solid #252b3d;
-            height: 0;
-            margin: -3px -5px 6px;
+            display: none;
         }
 
         .label {
@@ -411,9 +413,12 @@
     $companyPhone = $invoice->company?->address?->phone;
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
-    $companyAddressHasEmail = preg_match('/\bE-?mail\b/i', strip_tags((string) $companyAddress));
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $companyAddress);
-    $displayCompanyAddress = preg_replace('/^\s*<p[^>]*>\s*<strong>\s*\(A Cost Effective Distribution\)\s*<\/strong>\s*<\/p>\s*/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/<p[^>]*>\s*(?:<strong>)?\s*\(?A Cost Effective Distribution\)?\s*(?:<\/strong>)?\s*<\/p>/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/<br\s*\/?>\s*\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $panNo = 'BHLPS2943H';
     $gstin = '24BHLPS2943H1Z3';
 
@@ -443,6 +448,16 @@
     $consignorPhone = $invoiceField(['consignor_phone_no']);
     $consignorGstin = $invoiceField(['consignor_gst_no']);
     $docketNumber = preg_replace('/^INV/i', 'DOC', $invoice->invoice_number);
+    $descriptionOfGoods = trim((string) $itemField(['description_of_goods']));
+    $noOfArticles = trim((string) $itemField(['no_of_articles']));
+
+    if (preg_match('/^LR Receipt\s+\d+$/i', $descriptionOfGoods)) {
+        $descriptionOfGoods = '';
+    }
+
+    if ($noOfArticles === '1' && $descriptionOfGoods === '') {
+        $noOfArticles = '';
+    }
 @endphp
 
     <div class="wrapper">
@@ -453,7 +468,11 @@
                 <td class="header-left">
                     <table class="brand-block">
                         <tr>
-                            <td class="brand-logo-cell">
+                            <td class="company-panel">
+                                <div class="header-contact">
+                                    Mob. {{ $mobile }}<br>
+                                    E-mail : {{ $email }}
+                                </div>
                                 @if ($logo)
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else
@@ -462,17 +481,9 @@
                                         <span class="brand-small">GUJARAT LOGISTICS</span>
                                     </div>
                                 @endif
-                            </td>
-                            <td class="no-border">
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">(A Cost Effective Distribution)</div>
                                 <div class="company-address">{!! $displayCompanyAddress !!}</div>
-                            </td>
-                            <td class="header-contact">
-                                Mob. {{ $mobile }}
-                                @if (! $companyAddressHasEmail)
-                                    <br>E-mail : {{ $email }}
-                                @endif
                             </td>
                         </tr>
                     </table>
@@ -527,8 +538,8 @@
                 <td class="left-panel">
                     <table class="goods">
                         <tr>
-                            <td width="50%" class="large"><span class="label">Description of Goods</span><br>{{ $itemField(['description_of_goods']) }}</td>
-                            <td width="24%"><span class="label">No. of Articles</span><br>{{ $itemField(['no_of_articles']) }}</td>
+                            <td width="50%" class="large"><span class="label">Description of Goods</span><br>{{ $descriptionOfGoods }}</td>
+                            <td width="24%"><span class="label">No. of Articles</span><br>{{ $noOfArticles }}</td>
                             <td><span class="label">Packing</span><br>{{ $itemField(['packing']) }}</td>
                         </tr>
                         <tr>

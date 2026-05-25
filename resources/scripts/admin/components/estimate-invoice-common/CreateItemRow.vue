@@ -603,7 +603,7 @@ function ensureTransportItemName() {
 
   updateItemAttribute(
     'name',
-    isLrReceiptTemplate.value ? `LR Receipt ${props.index + 1}` : `Consignment ${props.index + 1}`
+    isLrReceiptTemplate.value ? '' : `Consignment ${props.index + 1}`
   )
 }
 

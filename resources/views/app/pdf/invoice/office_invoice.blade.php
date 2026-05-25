@@ -70,16 +70,26 @@
             width: 35%;
         }
 
-        .brand-logo-cell {
+        .company-panel {
             border: 0;
-            padding-top: 4px !important;
-            text-align: center;
-            width: 74px;
+            padding: 5px 8px !important;
+            position: relative;
+            width: 45%;
+        }
+
+        .company-contact {
+            font-size: 8px;
+            line-height: 10px;
+            position: absolute;
+            right: 8px;
+            text-align: right;
+            top: 7px;
+            white-space: nowrap;
         }
 
         .company-logo {
-            max-height: 56px;
-            max-width: 68px;
+            max-height: 72px;
+            max-width: 92px;
         }
 
         .brand-mark {
@@ -88,8 +98,8 @@
             font-weight: bold;
             letter-spacing: -4px;
             line-height: 34px;
-            text-align: center;
-            width: 74px;
+            text-align: left;
+            width: 92px;
         }
 
         .brand-small {
@@ -105,6 +115,7 @@
             font-size: 26px;
             font-weight: bold;
             line-height: 27px;
+            margin-top: 3px;
         }
 
         .company-tagline {
@@ -126,20 +137,12 @@
             font-size: 8.5px;
             line-height: 11.4px;
             padding-left: 8px;
-            width: 255px;
+            width: 55%;
         }
 
         .header-party-address {
             line-height: 11px;
             margin-top: 2px;
-        }
-
-        .mobile {
-            border: 0;
-            font-size: 8px;
-            text-align: right;
-            white-space: nowrap;
-            width: 82px;
         }
 
         .right-row {
@@ -428,9 +431,12 @@
     $companyPhone = $invoice->company?->address?->phone;
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
     $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
-    $companyAddressHasEmail = preg_match('/\bE-?mail\b/i', strip_tags((string) $company_address));
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $company_address);
-    $displayCompanyAddress = preg_replace('/^\s*<p[^>]*>\s*<strong>\s*\(A Cost Effective Distribution\)\s*<\/strong>\s*<\/p>\s*/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/<p[^>]*>\s*(?:<strong>)?\s*\(?A Cost Effective Distribution\)?\s*(?:<\/strong>)?\s*<\/p>/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/<br\s*\/?>\s*\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $blankRows = max(1, 11 - $invoice->items->count());
     $blankFillHeight = max(122, $blankRows * 17);
     $officeGrandTotal = 0;
@@ -444,7 +450,11 @@
                 <td class="header-left">
                     <table>
                         <tr>
-                            <td class="brand-logo-cell">
+                            <td class="company-panel">
+                                <div class="company-contact">
+                                    Mob. {{ $mobile }}<br>
+                                    E-mail : {{ $email }}
+                                </div>
                                 @if ($logo)
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else
@@ -453,15 +463,10 @@
                                         <span class="brand-small">GUJARAT LOGISTICS</span>
                                     </div>
                                 @endif
-                            </td>
-                            <td class="no-border">
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">(A Cost Effective Distribution)</div>
                                 <div class="company-address">
                                     {!! $displayCompanyAddress !!}
-                                    @if (! $companyAddressHasEmail)
-                                        <br>E-mail : {{ $email }}
-                                    @endif
                                 </div>
                             </td>
                             <td class="header-party">
@@ -469,7 +474,6 @@
                                 <div class="header-party-address">{!! $partyAddress !!}</div>
                                 <div><span class="bold">GSTIN :</span> {{ $partyGstin }}</div>
                             </td>
-                            <td class="mobile">Mob. {{ $mobile }}</td>
                         </tr>
                     </table>
                 </td>
