@@ -151,6 +151,22 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
+      fetchLrReceiptDetailsByDocket(docketNumber) {
+        return new Promise((resolve, reject) => {
+          http
+            .get('/api/v1/invoices/lr-receipt-lookup', {
+              params: { docket_number: docketNumber },
+            })
+            .then((response) => {
+              resolve(response)
+            })
+            .catch((err) => {
+              handleError(err)
+              reject(err)
+            })
+        })
+      },
+
       setInvoiceData(invoice) {
         Object.assign(this.newInvoice, invoice)
 

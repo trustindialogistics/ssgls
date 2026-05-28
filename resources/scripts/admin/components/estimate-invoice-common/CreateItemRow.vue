@@ -259,13 +259,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Guid from 'guid'
 import TaxStub from '@/scripts/admin/stub/tax'
 import ItemTax from './CreateItemRowTax.vue'
-import { sumBy } from 'lodash'
+import { debounce, sumBy } from 'lodash'
 import abilities from '@/scripts/admin/stub/abilities'
 import {
   required,
@@ -326,6 +326,7 @@ const companyStore = useCompanyStore()
 const itemStore = useItemStore()
 const customFieldStore = useCustomFieldStore()
 const itemCustomFields = computed(() => props.itemData.customFields || [])
+const lastMatchedLrDetails = ref(null)
 const isOfficeInvoiceTemplate = computed(
   () => props.store[props.storeProp].template_name === 'office_invoice'
 )
@@ -445,6 +446,13 @@ const lrReceiptAmount = computed(() => {
 const transportAmount = computed(() => {
   return isLrReceiptTemplate.value ? lrReceiptAmount.value : officeAmount.value
 })
+const consignmentNumber = computed(() => {
+  if (!isOfficeInvoiceTemplate.value) {
+    return ''
+  }
+
+  return getOfficeField('Consignment Number')?.value || ''
+})
 
 const selectedCurrency = computed(() => {
   if (props.currency) {
@@ -548,6 +556,26 @@ watch(
   { deep: true }
 )
 
+watch(
+  consignmentNumber,
+  (newValue, oldValue) => {
+    if (newValue === oldValue) {
+      return
+    }
+
+    fetchAndApplyLrReceiptDetails(newValue)
+  }
+)
+
+watch(
+  () => props.store[props.storeProp].customFields?.length,
+  () => {
+    if (lastMatchedLrDetails.value) {
+      applyLrInvoiceFields(lastMatchedLrDetails.value)
+    }
+  }
+)
+
 //
 // if (
 //   route.params.id &&
@@ -622,6 +650,104 @@ function getOfficeFieldNumber(label) {
 
 function getOfficeField(label) {
   return itemCustomFields.value.find((_field) => _field.label === label)
+}
+
+const fetchAndApplyLrReceiptDetails = debounce(async (docketNumber) => {
+  const normalizedDocketNumber = String(docketNumber || '').trim()
+
+  if (!isOfficeInvoiceTemplate.value || !normalizedDocketNumber) {
+    lastMatchedLrDetails.value = null
+    return
+  }
+
+  try {
+    const response = await props.store.fetchLrReceiptDetailsByDocket(normalizedDocketNumber)
+
+    if (normalizedDocketNumber !== String(consignmentNumber.value || '').trim()) {
+      return
+    }
+
+    if (!response.data?.found) {
+      lastMatchedLrDetails.value = null
+      return
+    }
+
+    applyLrReceiptDetails(response.data)
+  } catch (error) {
+    lastMatchedLrDetails.value = null
+  }
+}, 400)
+
+function applyLrReceiptDetails(details) {
+  lastMatchedLrDetails.value = details
+
+  const itemFields = details.item_fields || {}
+  let itemUpdated = false
+
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'From', itemFields.From) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Destination', itemFields.Destination) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Vehicle No', itemFields['Vehicle No']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Invoice No', itemFields['Invoice No']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Consignment Date', details.invoice_date) || itemUpdated
+
+  if (itemUpdated) {
+    props.store.$patch((state) => {
+      state[props.storeProp].items[props.index].customFields = [...itemCustomFields.value]
+    })
+
+    syncItemToStore()
+  }
+
+  applyLrInvoiceFields(details)
+}
+
+function applyLrInvoiceFields(details) {
+  const invoiceFields = props.store[props.storeProp].customFields || []
+  let updated = false
+
+  updated = setCustomFieldValue(
+    invoiceFields,
+    'GST Tax Through',
+    details.invoice_fields?.['GST Tax Through']
+  ) || updated
+
+  if (!updated) {
+    selectLrCustomer(details)
+    return
+  }
+
+  props.store.$patch((state) => {
+    state[props.storeProp].customFields = [...invoiceFields]
+  })
+
+  selectLrCustomer(details)
+}
+
+function selectLrCustomer(details) {
+  if (!details.customer_id || props.store[props.storeProp].customer_id === details.customer_id) {
+    return
+  }
+
+  props.store.selectCustomer(details.customer_id)
+}
+
+function setCustomFieldValue(fields, label, value) {
+  if (value === null || value === undefined || value === '') {
+    return false
+  }
+
+  const field = fields.find((_field) => normalizeCustomFieldLabel(_field.label) === normalizeCustomFieldLabel(label))
+
+  if (!field || field.value === value) {
+    return false
+  }
+
+  field.value = value
+  return true
+}
+
+function normalizeCustomFieldLabel(label) {
+  return String(label || '').replace(/[^a-z0-9]+/gi, '').toLowerCase()
 }
 
 function syncTransportAmountToStore() {

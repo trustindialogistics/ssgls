@@ -254,3 +254,8 @@ cd "C:\Users\18042\OneDrive\Documents\InvoiceShelf\InvoiceShelf"
 
 Open:
 http://127.0.0.1:8000/login
+
+
+
+cd C:\Users\18042\OneDrive\Documents\InvoiceShelf\InvoiceShelf
+docker-compose -f docker-compose.local.yml up -d

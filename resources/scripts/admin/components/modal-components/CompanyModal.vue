@@ -186,14 +186,17 @@ const v$ = useVuelidate(rules, { newCompanyForm })
 
 async function getInitials() {
   isFetchingInitialData.value = true
-  await globalStore.fetchCurrencies()
-  await globalStore.fetchCountries()
 
-  newCompanyForm.currency = companyStore.selectedCompanyCurrency.id
-  newCompanyForm.address.country_id =
-    companyStore.selectedCompany.address.country_id
+  try {
+    await globalStore.fetchCurrencies()
+    await globalStore.fetchCountries()
 
-  isFetchingInitialData.value = false
+    newCompanyForm.currency = companyStore.selectedCompanyCurrency?.id || ''
+    newCompanyForm.address.country_id =
+      companyStore.selectedCompany?.address?.country_id || null
+  } finally {
+    isFetchingInitialData.value = false
+  }
 }
 
 function onFileInputChange(fileName, file) {

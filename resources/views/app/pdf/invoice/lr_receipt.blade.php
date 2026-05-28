@@ -16,9 +16,9 @@
         }
 
         body {
-            color: #1f273d;
-            font-family: "DejaVu Sans";
-            font-size: 9px;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.2px;
             margin: 0;
         }
 
@@ -29,13 +29,13 @@
 
         td,
         th {
-            border: 1px solid #252b3d;
+            border: 1.1px solid #000;
             padding: 2px 5px;
             vertical-align: top;
         }
 
         .wrapper {
-            border: 1.5px solid #252b3d;
+            border: 1.6px solid #000;
             page-break-inside: avoid;
             width: 100%;
         }
@@ -45,14 +45,18 @@
         }
 
         .jurisdiction {
-            border-bottom: 1px solid #252b3d;
-            font-size: 8px;
-            line-height: 10px;
+            font-size: 7px;
+            left: 190px;
+            line-height: 9px;
+            position: absolute;
             text-align: center;
+            text-decoration: underline;
+            top: 6px;
+            width: 190px;
         }
 
         .header-left {
-            border-right: 1.5px solid #252b3d !important;
+            border-right: 1.1px solid #000 !important;
             padding: 0;
             vertical-align: top;
             width: 61%;
@@ -66,14 +70,15 @@
 
         .company-panel {
             border: 0;
-            padding: 4px 7px !important;
+            height: 132px;
+            padding: 2px 7px !important;
             position: relative;
             width: 100%;
         }
 
         .company-logo {
-            max-height: 68px;
-            max-width: 92px;
+            max-height: 88px;
+            max-width: 118px;
         }
 
         .brand-mark {
@@ -95,32 +100,34 @@
         }
 
         .company-name {
-            color: #26304a;
-            font-size: 24px;
+            color: #111;
+            font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
+            font-size: 28px;
             font-weight: bold;
-            line-height: 25px;
-            margin-top: 2px;
+            line-height: 28px;
+            margin-top: 3px;
         }
 
         .company-tagline {
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: bold;
-            line-height: 12px;
+            line-height: 11px;
         }
 
         .company-address {
-            font-size: 9px;
-            line-height: 11px;
-            margin-top: 2px;
+            font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
+            font-size: 8px;
+            line-height: 9.2px;
+            margin-top: 3px;
         }
 
         .header-contact {
-            font-size: 9px;
-            line-height: 12px;
+            font-size: 13px;
+            line-height: 14px;
             position: absolute;
             right: 7px;
             text-align: right;
-            top: 6px;
+            top: 2px;
             white-space: nowrap;
         }
 
@@ -134,22 +141,14 @@
             vertical-align: top;
         }
 
-        .copy-table td {
-            border: 0;
-            font-size: 9px;
-            font-weight: bold;
-            line-height: 12px;
-            padding: 1px 7px;
-        }
-
         .top-detail-table td {
-            height: 18px;
+            height: 20px;
             padding: 2px 6px;
             vertical-align: middle;
         }
 
         .top-detail-table .tax-line {
-            height: 34px;
+            height: 24px;
         }
 
         .party-table td {
@@ -157,20 +156,24 @@
         }
 
         .party-cell {
-            height: 50px;
+            height: 132px;
             padding: 4px 6px;
             width: 50%;
         }
 
         .party-lines {
-            font-size: 7.5px;
-            line-height: 8.5px;
-            margin-top: 1px;
+            border-bottom: 1.1px solid #000;
+            font-size: 8.5px;
+            height: 23px;
+            line-height: 21px;
+            margin-top: 0;
             overflow: hidden;
         }
 
         .party-details {
-            height: 34px;
+            height: 59px;
+            line-height: 13px;
+            padding-top: 4px;
         }
 
         .side-cell {
@@ -185,10 +188,10 @@
         }
 
         .docket-no {
-            font-size: 17px;
+            font-size: 8px;
             font-weight: bold;
-            letter-spacing: 3px;
-            text-align: center;
+            letter-spacing: 0;
+            text-align: left;
         }
 
         .owner-risk {
@@ -197,98 +200,138 @@
         }
 
         .tax-line {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             line-height: 13px;
         }
 
         .goods td {
-            height: 22px;
-            line-height: 14px;
+            font-size: 8.8px;
+            height: 20px;
+            line-height: 11px;
         }
 
         .goods .large {
-            height: 30px;
+            height: 36px;
+        }
+
+        .delivery-cell {
+            font-size: 9px;
+            line-height: 12px;
+        }
+
+        .eway-inline {
+            border-top: 1.1px solid #000;
+            margin: 15px -5px 0;
+            padding: 3px 5px 0;
         }
 
         .left-panel {
             padding: 0;
             vertical-align: top;
-            width: 61%;
+            width: 100%;
         }
 
         .freight-panel {
             padding: 0;
             vertical-align: top;
-            width: 39%;
+            width: 100%;
         }
 
         .charges th {
-            font-size: 9px;
-            height: 20px;
-            line-height: 11px;
+            font-size: 8px;
+            height: 25px;
+            line-height: 10px;
             text-align: center;
             vertical-align: middle;
         }
 
         .charges td {
-            height: 20.5px;
-            line-height: 14px;
+            height: 17px;
+            line-height: 12px;
         }
 
         .mode {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .copy-label-box {
-            font-size: 18px;
-            font-weight: bold;
-            height: 44px;
-            line-height: 44px;
-            text-align: center;
-        }
-
-        .goods-fill {
-            height: 44px;
-        }
-
-        .declaration {
-            font-size: 7.5px;
-            line-height: 9px;
-            height: 58px;
-        }
-
-        .agreement {
-            font-size: 8px;
-            font-weight: bold;
-            line-height: 11px;
-            text-align: center;
-        }
-
-        .consignee-sign {
-            height: 70px;
-            line-height: 13px;
-        }
-
-        .gst-payable {
-            font-size: 10px;
-            font-weight: bold;
-            height: 70px;
             line-height: 12px;
             text-align: center;
             vertical-align: middle;
         }
 
-        .for-company {
-            border-top: 1.5px solid #252b3d !important;
-            font-size: 13px;
+        .mode-struck {
+            color: #666;
+            text-decoration: line-through;
+        }
+
+        .mode-selected {
+            border-bottom: 1px solid #111;
+            padding-bottom: 1px;
+        }
+
+        .copy-label-box {
+            font-size: 12px;
+            height: 88px;
+            line-height: 16px;
+            padding: 8px 0 0 112px;
+            text-align: left;
+        }
+
+        .goods-fill {
+            height: 18px;
+        }
+
+        .footer-left {
+            table-layout: fixed;
+        }
+
+        .footer-left td {
+            height: 88px;
+        }
+
+        .declaration {
+            font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
+            font-size: 8.2px;
+            line-height: 8.9px;
+            height: 51px;
+            overflow: hidden;
+            padding: 3px 5px;
+        }
+
+        .agreement {
+            border-top: 1.1px solid #000;
+            font-size: 9.4px;
             font-weight: bold;
             height: 36px;
+            line-height: 11px;
+            padding-top: 7px;
+            text-align: center;
+        }
+
+        .consignee-sign {
+            height: 88px;
+            line-height: 13px;
+            padding: 4px 6px;
+        }
+
+        .gst-payable {
+            font-size: 10px;
+            font-weight: bold;
+            height: 39px;
+            line-height: 12px;
+            padding-top: 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .for-company {
+            border-bottom: 0 !important;
+            border-top: 1.1px solid #000 !important;
+            font-size: 13px;
+            font-weight: bold;
+            height: 49px;
             line-height: 18px;
-            padding-top: 5px;
+            padding-top: 12px;
             text-align: center;
         }
 
@@ -409,16 +452,18 @@
     $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
     $companyAddress = trim(strip_tags($company_address))
         ? $company_address
-        : '1953, Ground Floor, Mehsana Steel Compound, Umbergaon,<br>Dist. Valsad, Gujarat - 396171';
+        : 'B38, Param Logistics And Industrial Park,<br>Vapi, Gujarat';
     $companyPhone = $invoice->company?->address?->phone;
-    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '6355071130');
-    $email = $invoiceField(['email']) ?: 'ssglogistic2021@gmail.com';
+    $companyEmail = \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
+    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '7600475900 6355071130');
+    $email = $invoiceField(['email']) ?: ($companyEmail ?: '');
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $companyAddress);
     $displayCompanyAddress = preg_replace('/<p[^>]*>\s*(?:<strong>)?\s*\(?A Cost Effective Distribution\)?\s*(?:<\/strong>)?\s*<\/p>/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/<br\s*\/?>\s*\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
+    $displayCompanyAddress = str_ireplace('Param Logistics And Industrial Pack', 'Param Logistics And Industrial Park', $displayCompanyAddress);
     $panNo = 'BHLPS2943H';
     $gstin = '24BHLPS2943H1Z3';
 
@@ -440,14 +485,22 @@
     ) * 100;
 
     $modeOfPayment = $invoiceField(['mode_of_payment']) ?: 'TO PAY';
+    $selectedMode = $normalize($modeOfPayment);
+    $modeLabel = function (string $label) use ($normalize, $selectedMode) {
+        if ($normalize($label) === $selectedMode) {
+            return '<span class="mode-selected">'.e($label).'</span>';
+        }
+
+        return '<span class="mode-struck">'.e($label).'</span>';
+    };
     $gstPayableBy = $invoiceField(['gst_tax_payable_by']) ?: 'Consignor / Consignee';
-    $consigneeName = $partyDetails($invoice->customer, $invoiceField(['consignee']));
+    $consigneeName = $invoiceField(['consignee']);
     $consigneePhone = $invoice->customer->phone ?: $invoiceField(['consignee_phone_no']);
     $consigneeGstin = $invoice->customer->tax_id ?: $invoiceField(['consignee_gst_no']);
     $consignorName = $invoiceField(['consignor']);
     $consignorPhone = $invoiceField(['consignor_phone_no']);
     $consignorGstin = $invoiceField(['consignor_gst_no']);
-    $docketNumber = preg_replace('/^INV/i', 'DOC', $invoice->invoice_number);
+    $docketNumber = $invoice->invoice_number;
     $descriptionOfGoods = trim((string) $itemField(['description_of_goods']));
     $noOfArticles = trim((string) $itemField(['no_of_articles']));
 
@@ -461,14 +514,13 @@
 @endphp
 
     <div class="wrapper">
-        <div class="jurisdiction">Subject to Umbergaon Jurisdiction</div>
-
         <table>
             <tr>
                 <td class="header-left">
                     <table class="brand-block">
                         <tr>
                             <td class="company-panel">
+                                <div class="jurisdiction">Subject to Vapi Jurisdiction</div>
                                 <div class="header-contact">
                                     Mob. {{ $mobile }}<br>
                                     E-mail : {{ $email }}
@@ -487,25 +539,94 @@
                             </td>
                         </tr>
                     </table>
+
                     <table class="party-table">
                         <tr>
                             <td class="party-cell">
-                                <span class="label">Consignor</span>
+                                <span class="label">Consignor</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
-                                <span class="label">Consignee</span>
+                                <span class="label">Consignee</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>
                         </tr>
                     </table>
+
+                    <table class="goods">
+                        <tr>
+                            <td width="50%" class="large"><span class="label">Description of Goods</span><br>{{ $descriptionOfGoods }}</td>
+                            <td width="24%"><span class="label">No. of Articles</span><br>{{ $noOfArticles }}</td>
+                            <td><span class="label">Packing</span><br>{{ $itemField(['packing']) }}</td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">HSN CODE</span><br>{{ $itemField(['hsn_code']) }}</td>
+                            <td><span class="label">Actual Weight</span><br>{{ $itemField(['actual_weight']) }}</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="4" class="delivery-cell">
+                                <span class="label">Delivery At.:</span><br>
+                                {{ $itemField(['delivery_at']) }}
+                                <div class="eway-inline">
+                                    <span class="label">E-way Bill No.:</span><br>
+                                    {{ $itemField(['e_way_bill_no']) }}
+                                </div>
+                            </td>
+                            <td><span class="label">Charged Weight</span></td>
+                            <td>{{ $itemField(['charged_weight']) }}</td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">Invoice No. :</span></td>
+                            <td>{{ $itemField(['invoice_no']) }}</td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">Goods Value</span></td>
+                            <td>{{ $itemField(['goods_value']) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="goods-fill"><span class="label">POD Required</span></td>
+                            <td>{{ $itemField(['pod_required']) }}</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </table>
+
+                    <table class="footer-left">
+                        <tr>
+                            <td width="50%" style="padding: 0;">
+                                <div class="declaration">
+                                    <span class="label">DECLARATION :</span> We Have Not Taken Gst Credit As Per The Provisions
+                                    Of Convat Credit Rule 2004 Of Only Paid On Inputs Or Capital Goods
+                                    Used For Providing Taxable's Service To You And Have Also Availed
+                                    The Benefits Of Notification No. 11 &amp; 13/2017 Dated 28th June 2017
+                                </div>
+                                <div class="agreement">It is taken in to consideration that agrees with<br>all the terms and condition overleaf</div>
+                            </td>
+                            <td width="50%" class="consignee-sign">
+                                <span class="label">Rubber Stamp and Signature of Consignee</span><br><br><br><br>
+                                <span class="label">Phone / Mobile</span><br>
+                                {{ $consigneePhone }}
+                            </td>
+                        </tr>
+                    </table>
                 </td>
+
                 <td class="header-right">
-                    <div class="copy-label-box">{{ $copyLabel ?? '' }}</div>
+                    <div class="copy-label-box">
+                        ORIGINAL WHITE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNEE COPY<br>
+                        DUPLICATE GREEN&nbsp;&nbsp;&nbsp;: DRIVER COPY<br>
+                        TRIPLICATE PINK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNOR COPY<br>
+                        YELLOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: H. O COPY<br>
+                        DUPLICATE WHITE&nbsp;&nbsp;&nbsp;: FILE COPY
+                    </div>
                     <table class="top-detail-table">
                         <tr>
                             <td width="36%"><span class="label">Date :</span> {{ $invoice->formattedInvoiceDate }}</td>
@@ -522,88 +643,31 @@
                         <tr><td colspan="2"><span class="label">Truck No.:</span> {{ $invoiceField(['truck_no']) }}</td></tr>
                         <tr><td colspan="2" class="tax-line"><span class="label">PAN No.:</span> {{ $panNo }}<br><span class="label">GSTIN :</span> {{ $gstin }}</td></tr>
                     </table>
-                    <table class="copy-table">
-                        <tr><td>ORIGINAL WHITE</td><td>: CONSIGNEE COPY</td></tr>
-                        <tr><td>DUPLICATE GREEN</td><td>: DRIVER COPY</td></tr>
-                        <tr><td>TRIPALICATE PINK</td><td>: CONSIGNOR COPY</td></tr>
-                        <tr><td>YELLOW</td><td>: H. O. COPY</td></tr>
-                        <tr><td>DUPLICATE WHITE</td><td>: FILE COPY</td></tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
 
-        <table>
-            <tr>
-                <td class="left-panel">
-                    <table class="goods">
-                        <tr>
-                            <td width="50%" class="large"><span class="label">Description of Goods</span><br>{{ $descriptionOfGoods }}</td>
-                            <td width="24%"><span class="label">No. of Articles</span><br>{{ $noOfArticles }}</td>
-                            <td><span class="label">Packing</span><br>{{ $itemField(['packing']) }}</td>
-                        </tr>
-                        <tr>
-                            <td><span class="label">HSN CODE</span><br>{{ $itemField(['hsn_code']) }}</td>
-                            <td colspan="2" style="padding: 0;">
-                                <table>
-                                    <tr>
-                                        <td width="50%"><span class="label">Actual Weight</span><br>{{ $itemField(['actual_weight']) }}</td>
-                                        <td><span class="label">Charged Weight</span><br>{{ $itemField(['charged_weight']) }}</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td rowspan="4"><span class="label">Delivery At.:</span><br>{{ $itemField(['delivery_at']) }}</td>
-                            <td><span class="label">Charged Weight</span></td>
-                            <td>{{ $itemField(['charged_weight']) }}</td>
-                        </tr>
-                        <tr>
-                            <td><span class="label">Invoice No. :</span></td>
-                            <td>{{ $itemField(['invoice_no']) }}</td>
-                        </tr>
-                        <tr>
-                            <td><span class="label">Goods Value</span></td>
-                            <td>{{ $itemField(['goods_value']) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="goods-fill"><span class="label">POD Required.</span></td>
-                            <td>{{ $itemField(['pod_required']) }}</td>
-                        </tr>
-                        <tr>
-                            <td><span class="label">E-way Bill No.:</span><br>{{ $itemField(['e_way_bill_no']) }}</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                        </tr>
-                    </table>
-                </td>
-                <td class="freight-panel">
                     <table class="charges">
                         <tr>
-                            <th colspan="3">Description of Freight</th>
-                        </tr>
-                        <tr>
-                            <th width="42%">&nbsp;</th>
+                            <th width="42%">Description of<br>Freight</th>
                             <th width="34%">To Pay/Paid Rs.</th>
                             <th>Mode of<br>Payment</th>
                         </tr>
                         <tr>
                             <td><span class="label">Basic Freight</span></td>
                             <td class="text-right">{{ $basicFreight }}</td>
-                            <td rowspan="3" class="mode">{{ $modeOfPayment === 'TO PAY' ? 'TO PAY' : '' }}</td>
+                            <td class="mode">{!! $modeLabel('TO PAY') !!}</td>
                         </tr>
                         <tr>
                             <td><span class="label">Local Collection</span></td>
                             <td class="text-right">{{ $localCollection }}</td>
+                            <td class="mode"></td>
                         </tr>
                         <tr>
                             <td><span class="label">Door Delivery</span></td>
                             <td class="text-right">{{ $doorDelivery }}</td>
+                            <td rowspan="3" class="mode">{!! $modeLabel('PAID') !!}</td>
                         </tr>
                         <tr>
                             <td><span class="label">Hamali</span></td>
                             <td class="text-right">{{ $hamali }}</td>
-                            <td rowspan="2" class="mode">{{ $modeOfPayment === 'PAID' ? 'PAID' : '' }}</td>
                         </tr>
                         <tr>
                             <td><span class="label">Docket Charge</span></td>
@@ -612,7 +676,7 @@
                         <tr>
                             <td><span class="label">Other Charge</span></td>
                             <td class="text-right">{{ $otherCharge }}</td>
-                            <td rowspan="4" class="mode">{{ $modeOfPayment === 'TO BE BILLED AT' ? 'TO BE BILLED AT' : '' }}</td>
+                            <td rowspan="4" class="mode">{!! $modeLabel('TO BE BILLED AT') !!}</td>
                         </tr>
                         <tr>
                             <td><span class="label">F.O.V.</span></td>
@@ -627,33 +691,7 @@
                             <td class="text-right">{!! $moneyText($netAmount) !!}</td>
                         </tr>
                     </table>
-                </td>
-            </tr>
-        </table>
 
-        <table>
-            <tr>
-                <td width="61%" style="padding: 0;">
-                    <table>
-                        <tr>
-                            <td width="45%" style="padding: 0;">
-                                <div class="declaration">
-                                    <span class="label">DECLARATION :</span> We Have Not Taken Gst Credit As Per The Provisions
-                                    Of Convat Credit Rule 2004 Of Only Paid On Inputs Or Capital Goods
-                                    Used For Providing Taxable's Service To You And Have Also Availed
-                                    The Benefits Of Notification No. 11 &amp; 13/2017 Dated 28th June 2017
-                                </div>
-                                <div class="agreement">It is taken in to consideration that agrees with<br>all the terms and condition overleaf</div>
-                            </td>
-                            <td width="55%" class="consignee-sign">
-                                <span class="label">Rubber Stamp and Signature of Consignee</span><br><br><br>
-                                <span class="label">Phone / Mobile</span><br>
-                                {{ $consigneePhone }}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td width="39%" style="padding: 0;">
                     <table>
                         <tr>
                             <td class="gst-payable">

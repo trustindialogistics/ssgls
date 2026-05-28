@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\Currency;
 use App\Models\Expense;
+use App\Models\Invoice;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -32,9 +33,28 @@ class ProfitLossReportController extends Controller
 
         App::setLocale($locale);
 
-        $paymentsAmount = Payment::whereCompanyId($company->id)
+        $payments = Payment::with('invoice')
+            ->whereCompanyId($company->id)
+            ->whereHas('invoice', function ($query) {
+                $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+            })
             ->applyFilters($request->only(['from_date', 'to_date']))
-            ->sum('base_amount');
+            ->get();
+
+        $paymentsAmount = $payments->sum('base_amount');
+        $invoiceAmount = $payments
+            ->whereNotNull('invoice_id')
+            ->unique('invoice_id')
+            ->sum(function ($payment) {
+                $invoice = $payment->invoice;
+
+                if (! $invoice) {
+                    return 0;
+                }
+
+                return $invoice->base_total ?? ($invoice->total * $invoice->exchange_rate);
+            });
+        $netProfit = $paymentsAmount - $invoiceAmount;
 
         $expenseCategories = Expense::with('category')
             ->whereCompanyId($company->id)
@@ -70,8 +90,10 @@ class ProfitLossReportController extends Controller
         view()->share([
             'company' => $company,
             'income' => $paymentsAmount,
+            'invoiceAmount' => $invoiceAmount,
             'expenseCategories' => $expenseCategories,
             'totalExpense' => $totalAmount,
+            'netProfit' => $netProfit,
             'colorSettings' => $colorSettings,
             'company' => $company,
             'from_date' => $from_date,

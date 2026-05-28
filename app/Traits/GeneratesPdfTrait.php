@@ -167,6 +167,7 @@ trait GeneratesPdfTrait
         }
 
         foreach ($fields as $key => $field) {
+            $field = str_ireplace('Param Logistics And Industrial Pack', 'Param Logistics And Industrial Park', (string) $field);
             $fields[$key] = htmlspecialchars($field, ENT_QUOTES, 'UTF-8');
         }
 

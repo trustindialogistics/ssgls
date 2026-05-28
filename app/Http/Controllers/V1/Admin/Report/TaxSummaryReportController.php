@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\Currency;
+use App\Models\Payment;
 use App\Models\Tax;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -42,6 +43,14 @@ class TaxSummaryReportController extends Controller
             $totalAmount += $taxType->total_tax_amount;
         }
 
+        $tdsTaxAmount = (int) round(
+            Payment::whereCompanyId($company->id)
+                ->applyFilters($request->only(['from_date', 'to_date']))
+                ->selectRaw('COALESCE(SUM(tds_amount * exchange_rate), 0) as total_tds_tax_amount')
+                ->value('total_tds_tax_amount')
+        );
+        $totalAmount += $tdsTaxAmount;
+
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $company->id);
         $from_date = Carbon::createFromFormat('Y-m-d', $request->from_date)->translatedFormat($dateFormat);
         $to_date = Carbon::createFromFormat('Y-m-d', $request->to_date)->translatedFormat($dateFormat);
@@ -65,6 +74,7 @@ class TaxSummaryReportController extends Controller
 
         view()->share([
             'taxTypes' => $taxTypes,
+            'tdsTaxAmount' => $tdsTaxAmount,
             'totalTaxAmount' => $totalAmount,
             'colorSettings' => $colorSettings,
             'company' => $company,

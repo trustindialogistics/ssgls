@@ -173,6 +173,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useModalStore } from '@/scripts/stores/modal'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
+import { useCustomerStore } from '@/scripts/admin/stores/customer'
 import { useNotificationStore } from '@/scripts/stores/notification'
 import { useI18n } from 'vue-i18n'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
@@ -182,6 +183,7 @@ import { useMailDriverStore } from '@/scripts/admin/stores/mail-driver'
 
 const modalStore = useModalStore()
 const companyStore = useCompanyStore()
+const customerStore = useCustomerStore()
 const notificationStore = useNotificationStore()
 const invoiceStore = useInvoiceStore()
 const mailDriverStore = useMailDriverStore()
@@ -203,6 +205,7 @@ const invoiceMailFields = ref([
 
 const invoiceMailForm = reactive({
   id: null,
+  copy_type: null,
   from: null,
   to: null,
   cc: null,
@@ -259,16 +262,100 @@ async function setInitialData() {
   let admin = await companyStore.fetchBasicMailConfig()
 
   invoiceMailForm.id = modalStore.id
+  invoiceMailForm.copy_type = modalData.value?.copy_type || null
 
   if (admin.data) {
     invoiceMailForm.from = admin.data.from_mail
   }
 
   if (modalData.value) {
-    invoiceMailForm.to = modalData.value.customer.email
+    invoiceMailForm.to = await getInvoiceRecipientEmail()
   }
 
-  invoiceMailForm.body = companyStore.selectedCompanySettings.invoice_mail_body
+  invoiceMailForm.subject = isLrReceipt.value ? 'New LR' : t('invoices.new_invoice')
+  invoiceMailForm.body = isLrReceipt.value
+    ? getLrMailBody(companyStore.selectedCompanySettings.invoice_mail_body)
+    : companyStore.selectedCompanySettings.invoice_mail_body
+}
+
+const isLrReceipt = computed(() => {
+  return modalData.value?.template_name === 'lr_receipt'
+})
+
+function getLrMailBody(body) {
+  return String(body || '')
+    .replace(/new invoice/gi, 'new LR')
+    .replace(/invoice/gi, 'LR')
+}
+
+async function getInvoiceRecipientEmail() {
+  if (modalData.value?.template_name !== 'lr_receipt') {
+    return modalData.value?.customer?.email
+  }
+
+  return (
+    await getConsignorCustomerEmail() ||
+    extractEmailAddress(getInvoiceFieldValue('Consignor')) ||
+    modalData.value?.customer?.email
+  )
+}
+
+async function getConsignorCustomerEmail() {
+  const consignorName = getInvoiceFieldValue('Consignor')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean)
+
+  if (!consignorName) {
+    return null
+  }
+
+  try {
+    const response = await customerStore.fetchCustomers({
+      search: consignorName,
+      limit: 'all',
+    })
+
+    const normalizedConsignorName = normalizeFieldLabel(consignorName)
+    const customer = response.data.data.find((_customer) => {
+      return [
+        _customer.name,
+        _customer.display_name,
+        _customer.contact_name,
+        _customer.company_name,
+      ].some((name) => normalizeFieldLabel(name) === normalizedConsignorName)
+    })
+
+    return customer?.email || null
+  } catch (error) {
+    return null
+  }
+}
+
+function getInvoiceFieldEmail(label) {
+  return extractEmailAddress(getInvoiceFieldValue(label))
+}
+
+function getInvoiceFieldValue(label) {
+  const normalizedLabel = normalizeFieldLabel(label)
+  const field = modalData.value?.fields?.find((_field) => {
+    return (
+      normalizeFieldLabel(_field.custom_field?.label) === normalizedLabel ||
+      normalizeFieldLabel(_field.custom_field?.name) === normalizedLabel
+    )
+  })
+
+  return field?.default_answer || ''
+}
+
+function extractEmailAddress(value) {
+  const emailMatch = String(value || '').match(/[^\s<>,;:]+@[^\s<>,;:]+\.[^\s<>,;:]+/)
+
+  return emailMatch ? emailMatch[0] : null
+}
+
+function normalizeFieldLabel(label) {
+  return String(label || '').replace(/[^a-z0-9]+/gi, '').toLowerCase()
 }
 
 async function submitForm() {

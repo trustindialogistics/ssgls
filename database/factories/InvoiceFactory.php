@@ -90,7 +90,7 @@ class InvoiceFactory extends Factory
             'sequence_number' => $sequenceNumber->nextSequenceNumber,
             'customer_sequence_number' => $sequenceNumber->nextCustomerSequenceNumber,
             'reference_number' => $sequenceNumber->getNextNumber(),
-            'template_name' => 'invoice1',
+            'template_name' => Invoice::TEMPLATE_OFFICE_INVOICE,
             'status' => Invoice::STATUS_DRAFT,
             'tax_per_item' => 'NO',
             'tax_included' => false,

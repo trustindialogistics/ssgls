@@ -30,20 +30,6 @@
       {{ $t('general.copy_pdf_url') }}
     </BaseDropdownItem>
 
-    <template v-if="isLrReceipt">
-      <BaseDropdownItem
-        v-for="copyOption in lrCopyOptions"
-        :key="copyOption.value"
-        @click="openLrCopy(copyOption.value)"
-      >
-        <BaseIcon
-          name="ArrowDownTrayIcon"
-          class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
-        />
-        {{ copyOption.label }}
-      </BaseDropdownItem>
-    </template>
-
     <!-- View Invoice  -->
     <router-link
       v-if="
@@ -182,9 +168,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  lrCopyType: {
+    type: String,
+    default: null,
+  },
 })
-
-const emit = defineEmits(['show-lr-copy'])
 
 const invoiceStore = useInvoiceStore()
 const modalStore = useModalStore()
@@ -204,6 +192,7 @@ const isLrReceipt = computed(() => isLrReceiptRoute.value || props.row?.template
 const sendLabel = computed(() => isLrReceipt.value ? 'Send LR Receipt' : t('invoices.send_invoice'))
 const resendLabel = computed(() => isLrReceipt.value ? 'Resend LR Receipt' : t('invoices.resend_invoice'))
 const cloneLabel = computed(() => isLrReceipt.value ? 'Clone LR Receipt' : t('invoices.clone_invoice'))
+const deleteMessage = computed(() => isLrReceipt.value ? 'Are you sure you want to delete this LR Receipt?' : t('invoices.confirm_delete'))
 
 function canReSendInvoice(row) {
   return (
@@ -224,7 +213,7 @@ async function removeInvoice(id) {
   dialogStore
     .openDialog({
       title: t('general.are_you_sure'),
-      message: t('invoices.confirm_delete'),
+      message: deleteMessage.value,
       yesLabel: t('general.ok'),
       noLabel: t('general.cancel'),
       variant: 'danger',
@@ -299,10 +288,13 @@ async function onMarkAsSent(id) {
 
 async function sendInvoice(invoice) {
   modalStore.openModal({
-    title: t('invoices.send_invoice'),
+    title: isLrReceipt.value ? 'Send LR Receipt' : t('invoices.send_invoice'),
     componentName: 'SendInvoiceModal',
     id: invoice.id,
-    data: invoice,
+    data: {
+      ...invoice,
+      copy_type: isLrReceipt.value ? props.lrCopyType : null,
+    },
     variant: 'sm',
   })
 }
@@ -316,27 +308,6 @@ function copyPdfUrl() {
     type: 'success',
     message: t('general.copied_pdf_url_clipboard'),
   })
-}
-
-const lrCopyOptions = [
-  { value: 'consignee', label: 'Download Consignee Copy' },
-  { value: 'driver', label: 'Download Driver Copy' },
-  { value: 'consignor', label: 'Download Consignor Copy' },
-  { value: 'ho', label: 'Download H.O. Copy' },
-  { value: 'file', label: 'Download File Copy' },
-]
-
-function openLrCopy(copyType) {
-  if (isViewRoute.value && isLrReceipt.value) {
-    emit('show-lr-copy', copyType)
-    return
-  }
-
-  window.open(
-    `/invoices/pdf/${props.row.unique_hash}?copy=${copyType}`,
-    '_blank',
-    'noopener'
-  )
 }
 
 function openPodUpload(invoice) {

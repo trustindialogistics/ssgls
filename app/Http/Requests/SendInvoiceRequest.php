@@ -38,6 +38,10 @@ class SendInvoiceRequest extends FormRequest
             'bcc' => [
                 'nullable',
             ],
+            'copy_type' => [
+                'nullable',
+                'in:consignee,driver,consignor,ho,file',
+            ],
         ];
     }
 }

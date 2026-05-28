@@ -7,7 +7,7 @@
     />
   </BaseContentPlaceholders>
 
-  <div v-else class="max-h-[173px]">
+  <div v-else>
     <CustomerModal />
     <!-- <SalesTax :type="type" /> -->
 
@@ -23,17 +23,16 @@
       "
       @click.stop
     >
-      <div class="flex relative justify-between mb-2">
+      <div class="flex relative justify-between gap-3 mb-2">
         <BaseText
           :text="selectedCustomer.name"
           class="flex-1 text-base font-medium text-left text-gray-900"
         />
-        <div class="flex">
+        <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
           <a
             class="
               relative
               my-0
-              ml-6
               text-sm
               font-medium
               cursor-pointer
@@ -51,7 +50,6 @@
             class="
               relative
               my-0
-              ml-6
               text-sm
               flex
               items-center
@@ -66,7 +64,7 @@
           </a>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-8 mt-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-2">
         <div v-if="selectedCustomer.billing" class="flex flex-col">
           <label
             class="
@@ -505,7 +503,17 @@ async function fetchInitialCustomers() {
 }
 
 async function ensureCustomersLoaded() {
-  if (customerStore.customers.length || isSearchingCustomer.value) {
+  if (isSearchingCustomer.value) {
+    return
+  }
+
+  if (props.label === 'Consignee') {
+    search.value = null
+    await fetchInitialCustomers()
+    return
+  }
+
+  if (customerStore.customers.length) {
     return
   }
 

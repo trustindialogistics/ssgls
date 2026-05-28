@@ -176,7 +176,6 @@ class CustomFieldsController extends Controller
     {
         if (! $templateName) {
             return array_values(array_unique(array_merge(
-                $this->getTransportInvoiceSlugs('ssgl_transport'),
                 $this->getTransportInvoiceSlugs('office_invoice'),
                 $this->getTransportInvoiceSlugs('lr_receipt')
             )));
@@ -254,14 +253,6 @@ class CustomFieldsController extends Controller
                             ['name' => 'CONSIGNEE'],
                         ],
                     ],
-                    [
-                        'name' => 'Signature Name',
-                        'type' => 'Dropdown',
-                        'options' => [
-                            ['name' => 'Madanlal Sharma'],
-                            ['name' => 'Satpal Sharma'],
-                        ],
-                    ],
                 ],
                 'Item' => [
                     ['name' => 'Consignment Number'],
@@ -280,48 +271,7 @@ class CustomFieldsController extends Controller
             ];
         }
 
-        return [
-            'Invoice' => [
-                ['name' => 'Billing Branch Name Address'],
-                ['name' => 'PAN No'],
-                ['name' => 'GSTIN'],
-                ['name' => 'Party Code'],
-                ['name' => 'Branch Code'],
-                ['name' => 'Tick Bill Type'],
-                ['name' => 'Basis Of Charges'],
-                ['name' => 'Cash'],
-                ['name' => 'Cheque No'],
-                ['name' => 'Payment Date', 'type' => 'Date'],
-                ['name' => 'Bank'],
-                ['name' => 'Others'],
-                ['name' => 'Enclosures'],
-                ['name' => 'Service Tax Through'],
-                ['name' => 'EMP Code'],
-                ['name' => 'Prepared By'],
-                ['name' => 'Checked By'],
-                [
-                    'name' => 'Signature Name',
-                    'type' => 'Dropdown',
-                    'options' => [
-                        ['name' => 'Madanlal Sharma'],
-                        ['name' => 'Satpal Sharma'],
-                    ],
-                ],
-                ['name' => 'Rupees In Words'],
-            ],
-            'Item' => [
-                ['name' => 'Consignment Number'],
-                ['name' => 'Consignment Date', 'type' => 'Date'],
-                ['name' => 'Invoice No'],
-                ['name' => 'Destination'],
-                ['name' => 'Vehicle No'],
-                ['name' => 'Pkg'],
-                ['name' => 'Charged Weight Kgs'],
-                ['name' => 'Rate', 'type' => 'Number'],
-                ['name' => 'Other Charge', 'type' => 'Number'],
-                ['name' => 'DD Charge', 'type' => 'Number'],
-            ],
-        ];
+        return [];
     }
 
     private function makeTransportInvoiceSlug(string $modelType, string $name): string
@@ -363,6 +313,6 @@ class CustomFieldsController extends Controller
 
     private function isTransportInvoiceTemplate(?string $templateName): bool
     {
-        return in_array($templateName, ['ssgl_transport', 'office_invoice', 'lr_receipt'], true);
+        return in_array($templateName, ['office_invoice', 'lr_receipt'], true);
     }
 }

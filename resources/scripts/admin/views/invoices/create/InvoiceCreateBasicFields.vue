@@ -20,25 +20,34 @@
           style="min-height: 170px"
         />
       </BaseContentPlaceholders>
-      <div v-else class="max-h-[173px]">
+      <div v-else>
         <div
           v-if="selectedConsignor"
           class="flex flex-col p-4 bg-white border border-gray-200 border-solid min-h-[170px] rounded-md"
         >
-          <div class="flex relative justify-between mb-2">
+          <div class="flex relative justify-between gap-3 mb-2">
             <BaseText
               :text="selectedConsignor.name || selectedConsignor.display_name"
               class="flex-1 text-base font-medium text-left text-gray-900"
             />
-            <a
-              class="relative my-0 ml-6 text-sm flex items-center font-medium cursor-pointer text-primary-500"
-              @click="resetConsignor"
-            >
-              <BaseIcon name="XCircleIcon" class="text-gray-500 h-4 w-4 mr-1" />
-              {{ $t('general.deselect') }}
-            </a>
+            <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
+              <a
+                class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
+                @click.stop="editConsignor"
+              >
+                <BaseIcon name="PencilIcon" class="text-gray-500 h-4 w-4 mr-1" />
+                {{ $t('general.edit') }}
+              </a>
+              <a
+                class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
+                @click="resetConsignor"
+              >
+                <BaseIcon name="XCircleIcon" class="text-gray-500 h-4 w-4 mr-1" />
+                {{ $t('general.deselect') }}
+              </a>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-8 mt-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-2">
             <div v-if="selectedConsignor.billing" class="flex flex-col">
               <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
                 Bill To
@@ -355,6 +364,20 @@ function openCustomerModal(close) {
 
   modalStore.openModal({
     title: 'Add Customer',
+    componentName: 'CustomerModal',
+    variant: 'md',
+  })
+}
+
+async function editConsignor() {
+  if (!selectedConsignor.value?.id) {
+    return
+  }
+
+  await customerStore.fetchCustomer(selectedConsignor.value.id)
+
+  modalStore.openModal({
+    title: 'Edit Customer',
     componentName: 'CustomerModal',
     variant: 'md',
   })

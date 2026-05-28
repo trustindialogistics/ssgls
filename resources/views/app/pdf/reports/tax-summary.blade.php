@@ -179,6 +179,20 @@
                     </td>
                 </tr>
                 @endforeach
+                @if ($tdsTaxAmount > 0)
+                <tr>
+                    <td>
+                        <p class="tax-title">
+                            TDS
+                        </p>
+                    </td>
+                    <td>
+                        <p class="tax-amount">
+                            {!! format_money_pdf($tdsTaxAmount, $currency) !!}
+                        </p>
+                    </td>
+                </tr>
+                @endif
 
             </table>
         </div>

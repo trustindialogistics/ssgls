@@ -1,12 +1,12 @@
-name: my-company
+name: company_1
 
 services:
-  my-company:
-    container_name: my-company
+  company_1:
+    container_name: company_1
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: my-company:latest
+    image: company_1:latest
     ports:
       - "8090:8080"
     environment:

@@ -58,6 +58,10 @@ class SendInvoiceMail extends Mailable
 
             if (($this->data['invoice']['template_name'] ?? null) === 'lr_receipt') {
                 $fileName = preg_replace('/^INV/i', 'DOC', $fileName);
+
+                if (! empty($this->data['attach']['copy_type'])) {
+                    $fileName .= '-'.$this->data['attach']['copy_type'];
+                }
             }
 
             $mailContent->attachData(

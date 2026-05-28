@@ -451,7 +451,7 @@ async function removeMultipleInvoices() {
   dialogStore
     .openDialog({
       title: t('general.are_you_sure'),
-      message: t('invoices.confirm_delete'),
+      message: 'Are you sure you want to delete these LR Receipts?',
       yesLabel: t('general.ok'),
       noLabel: t('general.cancel'),
       variant: 'danger',

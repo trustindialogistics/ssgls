@@ -22,15 +22,41 @@
             {{ $t('dashboard.monthly_chart.title') }}
           </h6>
 
-          <div class="w-full my-2 md:m-0 md:w-40 h-10">
-            <BaseMultiselect
-              v-model="selectedYear"
-              :options="years"
-              :allow-empty="false"
-              :show-labels="false"
-              :placeholder="$t('dashboard.select_year')"
-              :can-deselect="false"
-            />
+          <div class="flex flex-col gap-3 my-2 md:m-0 sm:flex-row sm:items-end">
+            <div class="w-full h-10 sm:w-40">
+              <BaseMultiselect
+                v-model="selectedYear"
+                :options="years"
+                value-prop="value"
+                :allow-empty="false"
+                :show-labels="false"
+                :placeholder="$t('dashboard.select_year')"
+                :can-deselect="false"
+              />
+            </div>
+            <template v-if="selectedYear === 'Custom'">
+              <BaseInputGroup label="From Date">
+                <BaseDatePicker
+                  v-model="customRange.from_date"
+                  :calendar-button="true"
+                  calendar-button-icon="calendar"
+                />
+              </BaseInputGroup>
+              <BaseInputGroup label="To Date">
+                <BaseDatePicker
+                  v-model="customRange.to_date"
+                  :calendar-button="true"
+                  calendar-button-icon="calendar"
+                />
+              </BaseInputGroup>
+              <BaseButton
+                variant="primary"
+                type="button"
+                @click="loadCustomRange"
+              >
+                Apply
+              </BaseButton>
+            </template>
           </div>
         </div>
 
@@ -149,13 +175,14 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent, ref, watch, inject } from 'vue'
+import { defineAsyncComponent, ref, watch, inject, reactive } from 'vue'
 import { useDashboardStore } from '@/scripts/admin/stores/dashboard'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import ChartPlaceholder from './DashboardChartPlaceholder.vue'
 import abilities from '@/scripts/admin/stub/abilities'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import { useI18n } from 'vue-i18n'
+import moment from 'moment'
 
 const dashboardStore = useDashboardStore()
 const companyStore = useCompanyStore()
@@ -166,26 +193,55 @@ const LineChart = defineAsyncComponent(() =>
 const { t } = useI18n()
 const utils = inject('utils')
 const userStore = useUserStore()
-const years = ref( [{label: t('dateRange.this_year'), value: 'This year'}, {label: t( 'dateRange.previous_year'), value:
-  'Previous year'}])
+const years = ref([
+  { label: t('dateRange.this_year'), value: 'This year' },
+  { label: t('dateRange.previous_year'), value: 'Previous year' },
+  { label: 'Custom Date', value: 'Custom' },
+])
 const selectedYear = ref('This year')
+const customRange = reactive({
+  from_date: moment().startOf('year').format('YYYY-MM-DD'),
+  to_date: moment().format('YYYY-MM-DD'),
+})
 
 watch(
   selectedYear,
   (val) => {
-    if (val === 'Previous year') {
-      let params = { previous_year: true }
-      loadData(params)
-    } else {
-      loadData()
-    }
+    onChangeYear(val)
   },
   { immediate: true }
 )
+
+function selectedYearValue(data) {
+  return data?.value || data
+}
+
+function onChangeYear(data) {
+  const value = selectedYearValue(data)
+
+  if (value === 'Custom') {
+    loadCustomRange()
+    return
+  }
+
+  if (value === 'Previous year') {
+    loadData({ previous_year: true })
+    return
+  }
+
+  loadData()
+}
 
 async function loadData(params) {
   if (userStore.hasAbilities(abilities.DASHBOARD)) {
     await dashboardStore.loadData(params)
   }
+}
+
+async function loadCustomRange() {
+  await loadData({
+    from_date: moment(customRange.from_date).format('YYYY-MM-DD'),
+    to_date: moment(customRange.to_date).format('YYYY-MM-DD'),
+  })
 }
 </script>

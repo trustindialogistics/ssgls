@@ -7,6 +7,7 @@ use App\Http\Requests;
 use App\Http\Requests\DeleteCustomersRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
+use App\Models\Invoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,8 +27,12 @@ class CustomersController extends Controller
         $customers = Customer::with('creator')
             ->whereCompany()
             ->applyFilters($request->all())
-            ->withSum('invoices as base_due_amount', 'base_due_amount')
-            ->withSum('invoices as due_amount', 'due_amount')
+            ->withSum([
+                'invoices as base_due_amount' => fn ($query) => $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE),
+            ], 'base_due_amount')
+            ->withSum([
+                'invoices as due_amount' => fn ($query) => $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE),
+            ], 'due_amount')
             ->paginateData($limit);
 
         return CustomerResource::collection($customers)

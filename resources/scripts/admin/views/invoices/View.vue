@@ -1,6 +1,6 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { debounce } from 'lodash'
 
@@ -27,8 +27,9 @@ const route = useRoute()
 
 const isMarkAsSent = ref(false)
 const isLoading = ref(false)
-const selectedLrCopy = ref(null)
-const selectedLrCopyVersion = ref(0)
+const pdfFrameKey = ref(0)
+const pdfFrameSrc = ref('')
+const selectedLrCopyType = ref(null)
 
 const invoiceList = ref(null)
 const currentPageNumber = ref(1)
@@ -52,6 +53,9 @@ const invoiceResourcePath = computed(() =>
 const sendButtonLabel = computed(() =>
   isLrReceiptRoute.value ? 'Send LR Receipt' : t('invoices.send_invoice')
 )
+const sendModalTitle = computed(() =>
+  isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
+)
 
 const getOrderBy = computed(() => {
   if (searchData.orderBy === 'asc' || searchData.orderBy == null) {
@@ -68,13 +72,7 @@ const getOrderName = computed(() => {
 })
 
 const shareableLink = computed(() => {
-  const baseUrl = `/invoices/pdf/${invoiceData.value.unique_hash}`
-
-  if (isLrReceiptView.value && selectedLrCopy.value) {
-    return `${baseUrl}?copy=${selectedLrCopy.value}&v=${selectedLrCopyVersion.value}`
-  }
-
-  return baseUrl
+  return pdfFrameSrc.value
 })
 
 const getCurrentInvoiceId = computed(() => {
@@ -117,10 +115,13 @@ async function onMarkAsSent() {
 
 async function onSendInvoice(id) {
   modalStore.openModal({
-    title: t('invoices.send_invoice'),
+    title: sendModalTitle.value,
     componentName: 'SendInvoiceModal',
     id: invoiceData.value.id,
-    data: invoiceData.value,
+    data: {
+      ...invoiceData.value,
+      copy_type: selectedLrCopyType.value,
+    },
   })
 }
 
@@ -213,13 +214,23 @@ async function loadInvoice() {
   let response = await invoiceStore.fetchInvoice(route.params.id)
   if (response.data) {
     invoiceData.value = { ...response.data.data }
-    selectedLrCopy.value = null
+    pdfFrameSrc.value = `/invoices/pdf/${invoiceData.value.unique_hash}`
+    selectedLrCopyType.value = null
+    pdfFrameKey.value += 1
   }
 }
 
-function showLrCopy(copyType) {
-  selectedLrCopy.value = copyType
-  selectedLrCopyVersion.value += 1
+async function showLrCopy(copyType) {
+  const pdfUrl = `/invoices/pdf/${invoiceData.value.unique_hash}?copy=${copyType}&_=${Date.now()}`
+
+  selectedLrCopyType.value = copyType
+  pdfFrameSrc.value = 'about:blank'
+  pdfFrameKey.value += 1
+
+  await nextTick()
+
+  pdfFrameSrc.value = pdfUrl
+  pdfFrameKey.value += 1
 }
 
 async function onSearched() {
@@ -307,6 +318,7 @@ onSearched = debounce(onSearched, 500)
           class="ml-3"
           :row="invoiceData"
           :load-data="loadInvoice"
+          :lr-copy-type="selectedLrCopyType"
           @show-lr-copy="showLrCopy"
         />
       </template>
@@ -531,7 +543,7 @@ onSearched = debounce(onSearched, 500)
       style="height: 75vh"
     >
       <iframe
-        :key="shareableLink"
+        :key="pdfFrameKey"
         :src="`${shareableLink}`"
         class="
           flex-1

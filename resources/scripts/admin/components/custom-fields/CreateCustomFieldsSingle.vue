@@ -77,6 +77,7 @@ const isHiddenLrField = computed(() => {
     [
       'Time',
       'Consignor',
+      'Consignor Email',
       'Consignor Phone No',
       'Consignor GST No',
       'Consignee',

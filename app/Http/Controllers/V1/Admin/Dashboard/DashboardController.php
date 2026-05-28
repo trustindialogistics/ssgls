@@ -40,8 +40,10 @@ class DashboardController extends Controller
         $startDate = Carbon::now();
         $start = Carbon::now();
         $end = Carbon::now();
+        $rangeEndDate = null;
         $terms = explode('-', $fiscalYear);
         $companyStartMonth = intval($terms[0]);
+        $hasCustomRange = $request->filled(['from_date', 'to_date']);
 
         if ($companyStartMonth <= $start->month) {
             $startDate->month($companyStartMonth)->startOfMonth();
@@ -59,12 +61,22 @@ class DashboardController extends Controller
             $end->subYear()->endOfMonth();
         }
 
-        while ($monthCounter < 12) {
+        if ($hasCustomRange) {
+            $startDate = Carbon::parse($request->from_date)->startOfDay();
+            $rangeEndDate = Carbon::parse($request->to_date)->endOfDay();
+            $start = $startDate->copy()->startOfMonth();
+            $end = $startDate->copy()->endOfMonth();
+        }
+
+        while ($hasCustomRange ? $start->lte($rangeEndDate) : $monthCounter < 12) {
+            $bucketStart = $hasCustomRange && $start->lt($startDate) ? $startDate->copy() : $start->copy();
+            $bucketEnd = $hasCustomRange && $end->gt($rangeEndDate) ? $rangeEndDate->copy() : $end->copy();
+
             array_push(
                 $invoice_totals,
                 Invoice::whereBetween(
                     'invoice_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->whereRegularInvoice()
@@ -74,7 +86,7 @@ class DashboardController extends Controller
                 $expense_totals,
                 Expense::whereBetween(
                     'expense_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->where(function ($query) {
@@ -89,7 +101,7 @@ class DashboardController extends Controller
                 $receipt_totals,
                 Payment::whereBetween(
                     'payment_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->sum('base_amount')
@@ -99,18 +111,18 @@ class DashboardController extends Controller
                 ($receipt_totals[$i] - $expense_totals[$i])
             );
             $i++;
-            array_push($months, $start->translatedFormat('M'));
+            array_push($months, $hasCustomRange ? $start->translatedFormat('M y') : $start->translatedFormat('M'));
             $monthCounter++;
             $end->startOfMonth();
             $start->addMonth()->startOfMonth();
             $end->addMonth()->endOfMonth();
         }
 
-        $start->subMonth()->endOfMonth();
+        $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
 
         $total_sales = Invoice::whereBetween(
             'invoice_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->whereRegularInvoice()
@@ -118,7 +130,7 @@ class DashboardController extends Controller
 
         $total_receipts = Payment::whereBetween(
             'payment_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->where(function ($query) {
@@ -131,7 +143,7 @@ class DashboardController extends Controller
 
         $total_expenses = Expense::whereBetween(
             'expense_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->sum('base_amount');

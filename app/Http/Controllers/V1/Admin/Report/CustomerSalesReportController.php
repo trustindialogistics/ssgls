@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,10 +39,17 @@ class CustomerSalesReportController extends Controller
             $query->whereBetween(
                 'invoice_date',
                 [$start->format('Y-m-d'), $end->format('Y-m-d')]
-            );
+            )
+                ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
         }])
             ->where('company_id', $company->id)
-            ->applyInvoiceFilters($request->only(['from_date', 'to_date']))
+            ->whereHas('invoices', function ($query) use ($start, $end) {
+                $query->whereBetween(
+                    'invoice_date',
+                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                )
+                    ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+            })
             ->get();
 
         $totalAmount = 0;

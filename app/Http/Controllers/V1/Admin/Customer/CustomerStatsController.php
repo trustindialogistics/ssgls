@@ -4,6 +4,8 @@ namespace App\Http\Controllers\V1\Admin\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\InvoiceResource;
+use App\Http\Resources\PaymentResource;
 use App\Models\CompanySetting;
 use App\Models\Customer;
 use App\Models\Expense;
@@ -24,41 +26,33 @@ class CustomerStatsController extends Controller
     {
         $this->authorize('view', $customer);
 
-        $i = 0;
         $months = [];
         $invoiceTotals = [];
         $expenseTotals = [];
         $receiptTotals = [];
         $netProfits = [];
-        $monthCounter = 0;
-        $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
-        $startDate = Carbon::now();
-        $start = Carbon::now();
-        $end = Carbon::now();
-        $terms = explode('-', $fiscalYear);
-        $companyStartMonth = intval($terms[0]);
 
-        if ($companyStartMonth <= $start->month) {
-            $startDate->month($companyStartMonth)->startOfMonth();
-            $start->month($companyStartMonth)->startOfMonth();
-            $end->month($companyStartMonth)->endOfMonth();
-        } else {
-            $startDate->subYear()->month($companyStartMonth)->startOfMonth();
-            $start->subYear()->month($companyStartMonth)->startOfMonth();
-            $end->subYear()->month($companyStartMonth)->endOfMonth();
-        }
+        [$startDate, $endDate] = $this->resolveDateRange($request);
+        $cursor = $startDate->copy()->startOfMonth();
+        $lastMonth = $endDate->copy()->startOfMonth();
 
-        if ($request->has('previous_year')) {
-            $startDate->subYear()->startOfMonth();
-            $start->subYear()->startOfMonth();
-            $end->subYear()->endOfMonth();
-        }
-        while ($monthCounter < 12) {
+        while ($cursor->lessThanOrEqualTo($lastMonth)) {
+            $bucketStart = $cursor->copy()->startOfMonth();
+            $bucketEnd = $cursor->copy()->endOfMonth();
+
+            if ($bucketStart->lessThan($startDate)) {
+                $bucketStart = $startDate->copy();
+            }
+
+            if ($bucketEnd->greaterThan($endDate)) {
+                $bucketEnd = $endDate->copy();
+            }
+
             array_push(
                 $invoiceTotals,
                 Invoice::whereBetween(
                     'invoice_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->whereCustomer($customer->id)
@@ -68,7 +62,7 @@ class CustomerStatsController extends Controller
                 $expenseTotals,
                 Expense::whereBetween(
                     'expense_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->whereUser($customer->id)
@@ -78,43 +72,39 @@ class CustomerStatsController extends Controller
                 $receiptTotals,
                 Payment::whereBetween(
                     'payment_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
+                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
                 )
                     ->whereCompany()
                     ->whereCustomer($customer->id)
                     ->sum('base_amount') ?? 0
             );
+
+            $i = count($receiptTotals) - 1;
             array_push(
                 $netProfits,
                 ($receiptTotals[$i] - $expenseTotals[$i])
             );
-            $i++;
-            array_push($months, $start->translatedFormat('M'));
-            $monthCounter++;
-            $end->startOfMonth();
-            $start->addMonth()->startOfMonth();
-            $end->addMonth()->endOfMonth();
+            array_push($months, $cursor->translatedFormat('M y'));
+            $cursor->addMonth()->startOfMonth();
         }
-
-        $start->subMonth()->endOfMonth();
 
         $salesTotal = Invoice::whereBetween(
             'invoice_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->whereCustomer($customer->id)
             ->sum('base_total');
         $totalReceipts = Payment::whereBetween(
             'payment_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->whereCustomer($customer->id)
             ->sum('base_amount');
         $totalExpenses = Expense::whereBetween(
             'expense_date',
-            [$startDate->format('Y-m-d'), $start->format('Y-m-d')]
+            [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
         )
             ->whereCompany()
             ->whereUser($customer->id)
@@ -133,11 +123,67 @@ class CustomerStatsController extends Controller
             'totalExpenses' => $totalExpenses,
         ];
 
-        $customer = Customer::find($customer->id);
+        $officeInvoices = Invoice::with('customer.currency')
+            ->whereCompany()
+            ->whereCustomer($customer->id)
+            ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE)
+            ->orderBy('invoice_date', 'desc')
+            ->limit(25)
+            ->get();
+
+        $lrReceipts = Invoice::with('customer.currency')
+            ->whereCompany()
+            ->whereCustomer($customer->id)
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->orderBy('invoice_date', 'desc')
+            ->limit(25)
+            ->get();
+
+        $payments = Payment::with(['customer.currency', 'invoice', 'paymentMethod'])
+            ->whereCompany()
+            ->whereCustomer($customer->id)
+            ->orderBy('payment_date', 'desc')
+            ->limit(25)
+            ->get();
+
+        $customer = Customer::with(['billingAddress', 'shippingAddress', 'currency', 'fields.customField'])
+            ->find($customer->id);
 
         return (new CustomerResource($customer))
             ->additional(['meta' => [
                 'chartData' => $chartData,
+                'activity' => [
+                    'invoices' => InvoiceResource::collection($officeInvoices),
+                    'lrReceipts' => InvoiceResource::collection($lrReceipts),
+                    'payments' => PaymentResource::collection($payments),
+                ],
             ]]);
+    }
+
+    private function resolveDateRange(Request $request): array
+    {
+        if ($request->from_date && $request->to_date) {
+            return [
+                Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay(),
+            ];
+        }
+
+        $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
+        $terms = explode('-', $fiscalYear);
+        $companyStartMonth = intval($terms[0] ?? 1) ?: 1;
+        $startDate = Carbon::now()->startOfDay();
+
+        if ($companyStartMonth <= $startDate->month) {
+            $startDate->month($companyStartMonth)->startOfMonth();
+        } else {
+            $startDate->subYear()->month($companyStartMonth)->startOfMonth();
+        }
+
+        if ($request->has('previous_year')) {
+            $startDate->subYear()->startOfMonth();
+        }
+
+        return [$startDate, $startDate->copy()->addMonths(11)->endOfMonth()];
     }
 }

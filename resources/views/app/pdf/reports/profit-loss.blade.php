@@ -228,7 +228,7 @@
                 <p class="report-footer-label">@lang("pdf_net_profit_label")</p>
             </td>
             <td>
-                <p class="report-footer-value">{!! format_money_pdf($income - $totalExpense, $currency) !!}</p>
+                <p class="report-footer-value">{!! format_money_pdf($netProfit, $currency) !!}</p>
             </td>
         </tr>
     </table>

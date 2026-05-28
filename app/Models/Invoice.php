@@ -466,9 +466,16 @@ class Invoice extends Model implements HasMedia
         $data['invoice'] = $this->toArray();
         $data['customer'] = $this->customer->toArray();
         $data['company'] = Company::find($this->company_id);
+
+        if ($this->template_name === self::TEMPLATE_LR_RECEIPT) {
+            $data['subject'] = $this->getLrEmailString($data['subject']);
+            $data['body'] = $this->getLrEmailString($data['body']);
+        }
+
         $data['subject'] = $this->getEmailString($data['subject']);
         $data['body'] = $this->getEmailString($data['body']);
-        $data['attach']['data'] = $this->getPDFData();
+        $data['attach']['copy_type'] = $data['copy_type'] ?? null;
+        $data['attach']['data'] = $this->getPDFData($data['attach']['copy_type']);
 
         return $data;
     }
@@ -570,7 +577,7 @@ class Invoice extends Model implements HasMedia
         }
     }
 
-    public function getPDFData()
+    public function getPDFData(?string $copyType = null)
     {
         $taxes = collect();
 
@@ -590,7 +597,12 @@ class Invoice extends Model implements HasMedia
             }
         }
 
+        $allowedInvoiceTemplates = [self::TEMPLATE_OFFICE_INVOICE, self::TEMPLATE_LR_RECEIPT];
         $invoiceTemplate = self::find($this->id)->template_name;
+
+        if (! in_array($invoiceTemplate, $allowedInvoiceTemplates, true)) {
+            $invoiceTemplate = self::TEMPLATE_OFFICE_INVOICE;
+        }
 
         $company = Company::find($this->company_id);
         $locale = CompanySetting::getSetting('language', $company->id);
@@ -606,7 +618,7 @@ class Invoice extends Model implements HasMedia
             'ho' => 'H. O. COPY',
             'file' => 'FILE COPY',
         ];
-        $copyLabel = $copyLabels[request()->query('copy')] ?? '';
+        $copyLabel = $copyLabels[$copyType ?: request()->query('copy')] ?? '';
 
         view()->share([
             'invoice' => $this,
@@ -629,7 +641,7 @@ class Invoice extends Model implements HasMedia
 
         $pdf = PDF::loadView($templatePath);
 
-        if (in_array($invoiceTemplate, ['ssgl_transport', 'office_invoice', 'lr_receipt'], true)) {
+        if (in_array($invoiceTemplate, $allowedInvoiceTemplates, true)) {
             $pdf->setPaper('a4', 'landscape');
         }
 
@@ -686,6 +698,11 @@ class Invoice extends Model implements HasMedia
         $body = strtr($body, $values);
 
         return preg_replace('/{(.*?)}/', '', $body);
+    }
+
+    public function getLrEmailString($body)
+    {
+        return str_ireplace(['new invoice', 'invoice'], ['new LR', 'LR'], $body);
     }
 
     public function getExtraFields()

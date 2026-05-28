@@ -526,7 +526,7 @@ class Estimate extends Model implements HasMedia
         }
 
         if (in_array($templateName, $name) == false) {
-            $templateName = 'invoice1';
+            $templateName = Invoice::TEMPLATE_OFFICE_INVOICE;
         }
 
         return $templateName;

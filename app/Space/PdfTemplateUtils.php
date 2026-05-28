@@ -53,7 +53,7 @@ class PdfTemplateUtils
             return Str::endsWith($file['path'], '.blade.php');
         });
 
-        return array_map(function ($file) use ($templateType, $imageFormat) {
+        $templates = array_map(function ($file) use ($templateType, $imageFormat) {
             $templateName = Str::before(basename($file['path']), '.blade.php');
 
             if ($file['custom']) {
@@ -78,6 +78,14 @@ class PdfTemplateUtils
                 'custom' => $isCustomTemplate,
             ];
         }, $files);
+
+        $uniqueTemplates = [];
+
+        foreach ($templates as $template) {
+            $uniqueTemplates[$template['name']] = $template;
+        }
+
+        return array_values($uniqueTemplates);
     }
 
     /**

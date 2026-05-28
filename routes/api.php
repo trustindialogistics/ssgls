@@ -46,6 +46,7 @@ use App\Http\Controllers\V1\Admin\Invoice\ChangeInvoiceStatusController;
 use App\Http\Controllers\V1\Admin\Invoice\CloneInvoiceController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoiceTemplatesController;
+use App\Http\Controllers\V1\Admin\Invoice\LrReceiptLookupController;
 use App\Http\Controllers\V1\Admin\Invoice\SendInvoiceController;
 use App\Http\Controllers\V1\Admin\Invoice\SendInvoicePreviewController;
 use App\Http\Controllers\V1\Admin\Invoice\UploadInvoicePodController;
@@ -274,6 +275,8 @@ Route::prefix('/v1')->group(function () {
             Route::post('/invoices/{invoice}/pod', UploadInvoicePodController::class);
 
             Route::post('/invoices/delete', [InvoicesController::class, 'delete']);
+
+            Route::get('/invoices/lr-receipt-lookup', LrReceiptLookupController::class);
 
             Route::get('/invoices/templates', InvoiceTemplatesController::class);
 
