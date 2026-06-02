@@ -57,6 +57,7 @@
               />
             </BaseInputGroup>
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :label="$t('customers.primary_contact_name')"
               :content-loading="isFetchingInitialData"
@@ -67,6 +68,7 @@
                 type="text"
               />
             </BaseInputGroup>
+            -->
 
             <BaseInputGroup
               :error="
@@ -98,6 +100,7 @@
               />
             </BaseInputGroup>
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :label="$t('customers.primary_currency')"
               :content-loading="isFetchingInitialData"
@@ -122,7 +125,9 @@
               >
               </BaseMultiselect>
             </BaseInputGroup>
+            -->
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :error="
                 v$.currentCustomer.website.$error &&
@@ -138,7 +143,9 @@
                 @input="v$.currentCustomer.website.$touch()"
               />
             </BaseInputGroup>
+            -->
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :label="$t('customers.prefix')"
               :error="
@@ -157,6 +164,7 @@
                 @input="v$.currentCustomer.prefix.$touch()"
               />
             </BaseInputGroup>
+            -->
 
             <BaseInputGroup
               label="GSTIN No"
@@ -285,6 +293,7 @@
               />
             </BaseInputGroup>
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :label="$t('customers.country')"
               :content-loading="isFetchingInitialData"
@@ -302,7 +311,9 @@
                 class="w-full"
               />
             </BaseInputGroup>
+            -->
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :label="$t('customers.state')"
               :content-loading="isFetchingInitialData"
@@ -314,7 +325,9 @@
                 type="text"
               />
             </BaseInputGroup>
+            -->
 
+            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :content-loading="isFetchingInitialData"
               :label="$t('customers.city')"
@@ -326,6 +339,7 @@
                 type="text"
               />
             </BaseInputGroup>
+            -->
 
             <BaseInputGroup
               :label="$t('customers.address')"
@@ -365,6 +379,7 @@
               />
             </BaseInputGroup>
 
+            <!-- Hidden per simplified customer entry request. Billing phone is copied from Basic Info phone on submit.
             <div class="space-y-6">
               <BaseInputGroup
                 :content-loading="isFetchingInitialData"
@@ -392,12 +407,13 @@
                 />
               </BaseInputGroup>
             </div>
+            -->
           </BaseInputGrid>
         </div>
 
         <BaseDivider class="mb-5 md:mb-8" />
 
-        <!-- Billing Address Copy Button  -->
+        <!-- Hidden per simplified customer entry request. Billing Address Copy Button.
         <div
           class="flex items-center justify-start mb-6 md:justify-end md:mb-0"
         >
@@ -419,8 +435,9 @@
             </BaseButton>
           </div>
         </div>
+        -->
 
-        <!-- Shipping Address  -->
+        <!-- Hidden per simplified customer entry request. Shipping Address.
         <div
           v-if="customerStore.currentCustomer.shipping"
           class="grid grid-cols-5 gap-4 mb-8"
@@ -550,6 +567,7 @@
             </div>
           </BaseInputGrid>
         </div>
+        -->
 
         <BaseDivider
           v-if="customFieldStore.customFields.length > 0"
@@ -646,9 +664,12 @@ const rules = computed(() => {
           minLength(3)
         ),
       },
+      /*
+      Hidden per simplified customer entry request.
       currency_id: {
         required: helpers.withMessage(t('validation.required'), required),
       },
+      */
 
       email: {
         required: helpers.withMessage(
@@ -738,6 +759,10 @@ async function submitCustomerData() {
 
   let data = {
     ...customerStore.currentCustomer,
+  }
+
+  if (data.billing) {
+    data.billing.phone = data.phone
   }
 
   let response = null

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="grid grid-cols-1 gap-6 mt-10 xl:grid-cols-2">
-      <!-- Due Invoices/LR -->
+      <!-- Due Invoices -->
       <div
         v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
         class="due-invoices"

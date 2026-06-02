@@ -347,8 +347,16 @@
             font-weight: bold;
             height: 49px;
             line-height: 18px;
-            padding-top: 12px;
+            padding-top: 4px;
             text-align: center;
+        }
+
+        .signature-image {
+            display: block;
+            height: 28px;
+            margin: 0 auto;
+            max-width: 150px;
+            object-fit: contain;
         }
 
         .company-separator {
@@ -536,6 +544,7 @@
     if ($noOfArticles === '1' && $descriptionOfGoods === '') {
         $noOfArticles = '';
     }
+    $signaturePath = base_path('resources/static/img/PDF/authorized_signature.jpeg');
 @endphp
 
     <div class="wrapper">
@@ -721,7 +730,12 @@
                             </td>
                         </tr>
                         <tr>
-                            <td class="for-company"><div class="company-separator"></div>For {{ $companyName }}</td>
+                            <td class="for-company">
+                                <div class="company-separator"></div>For {{ $companyName }}
+                                @if (file_exists($signaturePath))
+                                    <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
+                                @endif
+                            </td>
                         </tr>
                     </table>
                 </td>

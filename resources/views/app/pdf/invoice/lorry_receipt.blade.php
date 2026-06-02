@@ -146,14 +146,13 @@
 </head>
 <body>
 <div class="sheet">
-    <div class="v" style="left:117pt; top:0; height:100pt;"></div>
     <div class="a c" style="left:12pt; top:9pt; width:93pt;">@if($logo && file_exists($logo))<img class="logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}">@else<div class="brand">{{ $companyInitials }}</div>@endif</div>
-    <div class="a c" style="left:117pt; top:2pt; width:300pt;">
+    <div class="a c" style="left:124pt; top:2pt; width:286pt;">
         <div class="brand">{{ $companyName }}</div>
         <div class="sub">{{ $companyTagline }}</div>
         <div class="small" style="width:285pt;">{!! $displayCompanyAddress !!}</div>
     </div>
-    <div class="t r" style="left:410pt; top:3pt; width:105pt;">@if($companyPhone)Mob. {{ $companyPhone }}@endif @if($companyEmail)<br>E-mail : {{ $companyEmail }}@endif</div>
+    <div class="t r" style="left:410pt; top:10pt; width:105pt;">@if($companyPhone)Mob. {{ $companyPhone }}@endif @if($companyEmail)<br>E-mail : {{ $companyEmail }}@endif</div>
 
     <div class="box" style="left:284pt; top:55pt; width:236pt; height:102pt;"></div>
     <div class="v" style="left:349pt; top:55pt; height:102pt;"></div><div class="v" style="left:396pt; top:55pt; height:102pt;"></div><div class="v" style="left:458pt; top:55pt; height:102pt;"></div>

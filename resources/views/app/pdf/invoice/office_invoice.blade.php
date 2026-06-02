@@ -69,6 +69,11 @@
             width: 35%;
         }
 
+        .right-zone table td:first-child,
+        .right-zone table th:first-child {
+            border-left: 0;
+        }
+
         .brand-row {
             height: 88px;
             table-layout: fixed;
@@ -321,8 +326,16 @@
         .signature {
             font-size: 12px;
             line-height: 14px;
-            margin-top: 20px;
+            margin-top: 2px;
             text-align: center;
+        }
+
+        .signature-image {
+            display: block;
+            height: 28px;
+            margin: 1px auto 0;
+            max-width: 150px;
+            object-fit: contain;
         }
 
         .bold {
@@ -486,6 +499,7 @@
         $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*'.preg_quote($companyEmail, '/').'\s*/i', '', $displayCompanyAddress);
     }
     $officeGrandTotal = 0;
+    $signaturePath = base_path('resources/static/img/PDF/authorized_signature.jpeg');
 @endphp
 
     <div class="invoice-shell">
@@ -665,9 +679,9 @@
 
         <table class="words-row">
             <colgroup>
-                <col style="width: 82%;">
-                <col style="width: 8%;">
-                <col style="width: 10%;">
+                <col style="width: 62%;">
+                <col style="width: 20%;">
+                <col style="width: 18%;">
             </colgroup>
             <tr>
                 <td><b>Rupees in words :</b> {{ $rupeesInWords }}</td>
@@ -694,6 +708,9 @@
                 <td width="10%" class="prepared text-center">Prepared by :<br>{{ $preparedBy }}</td>
                 <td width="10%" class="prepared text-center">Checked by :<br>{{ $checkedBy }}</td>
                 <td width="38%">
+                    @if (file_exists($signaturePath))
+                        <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
+                    @endif
                     <span class="emp-box">EMP Code<br>{{ $empCode }}</span>
                     <div class="signature">Signature</div>
                 </td>
