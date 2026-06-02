@@ -85,7 +85,7 @@ It creates a new empty SQLite database file.
 6. Clear Laravel cache
 ----------------------
 
-& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" artisan optimize:clear
+& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" php artisan optimize:clear
 
 What this does:
 It clears Laravel config, route, view, and app cache.
@@ -94,7 +94,7 @@ It clears Laravel config, route, view, and app cache.
 7. Recreate all database tables and seed default data
 -----------------------------------------------------
 
-& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" artisan migrate:fresh --seed
+& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" php artisan migrate:fresh --seed
 
 What this does:
 It creates all database tables again and adds the default admin user.
@@ -258,4 +258,7 @@ http://127.0.0.1:8000/login
 
 
 cd C:\Users\18042\OneDrive\Documents\InvoiceShelf\InvoiceShelf
+
+docker compose -f docker-compose.local.yml build company_1
+
 docker-compose -f docker-compose.local.yml up -d

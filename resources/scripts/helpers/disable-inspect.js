@@ -21,9 +21,14 @@ function isInspectShortcut(event) {
 }
 
 export function disableInspectShortcuts() {
-  window.addEventListener('contextmenu', (event) => {
-    event.preventDefault()
-  })
+  window.addEventListener(
+    'contextmenu',
+    (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    },
+    true
+  )
 
   window.addEventListener(
     'keydown',

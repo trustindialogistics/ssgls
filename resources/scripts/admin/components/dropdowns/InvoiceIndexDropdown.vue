@@ -100,7 +100,7 @@
     </BaseDropdownItem>
 
     <BaseDropdownItem
-      v-if="!isLrReceipt && userStore.hasAbilities(abilities.EDIT_INVOICE)"
+      v-if="!isTransportReceipt && userStore.hasAbilities(abilities.EDIT_INVOICE)"
       @click="openPodUpload(row)"
     >
       <BaseIcon
@@ -110,7 +110,7 @@
       Upload POD
     </BaseDropdownItem>
 
-    <BaseDropdownItem v-if="!isLrReceipt && row.pod_url" @click="viewPod(row)">
+    <BaseDropdownItem v-if="!isTransportReceipt && row.pod_url" @click="viewPod(row)">
       <BaseIcon
         name="PhotoIcon"
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
@@ -185,14 +185,29 @@ const route = useRoute()
 const router = useRouter()
 const utils = inject('utils')
 const isLrReceiptRoute = computed(() => route.name?.startsWith('lr-receipts'))
-const resourceBasePath = computed(() => props.resourceBasePath || (isLrReceiptRoute.value ? '/admin/lr-receipts' : '/admin/invoices'))
+const isLorryReceiptRoute = computed(() => route.name?.startsWith('lorry-receipts'))
+const rowResourceBasePath = computed(() => {
+  if (props.row?.template_name === 'lorry_receipt') {
+    return '/admin/lorry-receipts'
+  }
+
+  if (props.row?.template_name === 'lr_receipt') {
+    return '/admin/lr-receipts'
+  }
+
+  return '/admin/invoices'
+})
+const resourceBasePath = computed(() => props.resourceBasePath || (isLorryReceiptRoute.value ? '/admin/lorry-receipts' : isLrReceiptRoute.value ? '/admin/lr-receipts' : rowResourceBasePath.value))
 const afterDeletePath = computed(() => props.afterDeletePath || resourceBasePath.value)
-const isViewRoute = computed(() => route.name === 'invoices.view' || route.name === 'lr-receipts.view')
+const isViewRoute = computed(() => ['invoices.view', 'lr-receipts.view', 'lorry-receipts.view'].includes(route.name))
 const isLrReceipt = computed(() => isLrReceiptRoute.value || props.row?.template_name === 'lr_receipt')
-const sendLabel = computed(() => isLrReceipt.value ? 'Send LR Receipt' : t('invoices.send_invoice'))
-const resendLabel = computed(() => isLrReceipt.value ? 'Resend LR Receipt' : t('invoices.resend_invoice'))
-const cloneLabel = computed(() => isLrReceipt.value ? 'Clone LR Receipt' : t('invoices.clone_invoice'))
-const deleteMessage = computed(() => isLrReceipt.value ? 'Are you sure you want to delete this LR Receipt?' : t('invoices.confirm_delete'))
+const isLorryReceipt = computed(() => isLorryReceiptRoute.value || props.row?.template_name === 'lorry_receipt')
+const isTransportReceipt = computed(() => isLrReceipt.value || isLorryReceipt.value)
+const receiptTitle = computed(() => isLorryReceipt.value ? 'Lorry Receipt' : 'LR Receipt')
+const sendLabel = computed(() => isTransportReceipt.value ? `Send ${receiptTitle.value}` : t('invoices.send_invoice'))
+const resendLabel = computed(() => isTransportReceipt.value ? `Resend ${receiptTitle.value}` : t('invoices.resend_invoice'))
+const cloneLabel = computed(() => isTransportReceipt.value ? `Clone ${receiptTitle.value}` : t('invoices.clone_invoice'))
+const deleteMessage = computed(() => isTransportReceipt.value ? `Are you sure you want to delete this ${receiptTitle.value}?` : t('invoices.confirm_delete'))
 
 function canReSendInvoice(row) {
   return (
@@ -225,7 +240,7 @@ async function removeInvoice(id) {
       if (res) {
         invoiceStore.deleteInvoice({
           ids: [id],
-          template_name: isLrReceipt.value ? 'lr_receipt' : props.row?.template_name,
+          template_name: isTransportReceipt.value ? props.row?.template_name : props.row?.template_name,
         }).then((res) => {
           if (res.data.success) {
             router.push(afterDeletePath.value)
@@ -255,7 +270,11 @@ async function cloneInvoiceData(data) {
     .then((res) => {
       if (res) {
         invoiceStore.cloneInvoice(data).then((res) => {
-          const basePath = data.template_name === 'lr_receipt' ? '/admin/lr-receipts' : '/admin/invoices'
+          const basePath = data.template_name === 'lorry_receipt'
+            ? '/admin/lorry-receipts'
+            : data.template_name === 'lr_receipt'
+              ? '/admin/lr-receipts'
+              : '/admin/invoices'
           router.push(`${basePath}/${res.data.data.id}/edit`)
         })
       }
@@ -288,7 +307,7 @@ async function onMarkAsSent(id) {
 
 async function sendInvoice(invoice) {
   modalStore.openModal({
-    title: isLrReceipt.value ? 'Send LR Receipt' : t('invoices.send_invoice'),
+    title: isTransportReceipt.value ? `Send ${receiptTitle.value}` : t('invoices.send_invoice'),
     componentName: 'SendInvoiceModal',
     id: invoice.id,
     data: {

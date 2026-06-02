@@ -52,6 +52,7 @@ use App\Http\Controllers\V1\Admin\Invoice\SendInvoicePreviewController;
 use App\Http\Controllers\V1\Admin\Invoice\UploadInvoicePodController;
 use App\Http\Controllers\V1\Admin\Item\ItemsController;
 use App\Http\Controllers\V1\Admin\Item\UnitsController;
+use App\Http\Controllers\V1\Admin\LorryPartyProfile\LorryPartyProfilesController;
 use App\Http\Controllers\V1\Admin\Mobile\AuthController;
 use App\Http\Controllers\V1\Admin\Modules\ApiTokenController;
 use App\Http\Controllers\V1\Admin\Modules\CompleteModuleInstallationController;
@@ -281,6 +282,8 @@ Route::prefix('/v1')->group(function () {
             Route::get('/invoices/templates', InvoiceTemplatesController::class);
 
             Route::apiResource('invoices', InvoicesController::class);
+
+            Route::apiResource('lorry-party-profiles', LorryPartyProfilesController::class);
 
             // Recurring Invoice
             // -------------------------------------------------

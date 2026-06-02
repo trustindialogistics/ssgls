@@ -19,6 +19,10 @@ const CustomerIndex = () => import('@/scripts/admin/views/customers/Index.vue')
 const CustomerCreate = () =>
   import('@/scripts/admin/views/customers/Create.vue')
 const CustomerView = () => import('@/scripts/admin/views/customers/View.vue')
+const LorryPartyProfileIndex = () =>
+  import('@/scripts/admin/views/lorry-party-profiles/Index.vue')
+const LorryPartyProfileCreate = () =>
+  import('@/scripts/admin/views/lorry-party-profiles/Create.vue')
 
 //Settings
 const SettingsIndex = () =>
@@ -198,6 +202,60 @@ export default [
         name: 'customers.view',
         meta: { ability: abilities.VIEW_CUSTOMER },
         component: CustomerView,
+      },
+      {
+        path: 'owner-portal',
+        name: 'owner-portal.index',
+        meta: { ability: abilities.VIEW_INVOICE, profileType: 'OWNER' },
+        component: LorryPartyProfileIndex,
+      },
+      {
+        path: 'owner-portal/create',
+        name: 'owner-portal.create',
+        meta: { ability: abilities.CREATE_INVOICE, profileType: 'OWNER' },
+        component: LorryPartyProfileCreate,
+      },
+      {
+        path: 'owner-portal/:id/edit',
+        name: 'owner-portal.edit',
+        meta: { ability: abilities.EDIT_INVOICE, profileType: 'OWNER' },
+        component: LorryPartyProfileCreate,
+      },
+      {
+        path: 'driver-portal',
+        name: 'driver-portal.index',
+        meta: { ability: abilities.VIEW_INVOICE, profileType: 'DRIVER' },
+        component: LorryPartyProfileIndex,
+      },
+      {
+        path: 'driver-portal/create',
+        name: 'driver-portal.create',
+        meta: { ability: abilities.CREATE_INVOICE, profileType: 'DRIVER' },
+        component: LorryPartyProfileCreate,
+      },
+      {
+        path: 'driver-portal/:id/edit',
+        name: 'driver-portal.edit',
+        meta: { ability: abilities.EDIT_INVOICE, profileType: 'DRIVER' },
+        component: LorryPartyProfileCreate,
+      },
+      {
+        path: 'broker-portal',
+        name: 'broker-portal.index',
+        meta: { ability: abilities.VIEW_INVOICE, profileType: 'BROKER' },
+        component: LorryPartyProfileIndex,
+      },
+      {
+        path: 'broker-portal/create',
+        name: 'broker-portal.create',
+        meta: { ability: abilities.CREATE_INVOICE, profileType: 'BROKER' },
+        component: LorryPartyProfileCreate,
+      },
+      {
+        path: 'broker-portal/:id/edit',
+        name: 'broker-portal.edit',
+        meta: { ability: abilities.EDIT_INVOICE, profileType: 'BROKER' },
+        component: LorryPartyProfileCreate,
       },
       // Payments
       {
@@ -472,6 +530,32 @@ export default [
       {
         path: 'lr-receipts/:id/edit',
         name: 'lr-receipts.edit',
+        meta: { ability: abilities.EDIT_INVOICE },
+        component: InvoiceCreate,
+      },
+
+      // Lorry Receipts
+      {
+        path: 'lorry-receipts',
+        name: 'lorry-receipts.index',
+        meta: { ability: abilities.VIEW_INVOICE },
+        component: LrReceiptIndex,
+      },
+      {
+        path: 'lorry-receipts/create',
+        name: 'lorry-receipts.create',
+        meta: { ability: abilities.CREATE_INVOICE },
+        component: InvoiceCreate,
+      },
+      {
+        path: 'lorry-receipts/:id/view',
+        name: 'lorry-receipts.view',
+        meta: { ability: abilities.VIEW_INVOICE },
+        component: InvoiceView,
+      },
+      {
+        path: 'lorry-receipts/:id/edit',
+        name: 'lorry-receipts.edit',
         meta: { ability: abilities.EDIT_INVOICE },
         component: InvoiceCreate,
       },

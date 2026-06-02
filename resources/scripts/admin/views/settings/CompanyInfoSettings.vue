@@ -28,22 +28,24 @@
           />
         </BaseInputGroup>
 
+        <BaseInputGroup :label="$t('settings.company_info.tagline')">
+          <BaseInput v-model="companyForm.tagline" type="text" />
+        </BaseInputGroup>
+
         <BaseInputGroup :label="$t('settings.company_info.phone')">
           <BaseInput v-model="companyForm.address.phone" />
         </BaseInputGroup>
 
+        <BaseInputGroup :label="$t('settings.company_info.notification_email')">
+          <BaseInput v-model.trim="companyForm.notification_email" type="email" />
+        </BaseInputGroup>
+
         <BaseInputGroup
           :label="$t('settings.company_info.country')"
-          :error="
-            v$.address.country_id.$error &&
-            v$.address.country_id.$errors[0].$message
-          "
-          required
         >
           <BaseMultiselect
             v-model="companyForm.address.country_id"
             label="name"
-            :invalid="v$.address.country_id.$error"
             :options="globalStore.countries"
             value-prop="id"
             :can-deselect="true"
@@ -93,7 +95,26 @@
           <BaseInputGroup :label="$t('settings.company_info.vat_id')">
             <BaseInput v-model="companyForm.vat_id" type="text" />
           </BaseInputGroup>
+
+          <BaseInputGroup :label="$t('settings.company_info.gstin')">
+            <BaseInput v-model="companyForm.gstin" type="text" />
+          </BaseInputGroup>
+
+          <BaseInputGroup :label="$t('settings.company_info.enrollment_no')">
+            <BaseInput v-model="companyForm.enrollment_no" type="text" />
+          </BaseInputGroup>
+
+          <BaseInputGroup :label="$t('settings.company_info.pan_no')">
+            <BaseInput v-model="companyForm.pan_no" type="text" />
+          </BaseInputGroup>
         </div>
+
+        <BaseInputGroup :label="$t('settings.company_info.billing_branch_name_address')">
+          <BaseTextarea
+            v-model="companyForm.billing_branch_name_address"
+            rows="4"
+          />
+        </BaseInputGroup>
       </BaseInputGrid>
 
       <BaseButton
@@ -156,6 +177,14 @@ const companyForm = reactive({
   logo: null,
   tax_id: null,
   vat_id: null,
+  gstin: null,
+  enrollment_no: null,
+  pan_no: null,
+  tagline: null,
+  billing_branch_name_address: null,
+  notification_email:
+    companyStore.selectedCompany?.notification_email ||
+    companyStore.selectedCompanySettings.notification_email,
   address: {
     address_street_1: '',
     address_street_2: '',
@@ -191,11 +220,6 @@ const rules = computed(() => {
         t('validation.name_min_length'),
         minLength(3),
       ),
-    },
-    address: {
-      country_id: {
-        required: helpers.withMessage(t('validation.required'), required),
-      },
     },
   }
 })

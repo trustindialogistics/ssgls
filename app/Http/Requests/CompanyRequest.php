@@ -31,11 +31,39 @@ class CompanyRequest extends FormRequest
             'tax_id' => [
                 'nullable',
             ],
+            'gstin' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'enrollment_no' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'pan_no' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'tagline' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'billing_branch_name_address' => [
+                'nullable',
+                'string',
+            ],
+            'notification_email' => [
+                'nullable',
+                'email',
+            ],
             'slug' => [
                 'nullable',
             ],
             'address.country_id' => [
-                'required',
+                'nullable',
             ],
         ];
     }
@@ -48,6 +76,20 @@ class CompanyRequest extends FormRequest
                 'slug',
                 'vat_id',
                 'tax_id',
+                'gstin',
+                'enrollment_no',
+                'pan_no',
+                'tagline',
+                'billing_branch_name_address',
+            ])
+            ->toArray();
+    }
+
+    public function getCompanySettingsPayload(): array
+    {
+        return collect($this->validated())
+            ->only([
+                'notification_email',
             ])
             ->toArray();
     }

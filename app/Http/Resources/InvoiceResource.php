@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,19 @@ class InvoiceResource extends JsonResource
     public function toArray($request): array
     {
         $pod = $this->getFirstMedia('pod');
+        $lorryDocuments = collect(Invoice::LORRY_DOCUMENT_COLLECTIONS)
+            ->mapWithKeys(function ($label, $collection) {
+                $media = $this->getFirstMedia($collection);
+
+                return [
+                    $collection => $media ? [
+                        'label' => $label,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                    ] : null,
+                ];
+            });
 
         return [
             'id' => $this->id,
@@ -58,6 +72,7 @@ class InvoiceResource extends JsonResource
                 'file_name' => $pod->file_name,
                 'mime_type' => $pod->mime_type,
             ] : null,
+            'lorry_documents' => $lorryDocuments,
             'formatted_invoice_date' => $this->formattedInvoiceDate,
             'formatted_due_date' => $this->formattedDueDate,
             'allow_edit' => $this->allow_edit,

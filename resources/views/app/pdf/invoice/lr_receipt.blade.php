@@ -29,13 +29,13 @@
 
         td,
         th {
-            border: 1.1px solid #000;
+            border: 1.5px solid #000;
             padding: 2px 5px;
             vertical-align: top;
         }
 
         .wrapper {
-            border: 1.6px solid #000;
+            border: 2px solid #000;
             page-break-inside: avoid;
             width: 100%;
         }
@@ -56,7 +56,7 @@
         }
 
         .header-left {
-            border-right: 1.1px solid #000 !important;
+            border-right: 1.5px solid #000 !important;
             padding: 0;
             vertical-align: top;
             width: 61%;
@@ -131,6 +131,11 @@
             white-space: nowrap;
         }
 
+        .header-left table,
+        .header-right table {
+            border: 0;
+        }
+
         .brand-block {
             height: auto;
         }
@@ -151,8 +156,13 @@
             height: 24px;
         }
 
+        .party-table {
+            border-top: 2.5px solid #000 !important;
+        }
+
         .party-table td {
             border-bottom: 0;
+            border-top: 0;
         }
 
         .party-cell {
@@ -162,7 +172,7 @@
         }
 
         .party-lines {
-            border-bottom: 1.1px solid #000;
+            border-bottom: 1.5px solid #000;
             font-size: 8.5px;
             height: 23px;
             line-height: 21px;
@@ -200,9 +210,14 @@
         }
 
         .tax-line {
-            font-size: 12px;
+            font-size: 10.5px;
             font-weight: bold;
             line-height: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .goods {
+            border-top: 2.5px solid #000;
         }
 
         .goods td {
@@ -221,7 +236,7 @@
         }
 
         .eway-inline {
-            border-top: 1.1px solid #000;
+            border-top: 1.5px solid #000;
             margin: 15px -5px 0;
             padding: 3px 5px 0;
         }
@@ -240,6 +255,7 @@
 
         .charges th {
             font-size: 8px;
+            font-weight: bold;
             height: 25px;
             line-height: 10px;
             text-align: center;
@@ -299,7 +315,7 @@
         }
 
         .agreement {
-            border-top: 1.1px solid #000;
+            border-top: 1.5px solid #000;
             font-size: 9.4px;
             font-weight: bold;
             height: 36px;
@@ -326,7 +342,7 @@
 
         .for-company {
             border-bottom: 0 !important;
-            border-top: 1.1px solid #000 !important;
+            border-top: 1.5px solid #000 !important;
             font-size: 13px;
             font-weight: bold;
             height: 49px;
@@ -449,23 +465,32 @@
         return $paise ? format_money_pdf((int) round($paise), $invoice->customer->currency) : '';
     };
 
-    $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics';
-    $companyAddress = trim(strip_tags($company_address))
-        ? $company_address
-        : 'B38, Param Logistics And Industrial Park,<br>Vapi, Gujarat';
+    $companyName = $invoice->company?->name ?: '';
+    $companyInitials = collect(preg_split('/\s+/', trim($companyName)))
+        ->filter()
+        ->map(fn ($word) => mb_substr($word, 0, 1))
+        ->take(2)
+        ->implode('');
+    $companyTagline = $invoice->company?->tagline ?: '';
+    $companyAddress = trim(strip_tags($company_address)) ? $company_address : '';
     $companyPhone = $invoice->company?->address?->phone;
     $companyEmail = \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
-    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '7600475900 6355071130');
+    $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '');
     $email = $invoiceField(['email']) ?: ($companyEmail ?: '');
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $companyAddress);
-    $displayCompanyAddress = preg_replace('/<p[^>]*>\s*(?:<strong>)?\s*\(?A Cost Effective Distribution\)?\s*(?:<\/strong>)?\s*<\/p>/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = preg_replace('/<br\s*\/?>\s*\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = preg_replace('/\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = str_ireplace('Param Logistics And Industrial Pack', 'Param Logistics And Industrial Park', $displayCompanyAddress);
-    $panNo = 'BHLPS2943H';
-    $gstin = '24BHLPS2943H1Z3';
+    if ($companyPhone) {
+        $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*'.preg_quote($companyPhone, '/').'\s*/i', '', $displayCompanyAddress);
+    }
+    if ($companyEmail) {
+        $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*'.preg_quote($companyEmail, '/').'\s*/i', '', $displayCompanyAddress);
+    }
+    $panNo = $invoiceField(['pan_no', 'pan']) ?: ($invoice->company?->pan_no ?: '');
+    $companyGstin = $invoiceField(['gstin', 'gst_no']) ?: ($invoice->company?->gstin ?: '');
+    $companyEnrollmentNo = $invoice->company?->enrollment_no ?: $invoiceField(['enrollment_no', 'enrollment']);
+    $companyTaxIdentityLabel = $companyEnrollmentNo ? 'Enrollment No' : 'GSTIN';
+    $companyTaxIdentityValue = $companyEnrollmentNo ?: $companyGstin;
 
     $basicFreight = $itemField(['basic_freight']);
     $localCollection = $itemField(['local_collection']);
@@ -529,12 +554,11 @@
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else
                                     <div class="brand-mark">
-                                        SS
-                                        <span class="brand-small">GUJARAT LOGISTICS</span>
+                                        {{ $companyInitials }}
                                     </div>
                                 @endif
                                 <div class="company-name">{{ $companyName }}</div>
-                                <div class="company-tagline">(A Cost Effective Distribution)</div>
+                                <div class="company-tagline">{{ $companyTagline }}</div>
                                 <div class="company-address">{!! $displayCompanyAddress !!}</div>
                             </td>
                         </tr>
@@ -545,13 +569,11 @@
                             <td class="party-cell">
                                 <span class="label">Consignor</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
-                                <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
                                 <span class="label">Consignee</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
-                                <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>
                         </tr>
@@ -565,8 +587,8 @@
                         </tr>
                         <tr>
                             <td><span class="label">HSN CODE</span><br>{{ $itemField(['hsn_code']) }}</td>
-                            <td><span class="label">Actual Weight</span><br>{{ $itemField(['actual_weight']) }}</td>
-                            <td>&nbsp;</td>
+                            <td><span class="label">Actual Weight</span></td>
+                            <td>{{ $itemField(['actual_weight']) }}</td>
                         </tr>
                         <tr>
                             <td rowspan="4" class="delivery-cell">
@@ -606,14 +628,14 @@
                                     <span class="label">DECLARATION :</span> We Have Not Taken Gst Credit As Per The Provisions
                                     Of Convat Credit Rule 2004 Of Only Paid On Inputs Or Capital Goods
                                     Used For Providing Taxable's Service To You And Have Also Availed
-                                    The Benefits Of Notification No. 11 &amp; 13/2017 Dated 28th June 2017
+                                    The Benefits Of Notification No. 11 & 13/2017 Dated 28th June 2017
                                 </div>
                                 <div class="agreement">It is taken in to consideration that agrees with<br>all the terms and condition overleaf</div>
                             </td>
                             <td width="50%" class="consignee-sign">
                                 <span class="label">Rubber Stamp and Signature of Consignee</span><br><br><br><br>
                                 <span class="label">Phone / Mobile</span><br>
-                                {{ $consigneePhone }}
+                                &nbsp;
                             </td>
                         </tr>
                     </table>
@@ -641,7 +663,7 @@
                             <td><span class="label">To :</span> {{ $invoiceField(['to']) }}</td>
                         </tr>
                         <tr><td colspan="2"><span class="label">Truck No.:</span> {{ $invoiceField(['truck_no']) }}</td></tr>
-                        <tr><td colspan="2" class="tax-line"><span class="label">PAN No.:</span> {{ $panNo }}<br><span class="label">GSTIN :</span> {{ $gstin }}</td></tr>
+                        <tr><td colspan="2" class="tax-line"><span class="label">PAN No.:</span> {{ $panNo }}<br><span class="label">{{ $companyTaxIdentityLabel }} :</span> {{ $companyTaxIdentityValue }}</td></tr>
                     </table>
 
                     <table class="charges">

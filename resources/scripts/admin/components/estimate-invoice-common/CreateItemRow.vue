@@ -333,8 +333,11 @@ const isOfficeInvoiceTemplate = computed(
 const isLrReceiptTemplate = computed(
   () => props.store[props.storeProp].template_name === 'lr_receipt'
 )
+const isLorryReceiptTemplate = computed(
+  () => props.store[props.storeProp].template_name === 'lorry_receipt'
+)
 const isTransportEntryTemplate = computed(
-  () => isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value
+  () => isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value || isLorryReceiptTemplate.value
 )
 const isEstimateEntry = computed(
   () => props.storeProp === 'newEstimate' && !isTransportEntryTemplate.value

@@ -10,6 +10,7 @@ use App\Http\Requests\ProfileRequest;
 use App\Http\Resources\CompanyResource;
 use App\Http\Resources\UserResource;
 use App\Models\Company;
+use App\Models\CompanySetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -52,6 +53,8 @@ class CompanyController extends Controller
         $this->authorize('manage company', $company);
 
         $company->update($request->getCompanyPayload());
+
+        CompanySetting::setSettings($request->getCompanySettingsPayload(), $company->id);
 
         $company->address()->updateOrCreate(['company_id' => $company->id], $request->address);
 

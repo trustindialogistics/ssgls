@@ -1,6 +1,6 @@
 <template>
   <BaseInputGroup
-    v-if="!isHiddenLrField"
+    v-if="!isHiddenTransportField"
     :label="field.label"
     :required="field.is_required ? true : false"
     :error="v$.value.$error && v$.value.$errors[0].$message"
@@ -86,6 +86,26 @@ const isHiddenLrField = computed(() => {
     ].includes(props.field.label)
   )
 })
+
+const isHiddenLorryField = computed(() => {
+  return (
+    props.store[props.storeProp]?.template_name === 'lorry_receipt' &&
+    [
+      'Owner Code',
+      'Owner Name',
+      'Driver Name',
+      'Broker Name',
+      'Broker Code',
+      'Paid To',
+      'Gross Hire Amount',
+      'Balance Rupees',
+      'Advance Received By',
+      'Final Paid To',
+    ].includes(props.field.label)
+  )
+})
+
+const isHiddenTransportField = computed(() => isHiddenLrField.value || isHiddenLorryField.value)
 
 onMounted(() => {
   if (isHiddenLrField.value && props.field.label === 'Time') {

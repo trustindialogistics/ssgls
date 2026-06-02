@@ -1,6 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import SpinnerIcon from '@/scripts/components/icons/SpinnerIcon.vue'
+
+defineOptions({
+  inheritAttrs: false,
+})
+
 const props = defineProps({
   contentLoading: {
     type: Boolean,
@@ -140,6 +145,7 @@ const iconRightClass = computed(() => {
 
   <BaseCustomTag
     v-else
+    v-bind="$attrs"
     :tag="tag"
     :disabled="disabled"
     :class="[defaultClass, sizeClass, variantClass, roundedClass]"

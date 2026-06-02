@@ -64,7 +64,7 @@ class InvoicesRequest extends FormRequest
             ],
             'template_name' => [
                 'required',
-                Rule::in(['office_invoice', 'lr_receipt']),
+                Rule::in(['office_invoice', 'lr_receipt', 'lorry_receipt']),
             ],
             'items' => [
                 'required',
@@ -78,7 +78,7 @@ class InvoicesRequest extends FormRequest
                 'nullable',
             ],
             'items.*.name' => [
-                'required',
+                Rule::requiredIf($this->input('template_name') !== 'lorry_receipt'),
             ],
             'items.*.quantity' => [
                 'numeric',
@@ -87,6 +87,19 @@ class InvoicesRequest extends FormRequest
             'items.*.price' => [
                 'numeric',
                 'required',
+            ],
+            'lorry_documents' => [
+                'nullable',
+                'array',
+            ],
+            'lorry_documents.*.name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'lorry_documents.*.data' => [
+                'nullable',
+                'string',
             ],
         ];
 
@@ -122,7 +135,7 @@ class InvoicesRequest extends FormRequest
         $exchange_rate = $company_currency != $current_currency ? $this->exchange_rate : 1;
         $currency = Customer::find($this->customer_id)->currency_id;
 
-        return collect($this->except('items', 'taxes'))
+        return collect($this->except('items', 'taxes', 'lorry_documents'))
             ->merge([
                 'creator_id' => $this->user()->id ?? null,
                 'status' => $this->has('invoiceSend') ? Invoice::STATUS_SENT : Invoice::STATUS_DRAFT,

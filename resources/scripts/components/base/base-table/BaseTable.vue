@@ -289,12 +289,15 @@ async function fetchServerData() {
 
   isLoading.value = true
 
-  const response = await props.data({
-    sort,
-    page,
-  })
-
-  isLoading.value = false
+  let response
+  try {
+    response = await props.data({
+      sort,
+      page,
+    })
+  } finally {
+    isLoading.value = false
+  }
 
   // Ignore stale responses: only apply if this is still the requested page
   const currentPage = (pagination.value && pagination.value.currentPage) || 1
@@ -324,13 +327,19 @@ function changeSorting(column) {
 async function mapDataToRows() {
   let data
 
-  if (usesLocalData.value) {
-    data = prepareLocalData()
-  } else {
-    data = await fetchServerData()
-    if (data === null) {
-      return
+  try {
+    if (usesLocalData.value) {
+      data = prepareLocalData()
+    } else {
+      data = await fetchServerData()
+      if (data === null) {
+        return
+      }
     }
+  } catch {
+    pagination.value = null
+    rows.value = []
+    return
   }
 
   rows.value = data.map((rowData) => new Row(rowData, tableColumns))

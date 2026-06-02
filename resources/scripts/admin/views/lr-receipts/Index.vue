@@ -2,10 +2,10 @@
   <BasePage>
     <SendInvoiceModal />
     <UploadPodModal />
-    <BasePageHeader title="LR Receipts">
+    <BasePageHeader :title="pageTitle">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="$t('general.home')" to="dashboard" />
-        <BaseBreadcrumbItem title="LR Receipts" to="#" active />
+        <BaseBreadcrumbItem :title="pageTitle" to="#" active />
       </BaseBreadcrumb>
 
       <template #actions>
@@ -27,13 +27,13 @@
 
         <router-link
           v-if="userStore.hasAbilities(abilities.CREATE_INVOICE)"
-          to="/admin/lr-receipts/create"
+          :to="`${basePath}/create`"
         >
           <BaseButton variant="primary" class="ml-4">
             <template #left="slotProps">
               <BaseIcon name="PlusIcon" :class="slotProps.class" />
             </template>
-            New LR Receipt
+            {{ newButtonLabel }}
           </BaseButton>
         </router-link>
       </template>
@@ -97,8 +97,8 @@
 
     <BaseEmptyPlaceholder
       v-show="showEmptyScreen"
-      title="No LR Receipts"
-      description="Create your first LR receipt"
+      :title="emptyTitle"
+      :description="emptyDescription"
     >
       <MoonwalkerIcon class="mt-5 mb-4" />
       <template
@@ -107,12 +107,12 @@
       >
         <BaseButton
           variant="primary-outline"
-          @click="$router.push('/admin/lr-receipts/create')"
+          @click="$router.push(`${basePath}/create`)"
         >
           <template #left="slotProps">
             <BaseIcon name="PlusIcon" :class="slotProps.class" />
           </template>
-          Create LR Receipt
+          {{ createButtonLabel }}
         </BaseButton>
       </template>
     </BaseEmptyPlaceholder>
@@ -201,7 +201,7 @@
 
         <template #cell-invoice_number="{ row }">
           <router-link
-            :to="{ path: `/admin/lr-receipts/${row.data.id}/view` }"
+            :to="{ path: `${basePath}/${row.data.id}/view` }"
             class="font-medium text-primary-500"
           >
             {{ row.data.invoice_number }}
@@ -241,8 +241,8 @@
           <InvoiceDropdown
             :row="row.data"
             :table="table"
-            resource-base-path="/admin/lr-receipts"
-            after-delete-path="/admin/lr-receipts"
+            :resource-base-path="basePath"
+            :after-delete-path="basePath"
             :show-payment-action="false"
           />
         </template>
@@ -253,6 +253,7 @@
 
 <script setup>
 import { computed, ref, reactive, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { debouncedWatch } from '@vueuse/core'
 
@@ -270,12 +271,22 @@ const { t } = useI18n()
 const invoiceStore = useInvoiceStore()
 const userStore = useUserStore()
 const dialogStore = useDialogStore()
+const route = useRoute()
 
 const table = ref(null)
 const tableKey = ref(0)
 const showFilters = ref(false)
 const isRequestOngoing = ref(true)
 const activeTab = ref('general.draft')
+const isLorryReceiptRoute = computed(() => route.name?.startsWith('lorry-receipts'))
+const templateName = computed(() => isLorryReceiptRoute.value ? 'lorry_receipt' : 'lr_receipt')
+const basePath = computed(() => isLorryReceiptRoute.value ? '/admin/lorry-receipts' : '/admin/lr-receipts')
+const pageTitle = computed(() => isLorryReceiptRoute.value ? 'Lorry Receipts' : 'LR Receipts')
+const singularTitle = computed(() => isLorryReceiptRoute.value ? 'Lorry Receipt' : 'LR Receipt')
+const newButtonLabel = computed(() => `New ${singularTitle.value}`)
+const createButtonLabel = computed(() => `Create ${singularTitle.value}`)
+const emptyTitle = computed(() => `No ${pageTitle.value}`)
+const emptyDescription = computed(() => `Create your first ${singularTitle.value.toLowerCase()}`)
 
 const status = computed(() => [
   {
@@ -380,7 +391,7 @@ async function fetchData({ page, sort }) {
     from_date: filters.from_date,
     to_date: filters.to_date,
     invoice_number: filters.invoice_number,
-    template_name: 'lr_receipt',
+    template_name: templateName.value,
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
     page,
@@ -451,7 +462,7 @@ async function removeMultipleInvoices() {
   dialogStore
     .openDialog({
       title: t('general.are_you_sure'),
-      message: 'Are you sure you want to delete these LR Receipts?',
+      message: `Are you sure you want to delete these ${pageTitle.value}?`,
       yesLabel: t('general.ok'),
       noLabel: t('general.cancel'),
       variant: 'danger',
@@ -460,7 +471,7 @@ async function removeMultipleInvoices() {
     })
     .then(async (res) => {
       if (res) {
-        await invoiceStore.deleteMultipleInvoices({ template_name: 'lr_receipt' }).then((res) => {
+        await invoiceStore.deleteMultipleInvoices({ template_name: templateName.value }).then((res) => {
           if (res.data.success) {
             refreshTable()
 

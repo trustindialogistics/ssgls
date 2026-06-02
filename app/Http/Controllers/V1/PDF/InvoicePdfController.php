@@ -16,6 +16,10 @@ class InvoicePdfController extends Controller
      */
     public function __invoke(Request $request, Invoice $invoice)
     {
+        if ($request->filled('template_name') && $invoice->template_name !== $request->input('template_name')) {
+            abort(404);
+        }
+
         if ($request->has('preview')) {
             return $invoice->getPDFData();
         }

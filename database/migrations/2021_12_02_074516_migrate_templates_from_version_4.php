@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -14,21 +15,32 @@ return new class extends Migration
 
         foreach ($templates as $key => $template) {
             $templateName = Str::before(basename($template), '.blade.php');
-            if (! file_exists(resource_path("/static/img/PDF/{$templateName}.png"))) {
-                copy(public_path("/assets/img/PDF/{$templateName}.png"), public_path("/build/img/PDF/{$templateName}.png"));
-                copy(public_path("/assets/img/PDF/{$templateName}.png"), resource_path("/static/img/PDF/{$templateName}.png"));
-            }
+            $this->copyLegacyTemplatePreview($templateName);
         }
 
         $templates = Storage::disk('views')->files('/app/pdf/estimate');
 
         foreach ($templates as $key => $template) {
             $templateName = Str::before(basename($template), '.blade.php');
-            if (! file_exists(resource_path("/static/img/PDF/{$templateName}.png"))) {
-                copy(public_path("/assets/img/PDF/{$templateName}.png"), public_path("/build/img/PDF/{$templateName}.png"));
-                copy(public_path("/assets/img/PDF/{$templateName}.png"), resource_path("/static/img/PDF/{$templateName}.png"));
-            }
+            $this->copyLegacyTemplatePreview($templateName);
         }
+    }
+
+    private function copyLegacyTemplatePreview(string $templateName): void
+    {
+        $sourcePath = public_path("/assets/img/PDF/{$templateName}.png");
+        $buildPath = public_path("/build/img/PDF/{$templateName}.png");
+        $resourcePath = resource_path("/static/img/PDF/{$templateName}.png");
+
+        if (file_exists($resourcePath) || ! file_exists($sourcePath)) {
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($buildPath));
+        File::ensureDirectoryExists(dirname($resourcePath));
+
+        copy($sourcePath, $buildPath);
+        copy($sourcePath, $resourcePath);
     }
 
     /**

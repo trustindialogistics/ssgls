@@ -1,7 +1,7 @@
 <template>
   <!-- Tax Included -->
   <div
-    v-if="companyStore.selectedCompanySettings.tax_included === 'YES'"
+    v-if="companyStore.selectedCompanySettings.tax_included === 'YES' && !isLorryReceiptTemplate"
     class="
       flex
       items-center
@@ -22,7 +22,7 @@
       :store-prop="storeProp"
     />
   </div>
-  <table class="text-center item-table min-w-full">
+  <table v-if="!isLorryReceiptTemplate" class="text-center item-table min-w-full">
     <colgroup>
       <col style="width: 34%; min-width: 260px" />
       <col v-if="isEstimateEntry" style="width: 12%; min-width: 120px" />
@@ -197,7 +197,7 @@
   </table>
 
   <div
-    v-if="!isLrReceiptTemplate"
+    v-if="!isLrReceiptTemplate && !isLorryReceiptTemplate"
     class="
       flex
       items-center
@@ -273,9 +273,12 @@ const isOfficeInvoiceTemplate = computed(() => {
 const isLrReceiptTemplate = computed(() => {
   return props.store[props.storeProp].template_name === 'lr_receipt'
 })
+const isLorryReceiptTemplate = computed(() => {
+  return props.store[props.storeProp].template_name === 'lorry_receipt'
+})
 
 const isTransportEntryTemplate = computed(() => {
-  return isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value
+  return isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value || isLorryReceiptTemplate.value
 })
 
 const isEstimateEntry = computed(() => {

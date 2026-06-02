@@ -135,10 +135,10 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
-      fetchInvoice(id) {
+      fetchInvoice(id, params = {}) {
         return new Promise((resolve, reject) => {
           http
-            .get(`/api/v1/invoices/${id}`)
+            .get(`/api/v1/invoices/${id}`, { params })
             .then((response) => {
               this.setInvoiceData(response.data.data)
               this.setCustomerAddresses(this.newInvoice.customer)
@@ -247,6 +247,8 @@ export const useInvoiceStore = (useWindow = false) => {
                 message:
                   data.template_name === 'lr_receipt'
                     ? 'LR Receipt created successfully.'
+                    : data.template_name === 'lorry_receipt'
+                      ? 'Lorry Receipt created successfully.'
                     : global.t('invoices.created_message'),
               })
 
@@ -265,6 +267,7 @@ export const useInvoiceStore = (useWindow = false) => {
             .post(`/api/v1/invoices/delete`, id)
             .then((response) => {
               const isLrReceipt = id?.template_name === 'lr_receipt'
+              const isLorryReceipt = id?.template_name === 'lorry_receipt'
               const deletedId = Array.isArray(id?.ids) ? id.ids[0] : id
               let index = this.invoices.findIndex(
                 (invoice) => invoice.id === deletedId,
@@ -275,8 +278,10 @@ export const useInvoiceStore = (useWindow = false) => {
 
               notificationStore.showNotification({
                 type: 'success',
-                message: isLrReceipt
-                  ? 'LR Receipt deleted successfully.'
+                message: isLorryReceipt
+                  ? 'Lorry Receipt deleted successfully.'
+                  : isLrReceipt
+                    ? 'LR Receipt deleted successfully.'
                   : global.t('invoices.deleted_message', 1),
               })
               resolve(response)
@@ -294,6 +299,7 @@ export const useInvoiceStore = (useWindow = false) => {
             .post(`/api/v1/invoices/delete`, { ids: this.selectedInvoices })
             .then((response) => {
               const isLrReceipt = data?.template_name === 'lr_receipt'
+              const isLorryReceipt = data?.template_name === 'lorry_receipt'
               this.selectedInvoices.forEach((invoice) => {
                 const invoiceId = typeof invoice === 'object' ? invoice.id : invoice
                 let index = this.invoices.findIndex(
@@ -307,8 +313,10 @@ export const useInvoiceStore = (useWindow = false) => {
 
               notificationStore.showNotification({
                 type: 'success',
-                message: isLrReceipt
-                  ? 'LR Receipts deleted successfully.'
+                message: isLorryReceipt
+                  ? 'Lorry Receipts deleted successfully.'
+                  : isLrReceipt
+                    ? 'LR Receipts deleted successfully.'
                   : global.t('invoices.deleted_message', 2),
               })
               resolve(response)
@@ -335,6 +343,8 @@ export const useInvoiceStore = (useWindow = false) => {
                 message:
                   data.template_name === 'lr_receipt'
                     ? 'LR Receipt updated successfully.'
+                    : data.template_name === 'lorry_receipt'
+                      ? 'Lorry Receipt updated successfully.'
                     : global.t('invoices.updated_message'),
               })
 
@@ -420,7 +430,10 @@ export const useInvoiceStore = (useWindow = false) => {
                   route.name === 'lr-receipts.create' ||
                   route.name === 'lr-receipts.edit' ||
                   route.path.includes('/lr-receipts') ||
-                  this.newInvoice.template_name === 'lr_receipt'
+                  route.name === 'lorry-receipts.create' ||
+                  route.name === 'lorry-receipts.edit' ||
+                  route.path.includes('/lorry-receipts') ||
+                  ['lr_receipt', 'lorry_receipt'].includes(this.newInvoice.template_name)
 
                 this.newInvoice.invoice_number = isLrReceipt
                   ? formatLrDocketNumber(response.data.nextNumber)
@@ -553,7 +566,13 @@ export const useInvoiceStore = (useWindow = false) => {
           route.name === 'lr-receipts.create' ||
           route.name === 'lr-receipts.edit' ||
           route.path.includes('/lr-receipts') ||
-          this.newInvoice.template_name === 'lr_receipt'
+          route.name === 'lorry-receipts.create' ||
+          route.name === 'lorry-receipts.edit' ||
+          route.path.includes('/lorry-receipts') ||
+          ['lr_receipt', 'lorry_receipt'].includes(this.newInvoice.template_name)
+        const transportTemplateName = route.path.includes('/lorry-receipts')
+          ? 'lorry_receipt'
+          : 'lr_receipt'
 
         this.isFetchingInitialSettings = true
 
@@ -591,7 +610,7 @@ export const useInvoiceStore = (useWindow = false) => {
           this.newInvoice.invoice_date = moment().format(dateFormat)
           this.newInvoice.due_date = ''
         } else {
-          editActions = [this.fetchInvoice(route.params.id)]
+          editActions = [this.fetchInvoice(route.params.id, isLrReceipt ? { template_name: transportTemplateName } : { template_name: 'office_invoice' })]
         }
 
         const loadActions = [
@@ -610,7 +629,7 @@ export const useInvoiceStore = (useWindow = false) => {
           .then(async () => {
             if (!isEdit) {
               if (isLrReceipt) {
-                this.setTemplate('lr_receipt')
+                this.setTemplate(transportTemplateName)
               } else {
                 this.setTemplate('office_invoice')
               }

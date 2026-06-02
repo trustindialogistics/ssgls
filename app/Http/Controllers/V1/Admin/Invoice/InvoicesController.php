@@ -66,6 +66,10 @@ class InvoicesController extends Controller
     {
         $this->authorize('view', $invoice);
 
+        if ($request->filled('template_name') && $invoice->template_name !== $request->input('template_name')) {
+            abort(404);
+        }
+
         return new InvoiceResource($invoice->load(['media', 'customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 

@@ -31,8 +31,12 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function view(User $user, Invoice $invoice): bool
+    public function view(User $user, $invoice): bool
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('view-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('view-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return true;
         }
@@ -59,8 +63,12 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function update(User $user, Invoice $invoice): bool
+    public function update(User $user, $invoice): bool
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('edit-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('edit-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return $invoice->allow_edit;
         }
@@ -73,8 +81,12 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function delete(User $user, Invoice $invoice): bool
+    public function delete(User $user, $invoice): bool
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('delete-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('delete-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return true;
         }
@@ -87,8 +99,12 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function restore(User $user, Invoice $invoice): bool
+    public function restore(User $user, $invoice): bool
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('delete-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('delete-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return true;
         }
@@ -101,8 +117,12 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function forceDelete(User $user, Invoice $invoice): bool
+    public function forceDelete(User $user, $invoice): bool
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('delete-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('delete-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return true;
         }
@@ -116,8 +136,12 @@ class InvoicePolicy
      * @param  Payment  $payment
      * @return mixed
      */
-    public function send(User $user, Invoice $invoice)
+    public function send(User $user, $invoice)
     {
+        if ($invoice === Invoice::class) {
+            return BouncerFacade::can('send-invoice', Invoice::class);
+        }
+
         if (BouncerFacade::can('send-invoice', $invoice) && $user->hasCompany($invoice->company_id)) {
             return true;
         }

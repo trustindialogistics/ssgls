@@ -62,7 +62,7 @@
                 :class="slotProps.class"
               />
             </template>
-            {{ isLrReceipt ? 'Save LR' : $t('invoices.save_invoice') }}
+            {{ isTransportReceipt ? saveButtonLabel : $t('invoices.save_invoice') }}
           </BaseButton>
         </template>
       </BasePageHeader>
@@ -74,7 +74,9 @@
         :is-edit="isEdit"
       />
 
-      <div v-if="isLrReceipt" class="mb-8">
+      <div v-if="isTransportReceipt" class="mb-8">
+        <LorryReceiptPartyFields v-if="isLorryReceipt" />
+
         <InvoiceCustomFields
           type="Invoice"
           :is-edit="isEdit"
@@ -84,6 +86,27 @@
           :template-name="invoiceStore.newInvoice.template_name"
           :custom-field-scope="invoiceValidationScope"
         />
+
+        <div
+          v-if="isLorryReceipt"
+          class="grid grid-cols-1 gap-4 mt-8 md:grid-cols-2 xl:grid-cols-3"
+        >
+          <BaseInputGroup
+            v-for="document in lorryDocumentFields"
+            :key="document.key"
+            :label="document.label"
+            variant="vertical"
+          >
+            <BaseFileUploader
+              accept="image/*,application/pdf"
+              base64
+              :input-field-name="document.key"
+              :recommended-text="getLorryDocumentHint(document.key)"
+              @change="onLorryDocumentChange"
+              @remove="onLorryDocumentRemove(document.key)"
+            />
+          </BaseInputGroup>
+        </div>
       </div>
 
       <BaseScrollPane>
@@ -117,7 +140,7 @@
 
             <!-- Invoice Custom Fields -->
             <InvoiceCustomFields
-              v-if="!isLrReceipt"
+              v-if="!isTransportReceipt"
               type="Invoice"
               :is-edit="isEdit"
               :is-loading="isLoadingContent"
@@ -176,12 +199,14 @@ import InvoiceItems from '@/scripts/admin/components/estimate-invoice-common/Cre
 import InvoiceTotal from '@/scripts/admin/components/estimate-invoice-common/CreateTotal.vue'
 import SelectTemplate from '@/scripts/admin/components/estimate-invoice-common/SelectTemplateButton.vue'
 import InvoiceBasicFields from './InvoiceCreateBasicFields.vue'
+import LorryReceiptPartyFields from './LorryReceiptPartyFields.vue'
 import InvoiceCustomFields from '@/scripts/admin/components/custom-fields/CreateCustomFields.vue'
 import NoteFields from '@/scripts/admin/components/estimate-invoice-common/CreateNotesField.vue'
 import SelectTemplateModal from '@/scripts/admin/components/modal-components/SelectTemplateModal.vue'
 import TaxTypeModal from '@/scripts/admin/components/modal-components/TaxTypeModal.vue'
 import ItemModal from '@/scripts/admin/components/modal-components/ItemModal.vue'
 import SalesTax from '@/scripts/admin/components/estimate-invoice-common/SalesTax.vue'
+import BaseFileUploader from '@/scripts/components/base/BaseFileUploader.vue'
 
 const invoiceStore = useInvoiceStore()
 const companyStore = useCompanyStore()
@@ -210,19 +235,31 @@ let isLoadingContent = computed(
 )
 
 const isLrReceipt = computed(() => route.path.includes('/admin/lr-receipts'))
+const isLorryReceipt = computed(() => route.path.includes('/admin/lorry-receipts'))
+const isTransportReceipt = computed(() => isLrReceipt.value || isLorryReceipt.value)
+const transportTemplateName = computed(() => isLorryReceipt.value ? 'lorry_receipt' : 'lr_receipt')
 const indexTitle = computed(() =>
-  isLrReceipt.value ? 'LR Receipts' : t('invoices.invoice', 2)
+  isLorryReceipt.value ? 'Lorry Receipts' : isLrReceipt.value ? 'LR Receipts' : t('invoices.invoice', 2)
 )
 const indexPath = computed(() =>
-  isLrReceipt.value ? '/admin/lr-receipts' : '/admin/invoices'
+  isLorryReceipt.value ? '/admin/lorry-receipts' : isLrReceipt.value ? '/admin/lr-receipts' : '/admin/invoices'
 )
 const createTitle = computed(() =>
-  isLrReceipt.value ? 'New LR Receipt' : t('invoices.new_invoice')
+  isLorryReceipt.value ? 'New Lorry Receipt' : isLrReceipt.value ? 'New LR Receipt' : t('invoices.new_invoice')
 )
 const editTitle = computed(() =>
-  isLrReceipt.value ? 'Edit LR Receipt' : t('invoices.edit_invoice')
+  isLorryReceipt.value ? 'Edit Lorry Receipt' : isLrReceipt.value ? 'Edit LR Receipt' : t('invoices.edit_invoice')
 )
 let pageTitle = computed(() => (isEdit.value ? editTitle.value : createTitle.value))
+const saveButtonLabel = computed(() => isLorryReceipt.value ? 'Save Lorry Receipt' : 'Save LR')
+const lorryDocumentFields = [
+  { key: 'aadhar_front_copy', label: 'Aadhar Front Copy' },
+  { key: 'aadhar_back_copy', label: 'Aadhar Back Copy' },
+  { key: 'pan_card_front_copy', label: 'Pan Card Copy Front' },
+  { key: 'pan_card_back_copy', label: 'Pan Card Copy Back' },
+  { key: 'rc_copy_front', label: 'RC Copy Front' },
+  { key: 'rc_copy_back', label: 'RC Copy Back' },
+]
 
 const salesTaxEnabled = computed(() => {
   return (
@@ -236,11 +273,11 @@ const isOfficeInvoiceTemplate = computed(() => {
 })
 
 const isTransportEntryTemplate = computed(() => {
-  return isOfficeInvoiceTemplate.value || invoiceStore.newInvoice.template_name === 'lr_receipt'
+  return ['office_invoice', 'lr_receipt', 'lorry_receipt'].includes(invoiceStore.newInvoice.template_name)
 })
 
 let isEdit = computed(
-  () => route.name === 'invoices.edit' || route.name === 'lr-receipts.edit'
+  () => ['invoices.edit', 'lr-receipts.edit', 'lorry-receipts.edit'].includes(route.name)
 )
 watch(
   () => route.name,
@@ -284,8 +321,8 @@ const v$ = useVuelidate(
 customFieldStore.resetCustomFields()
 v$.value.$reset
 invoiceStore.resetCurrentInvoice()
-if (isLrReceipt.value) {
-  invoiceStore.newInvoice.template_name = 'lr_receipt'
+if (isTransportReceipt.value) {
+  invoiceStore.newInvoice.template_name = transportTemplateName.value
 }
 invoiceStore.fetchInvoiceInitialSettings(isEdit.value)
 
@@ -325,6 +362,14 @@ async function submitForm() {
     tax: invoiceStore.getTotalTax,
   })
 
+  if (data.template_name === 'lorry_receipt') {
+    data.items = data.items.map((item) => ({
+      ...item,
+      name: item.name || 'Lorry Receipt',
+      title: item.title || 'Lorry Receipt',
+    }))
+  }
+
   data.items = data.items.map((item) => ({
     ...item,
     custom_fields: item.customFields || [],
@@ -356,11 +401,39 @@ async function submitForm() {
 
     const response = await action(data)
 
-    router.push(isLrReceipt.value ? `/admin/lr-receipts/${response.data.data.id}/view` : `/admin/invoices/${response.data.data.id}/view`)
+    router.push(isLorryReceipt.value ? `/admin/lorry-receipts/${response.data.data.id}/view` : isLrReceipt.value ? `/admin/lr-receipts/${response.data.data.id}/view` : `/admin/invoices/${response.data.data.id}/view`)
   } catch (err) {
     console.error(err)
   }
 
   isSaving.value = false
+}
+
+function onLorryDocumentChange(fieldName, data, fileCount, file) {
+  invoiceStore.newInvoice.lorry_documents = {
+    ...(invoiceStore.newInvoice.lorry_documents || {}),
+    [fieldName]: {
+      name: file.name,
+      data,
+    },
+  }
+}
+
+function onLorryDocumentRemove(fieldName) {
+  if (!invoiceStore.newInvoice.lorry_documents) {
+    return
+  }
+
+  delete invoiceStore.newInvoice.lorry_documents[fieldName]
+}
+
+function getLorryDocumentHint(fieldName) {
+  const document = invoiceStore.newInvoice.lorry_documents?.[fieldName]
+
+  if (document?.file_name) {
+    return `Uploaded: ${document.file_name}`
+  }
+
+  return 'PNG, JPEG, or PDF'
 }
 </script>

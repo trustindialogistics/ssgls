@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\EmailLog;
 use App\Models\Estimate;
 use App\Models\Invoice;
+use App\Models\LorryReceipt;
 use App\Models\Payment;
 use App\Models\Transaction;
 
@@ -44,6 +45,11 @@ return [
             'salt' => Invoice::class.config('app.key'),
             'length' => 20,
             'alphabet' => 'XKAR7m8jD2bqP9OSVeNGiYL465T10zhfWuc3',
+        ],
+        LorryReceipt::class => [
+            'salt' => LorryReceipt::class.config('app.key'),
+            'length' => 20,
+            'alphabet' => 'gVJ8y2x3QaC9rNp5KX0z4LHw7SD6YtF1mBEO',
         ],
         Estimate::class => [
             'salt' => Estimate::class.config('app.key'),

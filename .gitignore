@@ -27,3 +27,7 @@ package-lock.json
 /docker/development/docker-compose.yml
 /docker/production/docker-compose.yml
 /docker-compose.yaml
+/.tmp-company_1
+/cloudflared-tunnel.log
+/cloudflared-tunnel.pid
+/company_1.tar

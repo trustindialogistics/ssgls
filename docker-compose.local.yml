@@ -10,18 +10,19 @@ services:
     ports:
       - "8090:8080"
     environment:
-      APP_NAME: "My Company"
+      APP_NAME: "SS Gujarat Logistics Services"
       APP_ENV: production
       APP_DEBUG: "false"
       APP_KEY: "base64:kgk/4DW1vEVy7aEvet5FPp5un6PIGe/so8H0mvoUtW0="
-      APP_URL: "http://localhost:8090"
+      APP_URL: "https://ssgls.in"
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/storage/app/database.sqlite
       CACHE_STORE: file
       SESSION_DRIVER: file
       SESSION_LIFETIME: "240"
-      SESSION_DOMAIN: "localhost"
-      SANCTUM_STATEFUL_DOMAINS: "127.0.0.1:8090,localhost:8090"
+      SESSION_DOMAIN: "ssgls.in"
+      SANCTUM_STATEFUL_DOMAINS: "ssgls.in"
+      SESSION_SECURE_COOKIE: "true"
       TRUSTED_PROXIES: "*"
       DOMPDF_ENABLE_REMOTE: "false"
       OFFICIAL_DOCUMENT_ARCHIVE_PATH: "/official-documents"

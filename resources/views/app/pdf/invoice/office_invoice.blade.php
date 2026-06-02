@@ -29,7 +29,7 @@
 
         td,
         th {
-            border: 1px solid #111;
+            border: 1.5px solid #000;
             padding: 2px 4px;
             vertical-align: top;
         }
@@ -39,7 +39,7 @@
         }
 
         .invoice-shell {
-            border: 1.5px solid #111;
+            border: 2px solid #000;
             width: 100%;
         }
 
@@ -146,19 +146,29 @@
             padding: 4px 6px !important;
         }
 
+        .branch-label {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
         .tax-box {
             height: 30px;
-            padding: 5px 6px !important;
+            overflow: hidden;
+            padding: 11px 6px 2px !important;
         }
 
         .tax-box div {
-            font-size: 12px;
+            font-size: 10.5px;
             font-weight: bold;
             line-height: 13px;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            word-break: break-all;
         }
 
         .party-box {
-            height: 84px;
+            border-top: 0 !important;
+            height: 142px;
             padding: 0 !important;
             position: relative;
         }
@@ -173,25 +183,39 @@
             border-left: 0;
             border-right: 0;
             border-top: 0;
-            font-size: 8.8px;
+            font-size: 10px;
             height: 16px;
             padding: 2px 8px;
         }
 
-        .party-line {
-            height: 18px;
+        .party-address-lines {
+            bottom: 18px;
+            left: 0;
             line-height: 13px;
-            padding: 3px 8px 1px;
+            overflow: hidden;
+            padding: 2px 8px 1px;
+            position: absolute;
+            right: 0;
+            top: 16px;
+        }
+
+        .party-display-name {
+            font-weight: normal;
+            margin-bottom: 2px;
         }
 
         .party-gstin {
             border-top: 1px solid #111;
             bottom: 0;
+            font-size: 8px;
             height: 18px;
             line-height: 16px;
+            overflow: hidden;
             padding: 1px 8px;
             position: absolute;
-            width: 100%;
+            text-overflow: clip;
+            white-space: nowrap;
+            width: 99.5%;
         }
 
         .bill-details td {
@@ -219,7 +243,7 @@
 
         .items th {
             font-size: 7.8px;
-            font-weight: normal;
+            font-weight: bold;
             height: 16px;
             line-height: 8.8px;
             padding: 1px 2px;
@@ -237,10 +261,6 @@
             padding: 2px 3px;
             text-align: center;
             vertical-align: top;
-        }
-
-        .items .blank-fill td {
-            border-top: 0;
         }
 
         .words-row td {
@@ -415,17 +435,26 @@
         return $fieldValue($item->fields, $keys);
     };
 
-    $companyName = $invoice->company?->name ?: 'S S Gujarat Logistics Services';
-    $billingBranch = $invoiceField(['billing_branch_name_address', 'billing_branch_address', 'billing_branch']);
-    $panNo = $invoiceField(['pan_no', 'pan']) ?: $customerField(['pan_no', 'pan']) ?: 'BHLPS2943H';
-    $companyGstin = $invoiceField(['gstin', 'gst_no']) ?: '24BHLPS2943H1Z3';
+    $companyName = $invoice->company?->name ?: '';
+    $companyInitials = collect(preg_split('/\s+/', trim($companyName)))
+        ->filter()
+        ->map(fn ($word) => mb_substr($word, 0, 1))
+        ->take(2)
+        ->implode('');
+    $billingBranch = $invoice->company?->billing_branch_name_address ?: $invoiceField(['billing_branch_name_address', 'billing_branch_address', 'billing_branch']);
+    $companyTagline = $invoice->company?->tagline ?: '';
+    $companyGstin = $invoiceField(['gstin', 'gst_no']) ?: ($invoice->company?->gstin ?: '');
+    $companyEnrollmentNo = $invoice->company?->enrollment_no ?: $invoiceField(['enrollment_no', 'enrollment']);
+    $companyTaxIdentityLabel = $companyEnrollmentNo ? 'Enrollment No' : 'GSTIN';
+    $companyTaxIdentityValue = $companyEnrollmentNo ?: $companyGstin;
+    $panNo = $invoiceField(['pan_no', 'pan']) ?: ($invoice->company?->pan_no ?: '');
     $partyGstin = $invoice->customer->tax_id ?: $customerField(['gstin', 'gst_no']);
     $partyCode = $invoiceField(['party_code']);
     $branchCode = $invoiceField(['branch_code']);
     $tickBillType = $invoiceField(['tick_bill_type', 'bill_type']);
     $basisOfCharges = $invoiceField(['basis_of_charges', 'basis']);
     $enclosures = $invoiceField(['enclosures']);
-    $gstTaxThrough = $invoiceField(['gst_tax_through', 'service_tax_through']) ?: 'CONSIGNOR / CONSIGNEE /';
+    $gstTaxThrough = $invoiceField(['gst_tax_through', 'service_tax_through']);
     $empCode = $invoiceField(['emp_code', 'employee_code']);
     $preparedBy = $invoiceField(['prepared_by']);
     $checkedBy = $invoiceField(['checked_by']);
@@ -433,28 +462,30 @@
     $partyAddressHtml = preg_replace('/<\/p>\s*<p[^>]*>/i', "\n", $partyAddressHtml);
     $partyAddressHtml = preg_replace('/<\/?p[^>]*>/i', "\n", $partyAddressHtml);
     $partyAddressText = html_entity_decode(strip_tags($partyAddressHtml), ENT_QUOTES, 'UTF-8');
+    $partyDisplayName = $invoice->customer?->billingAddress?->name ?: $invoice->customer?->display_name ?: $invoice->customer?->name;
     $partyAddressLines = collect(preg_split('/\r\n|\r|\n/', $partyAddressText))
         ->map(fn ($line) => trim(preg_replace('/\s+/', ' ', $line)))
+        ->reject(fn ($line) => $partyDisplayName && strcasecmp($line, $partyDisplayName) === 0)
         ->filter()
         ->values();
 
-    if ($partyAddressLines->isEmpty() && $invoice->customer?->name) {
-        $partyAddressLines = collect([$invoice->customer->name]);
+    if (! $partyDisplayName && $partyAddressLines->isNotEmpty()) {
+        $partyDisplayName = $partyAddressLines->shift();
     }
     $companyPhone = $invoice->company?->address?->phone;
-    $companyEmail = \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
-    $mobile = $invoiceField(['mobile', 'phone']) ?: ($companyPhone ?: '7600475900 6355071130');
-    $email = $invoiceField(['email']) ?: ($companyEmail ?: 'ssgl2026@gmail.com');
+    $companyEmail = $invoice->company?->notification_email ?: \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
+    $mobile = $invoiceField(['mobile', 'phone']) ?: ($companyPhone ?: '');
+    $email = $invoiceField(['email']) ?: ($companyEmail ?: '');
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $company_address);
-    $displayCompanyAddress = preg_replace('/<p[^>]*>\s*(?:<strong>)?\s*\(?A Cost Effective Distribution\)?\s*(?:<\/strong>)?\s*<\/p>/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = preg_replace('/<br\s*\/?>\s*\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = preg_replace('/\(?A Cost Effective Distribution\)?/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
-    $displayCompanyAddress = str_ireplace('Param Logistics And Industrial Pack', 'Param Logistics And Industrial Park', $displayCompanyAddress);
+    if ($companyPhone) {
+        $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*'.preg_quote($companyPhone, '/').'\s*/i', '', $displayCompanyAddress);
+    }
+    if ($companyEmail) {
+        $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*'.preg_quote($companyEmail, '/').'\s*/i', '', $displayCompanyAddress);
+    }
     $officeGrandTotal = 0;
-    $blankRows = max(1, 11 - $invoice->items->count());
-    $blankFillHeight = max(210, $blankRows * 21);
 @endphp
 
     <div class="invoice-shell">
@@ -468,12 +499,12 @@
                                 @if ($logo)
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else
-                                    <div class="brand-fallback">SS<span>GUJARAT<br>LOGISTICS SERVICES</span></div>
+                                    <div class="brand-fallback">{{ $companyInitials }}</div>
                                 @endif
                             </td>
                             <td class="company-cell">
                                 <div class="company-name">{{ $companyName }}</div>
-                                <div class="company-tagline">(A Cost Effective Distribution)</div>
+                                <div class="company-tagline">{{ $companyTagline }}</div>
                                 <div class="company-address">{!! $displayCompanyAddress !!}</div>
                             </td>
                             <td class="contact-cell">
@@ -484,7 +515,7 @@
                     </table>
                 </td>
                 <td class="right-zone branch-box">
-                    Billing Br. Name &amp; Address :<br>{!! nl2br(e($billingBranch)) !!}
+                    <span class="branch-label">Billing Br. Name & Address :</span><br>{!! nl2br(e($billingBranch)) !!}
                 </td>
             </tr>
 
@@ -492,30 +523,31 @@
                 <td rowspan="4" class="party-box">
                     <table class="party-head">
                         <tr>
-                            <td width="50%">Party Name &amp; Address :</td>
-                            <td>Party Code : {{ $partyCode }}</td>
+                            <td width="50%"><b>Party Name & Address :</b></td>
+                            <td><b>Party Code :</b> {{ $partyCode }}</td>
                         </tr>
                     </table>
-                    @for ($lineIndex = 0; $lineIndex < 3; $lineIndex++)
-                        <div class="party-line">{{ $partyAddressLines->get($lineIndex) ?: "\u{00A0}" }}</div>
-                    @endfor
-                    <div class="party-gstin">GSTIN : {{ $partyGstin }}</div>
+                    <div class="party-address-lines">
+                        <div class="party-display-name">{{ $partyDisplayName }}</div>
+                        {!! nl2br(e($partyAddressLines->implode("\n"))) ?: "\u{00A0}" !!}
+                    </div>
+                    <div class="party-gstin"><b>GSTIN :</b> {{ $partyGstin }}</div>
                 </td>
                 <td class="tax-box">
                     <div>PAN No.: {{ $panNo }}</div>
-                    <div>GSTIN : {{ $companyGstin }}</div>
+                    <div>{{ $companyTaxIdentityLabel }} : {{ $companyTaxIdentityValue }}</div>
                 </td>
             </tr>
             <tr>
                 <td>
                     <table class="bill-details">
                         <tr>
-                            <td width="50%">Bill No.: {{ $invoice->invoice_number }}</td>
-                            <td>Branch Code : {{ $branchCode }}</td>
+                            <td width="50%"><b>Bill No.:</b> {{ $invoice->invoice_number }}</td>
+                            <td><b>Branch Code :</b> {{ $branchCode }}</td>
                         </tr>
                         <tr>
-                            <td>Bill Date : {{ $invoice->formattedInvoiceDate }}</td>
-                            <td>Payment Due Date : {{ $invoice->formattedDueDate }}</td>
+                            <td><b>Bill Date :</b> {{ $invoice->formattedInvoiceDate }}</td>
+                            <td><b>Payment Due Date :</b> {{ $invoice->formattedDueDate }}</td>
                         </tr>
                     </table>
                 </td>
@@ -557,10 +589,11 @@
                 <col style="width: 9%;">
                 <col style="width: 5.5%;">
                 <col style="width: 7.4%;">
-                <col style="width: 10%;">
-                <col style="width: 7.6%;">
-                <col style="width: 7%;">
-                <col style="width: 13.9%;">
+                <col style="width: 8.5%;">
+                <col style="width: 6.8%;">
+                <col style="width: 6.8%;">
+                <col style="width: 6.8%;">
+                <col style="width: 12.2%;">
             </colgroup>
             <thead>
                 <tr class="group-head">
@@ -573,6 +606,7 @@
                     <th rowspan="2">Charged<br>Weight Kgs.</th>
                     <th rowspan="2">Rate</th>
                     <th rowspan="2">Other Charge</th>
+                    <th rowspan="2">LR Charge</th>
                     <th rowspan="2">DD Charge</th>
                     <th rowspan="2">Amount</th>
                 </tr>
@@ -588,13 +622,15 @@
                     @php
                         $rate = $itemField($item, ['rate']);
                         $otherCharge = $itemField($item, ['other_charge']);
+                        $lrCharge = $itemField($item, ['lr_charge']);
                         $ddCharge = $itemField($item, ['dd_charge']);
                         $calculatedAmount = null;
 
-                        if ($rate !== '' || $otherCharge !== '' || $ddCharge !== '') {
+                        if ($rate !== '' || $otherCharge !== '' || $lrCharge !== '' || $ddCharge !== '') {
                             $calculatedAmount = (int) round((
                                 $numericField($rate)
                                 + $numericField($otherCharge)
+                                + $numericField($lrCharge)
                                 + $numericField($ddCharge)
                             ) * 100);
                         }
@@ -614,15 +650,11 @@
                         <td>{{ $itemField($item, ['charged_weight_kgs', 'charged_weight', 'weight']) }}</td>
                         <td class="text-right">{{ $rate ?: number_format($item->price / 100, 2) }}</td>
                         <td class="text-right">{{ $otherCharge }}</td>
+                        <td class="text-right">{{ $lrCharge }}</td>
                         <td class="text-right">{{ $ddCharge }}</td>
                         <td class="text-right">{!! format_money_pdf($officeLineTotal, $invoice->customer->currency) !!}</td>
                     </tr>
                 @endforeach
-                <tr class="blank-fill">
-                    @for ($column = 0; $column < 13; $column++)
-                        <td style="height: {{ $blankFillHeight }}px;">&nbsp;</td>
-                    @endfor
-                </tr>
             </tbody>
         </table>
 
@@ -638,7 +670,7 @@
                 <col style="width: 10%;">
             </colgroup>
             <tr>
-                <td>Rupees in words : {{ $rupeesInWords }}</td>
+                <td><b>Rupees in words :</b> {{ $rupeesInWords }}</td>
                 <td class="grand-label">GRAND TOTAL</td>
                 <td class="text-right bold">{!! format_money_pdf($officeGrandTotal ?: $invoice->total, $invoice->customer->currency) !!}</td>
             </tr>

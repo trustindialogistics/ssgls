@@ -5,8 +5,8 @@
       :valid="v.customer_id"
       :content-loading="isLoading"
       type="invoice"
-      :label="isLrReceiptTemplate ? 'Consignee' : ''"
-      :class="isLrReceiptTemplate ? 'order-2 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
+      :label="isTransportReceiptTemplate ? customerLabel : ''"
+      :class="isTransportReceiptTemplate ? 'order-2 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
     />
 
     <div
@@ -93,7 +93,7 @@
                 class="flex justify-center !w-10 !h-10 p-2 mr-5 text-sm text-white bg-gray-200 rounded-full font-base"
               />
               <div class="mt-1">
-                <label class="text-lg font-medium text-gray-900">Consignor</label>
+                <label class="text-lg font-medium text-gray-900">Consignee</label>
               </div>
             </div>
           </PopoverButton>
@@ -162,9 +162,9 @@
       </div>
     </div>
 
-    <BaseInputGrid :class="isLrReceiptTemplate ? 'order-3 col-span-12 lg:col-span-4' : 'col-span-12 lg:col-span-7'">
+    <BaseInputGrid :class="isTransportReceiptTemplate ? 'order-3 col-span-12 lg:col-span-4' : 'col-span-12 lg:col-span-7'">
       <BaseInputGroup
-        :label="isLrReceiptTemplate ? 'Date' : $t('invoices.invoice_date')"
+        :label="isTransportReceiptTemplate ? 'Date' : $t('invoices.invoice_date')"
         :content-loading="isLoading"
         required
         :error="v.invoice_date.$error && v.invoice_date.$errors[0].$message"
@@ -192,7 +192,7 @@
       </BaseInputGroup>
 
       <BaseInputGroup
-        :label="isLrReceiptTemplate ? 'Docket No.' : $t('invoices.invoice_number')"
+        :label="isTransportReceiptTemplate ? numberLabel : $t('invoices.invoice_number')"
         :content-loading="isLoading"
         :error="v.invoice_number.$error && v.invoice_number.$errors[0].$message"
         required
@@ -264,6 +264,14 @@ const time24h = computed(() => {
 const isLrReceiptTemplate = computed(() => {
   return invoiceStore.newInvoice.template_name === 'lr_receipt'
 })
+const isLorryReceiptTemplate = computed(() => {
+  return invoiceStore.newInvoice.template_name === 'lorry_receipt'
+})
+const isTransportReceiptTemplate = computed(() => {
+  return isLrReceiptTemplate.value || isLorryReceiptTemplate.value
+})
+const customerLabel = computed(() => isLorryReceiptTemplate.value ? 'Party' : 'Consignor')
+const numberLabel = computed(() => isLorryReceiptTemplate.value ? 'Challan No.' : 'Docket No.')
 
 const debounceSearchConsignors = useDebounceFn(() => {
   fetchConsignors(consignorSearch.value)
@@ -331,6 +339,15 @@ function syncConsignorFields(customer) {
   setInvoiceField('Consignor GST No', customer?.tax_id)
 }
 
+function partyName(customer) {
+  return compact(customer?.name || customer?.display_name)
+}
+
+function syncLorryPartyPaymentFields(customer) {
+  setInvoiceField('Paid To', partyName(customer))
+  setInvoiceField('Final Paid To', partyName(customer))
+}
+
 async function selectConsignor(customer, close) {
   const response = await customerStore.fetchCustomer(customer.id)
   selectedConsignor.value = response.data.data
@@ -389,6 +406,10 @@ watch(
     if (isLrReceiptTemplate.value) {
       syncConsigneeFields(customer)
     }
+
+    if (isLorryReceiptTemplate.value) {
+      syncLorryPartyPaymentFields(customer)
+    }
   },
   { deep: true }
 )
@@ -396,12 +417,14 @@ watch(
 watch(
   () => invoiceStore.newInvoice.customFields,
   () => {
-    if (!isLrReceiptTemplate.value) {
-      return
+    if (isLrReceiptTemplate.value) {
+      syncConsigneeFields(invoiceStore.newInvoice.customer)
+      syncConsignorFields(selectedConsignor.value)
     }
 
-    syncConsigneeFields(invoiceStore.newInvoice.customer)
-    syncConsignorFields(selectedConsignor.value)
+    if (isLorryReceiptTemplate.value) {
+      syncLorryPartyPaymentFields(invoiceStore.newInvoice.customer)
+    }
   },
   { deep: false }
 )

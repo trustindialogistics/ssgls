@@ -7,6 +7,7 @@ use App\Models\ExchangeRateProvider;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
+use App\Models\LorryReceipt;
 use App\Models\Note;
 use App\Models\Payment;
 use App\Models\RecurringInvoice;
@@ -327,6 +328,36 @@ return [
             'model' => Customer::class,
         ],
         [
+            'title' => 'navigation.owner-portal',
+            'group' => 1,
+            'link' => '/admin/owner-portal',
+            'icon' => 'IdentificationIcon',
+            'name' => 'Owner List',
+            'owner_only' => false,
+            'ability' => 'view-invoice',
+            'model' => '',
+        ],
+        [
+            'title' => 'navigation.driver-portal',
+            'group' => 1,
+            'link' => '/admin/driver-portal',
+            'icon' => 'TruckIcon',
+            'name' => 'Driver List',
+            'owner_only' => false,
+            'ability' => 'view-invoice',
+            'model' => '',
+        ],
+        [
+            'title' => 'navigation.broker-portal',
+            'group' => 1,
+            'link' => '/admin/broker-portal',
+            'icon' => 'UserGroupIcon',
+            'name' => 'Broker List',
+            'owner_only' => false,
+            'ability' => 'view-invoice',
+            'model' => '',
+        ],
+        [
             'title' => 'navigation.items',
             'group' => 1,
             'link' => '/admin/items',
@@ -365,6 +396,16 @@ return [
             'owner_only' => false,
             'ability' => 'view-invoice',
             'model' => Invoice::class,
+        ],
+        [
+            'title' => 'navigation.lorry-receipts',
+            'group' => 2,
+            'link' => '/admin/lorry-receipts',
+            'icon' => 'TruckIcon',
+            'name' => 'Lorry Receipts',
+            'owner_only' => false,
+            'ability' => 'view-invoice',
+            'model' => LorryReceipt::class,
         ],
         [
             'title' => 'navigation.recurring-invoices',

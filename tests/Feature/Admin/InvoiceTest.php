@@ -34,6 +34,18 @@ test('testGetInvoices', function () {
     $response->assertOk();
 });
 
+test('show invoice requires matching template when template is provided', function () {
+    $invoice = Invoice::factory()->create([
+        'template_name' => Invoice::TEMPLATE_OFFICE_INVOICE,
+    ]);
+
+    getJson("api/v1/invoices/{$invoice->id}?template_name=".Invoice::TEMPLATE_OFFICE_INVOICE)
+        ->assertOk();
+
+    getJson("api/v1/invoices/{$invoice->id}?template_name=".Invoice::TEMPLATE_LR_RECEIPT)
+        ->assertNotFound();
+});
+
 test('create invoice', function () {
     $invoice = Invoice::factory()
         ->raw([

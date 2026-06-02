@@ -36,7 +36,7 @@ FROM base AS production
     # Revert back to www-data, non-root user
     USER www-data
 
-    # Copy application files
-    COPY --from=static_builder --chown=www-data:www-data /var/www/html/public /var/www/html/public
+    # Copy application files first, then overlay container-built frontend assets.
     COPY --chown=www-data:www-data . /var/www/html
+    COPY --from=static_builder --chown=www-data:www-data /var/www/html/public/build /var/www/html/public/build
     RUN composer install --prefer-dist --no-dev --optimize-autoloader

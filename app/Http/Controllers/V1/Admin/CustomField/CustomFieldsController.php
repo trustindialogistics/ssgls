@@ -8,6 +8,7 @@ use App\Http\Resources\CustomFieldResource;
 use App\Models\CustomField;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class CustomFieldsController extends Controller
 {
@@ -141,6 +142,9 @@ class CustomFieldsController extends Controller
                 $fieldName = $fieldDefinition['name'];
                 $fieldType = $fieldDefinition['type'] ?? 'Input';
                 $defaultAnswerKey = getCustomFieldValueKey($fieldType);
+                $defaultAnswer = $request->template_name === 'lorry_receipt'
+                    ? null
+                    : ($fieldDefinition['default_answer'] ?? null);
                 $attributes = [
                     'slug' => $this->makeTransportInvoiceSlug($modelType, $fieldName),
                     'label' => $fieldName,
@@ -148,7 +152,7 @@ class CustomFieldsController extends Controller
                     'options' => $fieldDefinition['options'] ?? null,
                     'is_required' => false,
                     'order' => 900 + $index,
-                    $defaultAnswerKey => $fieldDefinition['default_answer'] ?? null,
+                    $defaultAnswerKey => $defaultAnswer,
                 ];
                 $existingField = $existingFields->get($modelType.'|'.$fieldName);
 
@@ -177,7 +181,8 @@ class CustomFieldsController extends Controller
         if (! $templateName) {
             return array_values(array_unique(array_merge(
                 $this->getTransportInvoiceSlugs('office_invoice'),
-                $this->getTransportInvoiceSlugs('lr_receipt')
+                $this->getTransportInvoiceSlugs('lr_receipt'),
+                $this->getTransportInvoiceSlugs('lorry_receipt')
             )));
         }
 
@@ -242,6 +247,68 @@ class CustomFieldsController extends Controller
             ];
         }
 
+        if ($templateName === 'lorry_receipt') {
+            return [
+                'Invoice' => [
+                    ['name' => 'From', 'default_answer' => 'Vapi'],
+                    ['name' => 'To', 'default_answer' => 'Bengaluru'],
+                    ['name' => 'No Of Pages', 'type' => 'Number', 'default_answer' => 1],
+                    ['name' => 'No Of Packages', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Actual Weight', 'default_answer' => '100 kg'],
+                    ['name' => 'Charge Weight', 'default_answer' => '1000 kg'],
+                    ['name' => 'Lorry No', 'default_answer' => 'GJ05BC1234'],
+                    ['name' => 'Regd at', 'default_answer' => 'Honda'],
+                    ['name' => 'Body Type', 'default_answer' => 'Metal'],
+                    ['name' => 'Make', 'default_answer' => 'Black'],
+                    ['name' => 'Model', 'default_answer' => '2026'],
+                    ['name' => 'Colour', 'default_answer' => 'Black'],
+                    ['name' => 'Chasis No', 'default_answer' => '45121564551'],
+                    ['name' => 'Engine No', 'default_answer' => '45444CDD'],
+                    ['name' => 'Owner Name', 'default_answer' => 'Helloabv'],
+                    ['name' => 'Owner Address', 'type' => 'TextArea', 'default_answer' => 'Abc def gh abc def ghi jkl'],
+                    ['name' => 'Owner Phone No', 'default_answer' => '123456789'],
+                    ['name' => 'Financer Name', 'default_answer' => 'MSMSM'],
+                    ['name' => 'Financer Address', 'type' => 'TextArea', 'default_answer' => 'ABC DEF GHI JKL'],
+                    ['name' => 'Driver Name', 'default_answer' => 'Ramesh Driver'],
+                    ['name' => 'Driver Address', 'type' => 'TextArea', 'default_answer' => 'Driver line one driver line two'],
+                    ['name' => 'Driver Place', 'default_answer' => 'Vapi'],
+                    ['name' => 'Driver Licence No', 'default_answer' => 'DL-2026-1937'],
+                    ['name' => 'Driver Licence Date', 'type' => 'Date', 'default_answer' => '2026-05-17'],
+                    ['name' => 'Driver Licence Issued By', 'default_answer' => 'RTO Vapi'],
+                    ['name' => 'Driver RTO', 'type' => 'TextArea', 'default_answer' => 'Vapi RTO'],
+                    ['name' => 'Driver Valid Up To', 'type' => 'Date', 'default_answer' => '2027-05-17'],
+                    ['name' => 'Broker Name', 'default_answer' => 'Sample Broker'],
+                    ['name' => 'Broker Address', 'type' => 'TextArea', 'default_answer' => 'Broker address line one line two'],
+                    ['name' => 'Advice No', 'default_answer' => 'ADV-121'],
+                    ['name' => 'Advice Date', 'type' => 'Date', 'default_answer' => '2026-05-17'],
+                    ['name' => 'Destination Broker Name', 'default_answer' => 'Bengaluru Broker'],
+                    ['name' => 'Destination Broker Address', 'type' => 'TextArea', 'default_answer' => 'Destination broker address sample'],
+                    ['name' => 'Broker Phone No', 'default_answer' => '9876543210'],
+                    ['name' => 'Paid To', 'default_answer' => 'M K Infrastructure'],
+                    ['name' => 'Lorry Hire Amount', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Other Charges Amount', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Gross Hire Rupees', 'default_answer' => 1100],
+                    ['name' => 'Advance Cash Cheque No', 'default_answer' => '121'],
+                    ['name' => 'Advance On', 'type' => 'Date', 'default_answer' => '2026-05-17'],
+                    ['name' => 'Advance Bank', 'default_answer' => 'ICICI Bank'],
+                    ['name' => 'Advance Amount', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Balance Payable At', 'default_answer' => 'ICICI'],
+                    ['name' => 'Balance Amount', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Balance Rupees Only', 'type' => 'TextArea', 'default_answer' => 100],
+                    ['name' => 'Final Paid To', 'default_answer' => 'M K Infrastructure'],
+                    ['name' => 'Final Total Extra Amount', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Grand Total', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Total Less Amount', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Final Balance Date', 'type' => 'Date', 'default_answer' => '2026-05-17'],
+                    ['name' => 'Net Amount Payable', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Final Cash Cheque No', 'default_answer' => 'CHQ-121'],
+                    ['name' => 'Final Bank', 'default_answer' => 'ICICI Bank'],
+                    ['name' => 'Received No Of Bilties', 'type' => 'TextArea', 'default_answer' => 'LR NO 1937*471 wt Orthopedic Goods'],
+                ],
+                'Item' => [],
+            ];
+        }
+
         if ($templateName === 'office_invoice') {
             return [
                 'Invoice' => [
@@ -276,7 +343,7 @@ class CustomFieldsController extends Controller
 
     private function makeTransportInvoiceSlug(string $modelType, string $name): string
     {
-        return 'CUSTOM_'.$modelType.'_'.\Illuminate\Support\Str::upper(\Illuminate\Support\Str::slug($name, '_'));
+        return 'CUSTOM_'.$modelType.'_'.Str::upper(Str::slug($name, '_'));
     }
 
     private function removeEmptyDuplicateTransportInvoiceFields(int $companyId, array $slugs): void
@@ -313,6 +380,6 @@ class CustomFieldsController extends Controller
 
     private function isTransportInvoiceTemplate(?string $templateName): bool
     {
-        return in_array($templateName, ['office_invoice', 'lr_receipt'], true);
+        return in_array($templateName, ['office_invoice', 'lr_receipt', 'lorry_receipt'], true);
     }
 }

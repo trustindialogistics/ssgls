@@ -1,0 +1,308 @@
+<template>
+  <div class="mb-8">
+    <div class="grid gap-y-6 gap-x-4 grid-cols-1 md:grid-cols-2">
+      <div
+        v-for="profile in profileInputs"
+        :key="profile.key"
+        class="relative flex flex-col rounded-md"
+      >
+        <div
+          v-if="selectedProfiles[profile.key]"
+          class="flex flex-col p-4 bg-white border border-gray-200 border-solid min-h-[170px] rounded-md"
+        >
+          <div class="flex relative justify-between gap-3 mb-2">
+            <BaseText
+              :text="selectedProfiles[profile.key].name"
+              class="flex-1 text-base font-medium text-left text-gray-900"
+            />
+            <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
+              <a
+                class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
+                @click.stop="openProfileEdit(profile)"
+              >
+                <BaseIcon name="PencilIcon" class="text-gray-500 h-4 w-4 mr-1" />
+                {{ $t('general.edit') }}
+              </a>
+              <a
+                class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
+                @click="resetProfile(profile)"
+              >
+                <BaseIcon name="XCircleIcon" class="text-gray-500 h-4 w-4 mr-1" />
+                {{ $t('general.deselect') }}
+              </a>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-2">
+            <div class="flex flex-col">
+              <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
+                {{ profile.summaryLabel }}
+              </label>
+              <div class="flex flex-col flex-1 p-0 text-left">
+                <label
+                  v-for="line in formatProfileLines(selectedProfiles[profile.key])"
+                  :key="`${profile.key}-${line}`"
+                  class="relative w-11/12 text-sm truncate"
+                >
+                  {{ line }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Popover v-else v-slot="{ open }" class="relative flex flex-col rounded-md">
+          <PopoverButton
+            :class="{
+              'focus:ring-2 focus:ring-primary-400': !open,
+            }"
+            class="w-full outline-hidden rounded-md"
+            @click="ensureProfilesLoaded(profile)"
+          >
+            <div class="relative flex justify-center px-0 p-0 py-16 bg-white border border-gray-200 border-solid rounded-md min-h-[170px]">
+              <BaseIcon
+                name="UserIcon"
+                class="flex justify-center !w-10 !h-10 p-2 mr-5 text-sm text-white bg-gray-200 rounded-full font-base"
+              />
+              <div class="mt-1">
+                <label class="text-lg font-medium text-gray-900">
+                  {{ profile.label }}
+                </label>
+              </div>
+            </div>
+          </PopoverButton>
+
+          <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="translate-y-1 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-1 opacity-0"
+          >
+            <div v-if="open" class="absolute min-w-full z-10">
+              <PopoverPanel
+                v-slot="{ close }"
+                focus
+                static
+                class="overflow-hidden rounded-md shadow-lg ring-1 ring-black/5 bg-white"
+              >
+                <div class="relative">
+                  <BaseInput
+                    v-model="profileSearch[profile.key]"
+                    container-class="m-4"
+                    :placeholder="$t('general.search')"
+                    type="text"
+                    icon="search"
+                    @update:model-value="debounceSearchProfiles(profile)"
+                  />
+
+                  <ul class="max-h-80 flex flex-col overflow-auto list border-t border-gray-200">
+                    <li
+                      v-for="option in profileOptions[profile.key]"
+                      :key="option.id"
+                      class="flex px-6 py-2 border-b border-gray-200 border-solid cursor-pointer hover:cursor-pointer hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
+                      @click="selectProfile(profile, option, close)"
+                    >
+                      <div class="flex items-center justify-center h-10 w-10 mr-4 rounded-full bg-gray-100 uppercase text-primary-500">
+                        {{ (option.name || profile.singular).charAt(0) }}
+                      </div>
+                      <div class="flex-1 flex flex-col text-left">
+                        <span class="text-sm font-medium text-gray-900">
+                          {{ option.name }}
+                        </span>
+                        <span class="text-xs text-gray-500">
+                          {{ option.phone || option.address }}
+                        </span>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    class="flex items-center justify-center w-full px-6 py-3 bg-gray-100 cursor-pointer"
+                    @click="openProfileCreate(profile, close)"
+                  >
+                    <BaseIcon name="PlusIcon" class="h-5 text-primary-400" />
+                    <label class="m-0 ml-3 text-sm leading-none cursor-pointer font-base text-primary-400">
+                      Add New {{ profile.singular }}
+                    </label>
+                  </button>
+                </div>
+              </PopoverPanel>
+            </div>
+          </transition>
+        </Popover>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { reactive } from 'vue'
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+import { useDebounceFn } from '@vueuse/core'
+import { useRouter } from 'vue-router'
+import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
+import { useLorryPartyProfileStore } from '@/scripts/admin/stores/lorry-party-profile'
+
+const invoiceStore = useInvoiceStore()
+const profileStore = useLorryPartyProfileStore()
+const router = useRouter()
+
+const selectedProfiles = reactive({
+  owner: null,
+  driver: null,
+  broker: null,
+})
+
+const profileOptions = reactive({
+  owner: [],
+  driver: [],
+  broker: [],
+})
+
+const profileSearch = reactive({
+  owner: '',
+  driver: '',
+  broker: '',
+})
+
+const profileInputs = [
+  {
+    key: 'owner',
+    type: 'OWNER',
+    label: 'Owner Name',
+    singular: 'Owner',
+    summaryLabel: 'Owner Details',
+  },
+  {
+    key: 'driver',
+    type: 'DRIVER',
+    label: 'Driver Name',
+    singular: 'Driver',
+    summaryLabel: 'Driver Details',
+  },
+  {
+    key: 'broker',
+    type: 'BROKER',
+    label: 'Broker Name',
+    singular: 'Broker',
+    summaryLabel: 'Broker Details',
+  },
+]
+
+const createPathByType = {
+  OWNER: '/admin/owner-portal/create',
+  DRIVER: '/admin/driver-portal/create',
+  BROKER: '/admin/broker-portal/create',
+}
+
+const editPathByType = {
+  OWNER: '/admin/owner-portal',
+  DRIVER: '/admin/driver-portal',
+  BROKER: '/admin/broker-portal',
+}
+
+const fieldMappingsByType = {
+  OWNER: [
+    ['Owner Name', 'name'],
+    ['Owner Address', 'address'],
+    ['Owner Phone No', 'phone'],
+    ['Financer Name', 'financer_name'],
+    ['Financer Address', 'financer_address'],
+  ],
+  DRIVER: [
+    ['Driver Name', 'name'],
+    ['Driver Address', 'address'],
+    ['Driver Place', 'place'],
+    ['Driver Licence No', 'licence_no'],
+    ['Driver Licence Date', 'licence_date'],
+    ['Driver Licence Issued By', 'licence_issued_by'],
+    ['Driver RTO', 'rto_address'],
+    ['Driver Valid Up To', 'valid_up_to'],
+  ],
+  BROKER: [
+    ['Broker Name', 'name'],
+    ['Broker Address', 'address'],
+    ['Advice No', 'advice_no'],
+    ['Advice Date', 'advice_date'],
+    ['Destination Broker Name', 'destination_broker_name'],
+    ['Destination Broker Address', 'destination_broker_address'],
+    ['Broker Phone No', 'phone'],
+  ],
+}
+
+const debounceSearchProfiles = useDebounceFn((profile) => {
+  fetchProfileOptions(profile)
+}, 500)
+
+function setField(label, value) {
+  const field = invoiceStore.newInvoice.customFields?.find((_field) => _field.label === label)
+
+  if (field) {
+    field.value = value || ''
+  }
+}
+
+async function fetchProfileOptions(profile) {
+  const response = await profileStore.fetchProfiles({
+    search: profileSearch[profile.key],
+    type: profile.type,
+    limit: 'all',
+  })
+
+  profileOptions[profile.key] = response.data.data
+}
+
+function ensureProfilesLoaded(profile) {
+  if (!profileOptions[profile.key].length) {
+    fetchProfileOptions(profile)
+  }
+}
+
+function openProfileCreate(profile, close) {
+  close?.()
+  router.push(createPathByType[profile.type])
+}
+
+function openProfileEdit(profile) {
+  const selectedProfile = selectedProfiles[profile.key]
+
+  if (!selectedProfile?.id) {
+    return
+  }
+
+  router.push(`${editPathByType[profile.type]}/${selectedProfile.id}/edit`)
+}
+
+function selectProfile(profile, option, close) {
+  selectedProfiles[profile.key] = option
+  fillProfileFields(profile.type, selectedProfiles[profile.key])
+  close()
+  profileSearch[profile.key] = ''
+}
+
+function resetProfile(profile) {
+  selectedProfiles[profile.key] = null
+  fillProfileFields(profile.type, null)
+}
+
+function compact(value) {
+  return value ? String(value).trim() : ''
+}
+
+function formatProfileLines(profile) {
+  return [
+    compact(profile?.address),
+    compact(profile?.phone),
+    compact(profile?.code),
+  ].filter(Boolean)
+}
+
+function fillProfileFields(type, profile) {
+  fieldMappingsByType[type].forEach(([label, key]) => {
+    setField(label, profile?.[key])
+  })
+}
+</script>

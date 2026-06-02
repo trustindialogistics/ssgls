@@ -45,6 +45,17 @@ class Invoice extends Model implements HasMedia
 
     public const TEMPLATE_LR_RECEIPT = 'lr_receipt';
 
+    public const TEMPLATE_LORRY_RECEIPT = 'lorry_receipt';
+
+    public const LORRY_DOCUMENT_COLLECTIONS = [
+        'aadhar_front_copy' => 'Aadhar Front Copy',
+        'aadhar_back_copy' => 'Aadhar Back Copy',
+        'pan_card_front_copy' => 'Pan Card Copy Front',
+        'pan_card_back_copy' => 'Pan Card Copy Back',
+        'rc_copy_front' => 'RC Copy Front',
+        'rc_copy_back' => 'RC Copy Back',
+    ];
+
     protected $dates = [
         'created_at',
         'updated_at',
@@ -357,6 +368,8 @@ class Invoice extends Model implements HasMedia
 
         self::createItems($invoice, $request->items);
 
+        $invoice->syncLorryDocuments($request->input('lorry_documents', []));
+
         $company_currency = CompanySetting::getSetting('currency', $request->header('company'));
 
         if ((string) $data['currency_id'] !== $company_currency) {
@@ -440,6 +453,8 @@ class Invoice extends Model implements HasMedia
         $this->taxes()->delete();
 
         self::createItems($this, $request->items);
+
+        $this->syncLorryDocuments($request->input('lorry_documents', []));
 
         if ($request->has('taxes') && (! empty($request->taxes))) {
             self::createTaxes($this, $request->taxes);
@@ -597,7 +612,7 @@ class Invoice extends Model implements HasMedia
             }
         }
 
-        $allowedInvoiceTemplates = [self::TEMPLATE_OFFICE_INVOICE, self::TEMPLATE_LR_RECEIPT];
+        $allowedInvoiceTemplates = [self::TEMPLATE_OFFICE_INVOICE, self::TEMPLATE_LR_RECEIPT, self::TEMPLATE_LORRY_RECEIPT];
         $invoiceTemplate = self::find($this->id)->template_name;
 
         if (! in_array($invoiceTemplate, $allowedInvoiceTemplates, true)) {
@@ -622,6 +637,7 @@ class Invoice extends Model implements HasMedia
 
         view()->share([
             'invoice' => $this,
+            'lorryDocumentCollections' => self::LORRY_DOCUMENT_COLLECTIONS,
             'customFields' => $customFields,
             'company_address' => $this->getCompanyAddress(),
             'shipping_address' => $this->getCustomerShippingAddress(),
@@ -641,7 +657,9 @@ class Invoice extends Model implements HasMedia
 
         $pdf = PDF::loadView($templatePath);
 
-        if (in_array($invoiceTemplate, $allowedInvoiceTemplates, true)) {
+        if ($invoiceTemplate === self::TEMPLATE_LORRY_RECEIPT) {
+            $pdf->setPaper('a4', 'portrait');
+        } elseif (in_array($invoiceTemplate, $allowedInvoiceTemplates, true)) {
             $pdf->setPaper('a4', 'landscape');
         }
 
@@ -784,13 +802,71 @@ class Invoice extends Model implements HasMedia
         foreach ($ids as $id) {
             $invoice = self::find($id);
 
+            if (! $invoice) {
+                continue;
+            }
+
             if ($invoice->transactions()->exists()) {
                 $invoice->transactions()->delete();
+            }
+
+            $invoice->clearMediaCollection('pod');
+
+            foreach (self::LORRY_DOCUMENT_COLLECTIONS as $collection => $label) {
+                $invoice->clearMediaCollection($collection);
             }
 
             $invoice->delete();
         }
 
         return true;
+    }
+
+    public function syncLorryDocuments(?array $documents): void
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT || empty($documents)) {
+            return;
+        }
+
+        foreach (self::LORRY_DOCUMENT_COLLECTIONS as $collection => $label) {
+            $document = $documents[$collection] ?? null;
+
+            if (! is_array($document) || empty($document['data']) || empty($document['name'])) {
+                continue;
+            }
+
+            $this->clearMediaCollection($collection);
+
+            $this->addMediaFromBase64($this->sanitizeBase64Pdf($document['data'], $document['name']))
+                ->usingFileName($document['name'])
+                ->toMediaCollection($collection);
+        }
+    }
+
+    private function sanitizeBase64Pdf(string $data, string $fileName): string
+    {
+        if (strtolower(pathinfo($fileName, PATHINFO_EXTENSION)) !== 'pdf') {
+            return $data;
+        }
+
+        $parts = explode(',', $data, 2);
+
+        if (count($parts) !== 2) {
+            return $data;
+        }
+
+        $decoded = base64_decode($parts[1], true);
+
+        if ($decoded === false) {
+            return $data;
+        }
+
+        $pdfOffset = strpos($decoded, '%PDF');
+
+        if ($pdfOffset === false || $pdfOffset === 0) {
+            return $data;
+        }
+
+        return $parts[0].','.base64_encode(substr($decoded, $pdfOffset));
     }
 }

@@ -34,6 +34,7 @@ export default function () {
     ],
     customFields: [],
     fields: [],
+    lorry_documents: {},
     selectedNote: null,
     selectedCurrency: '',
   }

@@ -44,17 +44,25 @@ const searchData = reactive({
 
 const pageTitle = computed(() => invoiceData.value.invoice_number)
 const isLrReceiptRoute = computed(() => route.name?.startsWith('lr-receipts'))
+const isLorryReceiptRoute = computed(() => route.name?.startsWith('lorry-receipts'))
 const isLrReceiptView = computed(() =>
   isLrReceiptRoute.value || invoiceData.value?.template_name === 'lr_receipt'
 )
+const isLorryReceiptView = computed(() =>
+  isLorryReceiptRoute.value || invoiceData.value?.template_name === 'lorry_receipt'
+)
+const isTransportReceiptView = computed(() => isLrReceiptView.value || isLorryReceiptView.value)
 const invoiceResourcePath = computed(() =>
-  isLrReceiptRoute.value ? '/admin/lr-receipts' : '/admin/invoices'
+  isLorryReceiptRoute.value ? '/admin/lorry-receipts' : isLrReceiptRoute.value ? '/admin/lr-receipts' : '/admin/invoices'
+)
+const expectedTemplateName = computed(() =>
+  isLorryReceiptRoute.value ? 'lorry_receipt' : isLrReceiptRoute.value ? 'lr_receipt' : 'office_invoice'
 )
 const sendButtonLabel = computed(() =>
-  isLrReceiptRoute.value ? 'Send LR Receipt' : t('invoices.send_invoice')
+  isLorryReceiptView.value ? 'Send Lorry Receipt' : isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
 )
 const sendModalTitle = computed(() =>
-  isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
+  isLorryReceiptView.value ? 'Send Lorry Receipt' : isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
 )
 
 const getOrderBy = computed(() => {
@@ -83,7 +91,7 @@ const getCurrentInvoiceId = computed(() => {
 })
 
 watch(route, (to, from) => {
-  if (to.name === 'invoices.view' || to.name === 'lr-receipts.view') {
+  if (['invoices.view', 'lr-receipts.view', 'lorry-receipts.view'].includes(to.name)) {
     loadInvoice()
   }
 })
@@ -157,7 +165,7 @@ async function loadInvoices(pageNumber, fromScrollListener = false) {
   isLoading.value = true
   let response = await invoiceStore.fetchInvoices({
     page: pageNumber,
-    template_name: isLrReceiptRoute.value ? 'lr_receipt' : 'office_invoice',
+    template_name: isLorryReceiptRoute.value ? 'lorry_receipt' : isLrReceiptRoute.value ? 'lr_receipt' : 'office_invoice',
     ...params,
   })
   isLoading.value = false
@@ -211,17 +219,19 @@ function addScrollListener() {
 }
 
 async function loadInvoice() {
-  let response = await invoiceStore.fetchInvoice(route.params.id)
+  let response = await invoiceStore.fetchInvoice(route.params.id, {
+    template_name: expectedTemplateName.value,
+  })
   if (response.data) {
     invoiceData.value = { ...response.data.data }
-    pdfFrameSrc.value = `/invoices/pdf/${invoiceData.value.unique_hash}`
+    pdfFrameSrc.value = `/invoices/pdf/${invoiceData.value.unique_hash}?template_name=${expectedTemplateName.value}`
     selectedLrCopyType.value = null
     pdfFrameKey.value += 1
   }
 }
 
 async function showLrCopy(copyType) {
-  const pdfUrl = `/invoices/pdf/${invoiceData.value.unique_hash}?copy=${copyType}&_=${Date.now()}`
+  const pdfUrl = `/invoices/pdf/${invoiceData.value.unique_hash}?copy=${copyType}&template_name=${expectedTemplateName.value}&_=${Date.now()}`
 
   selectedLrCopyType.value = copyType
   pdfFrameSrc.value = 'about:blank'
@@ -300,7 +310,7 @@ onSearched = debounce(onSearched, 500)
 
         <!-- Record Payment  -->
         <router-link
-          v-if="userStore.hasAbilities(abilities.CREATE_PAYMENT)"
+          v-if="!isTransportReceiptView && userStore.hasAbilities(abilities.CREATE_PAYMENT)"
           :to="`/admin/payments/${$route.params.id}/create`"
         >
           <BaseButton
