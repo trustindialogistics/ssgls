@@ -148,12 +148,23 @@
         .branch-box {
             height: 82px;
             line-height: 10px;
+            overflow: hidden;
             padding: 4px 6px !important;
+            white-space: normal;
+            word-break: break-word;
         }
 
         .branch-label {
             font-size: 10px;
             font-weight: bold;
+        }
+
+        .branch-address {
+            display: block;
+            line-height: 11px;
+            margin-top: 2px;
+            overflow-wrap: anywhere;
+            white-space: normal;
         }
 
         .tax-box {
@@ -218,9 +229,10 @@
             overflow: hidden;
             padding: 1px 8px;
             position: absolute;
+            right: auto;
             text-overflow: clip;
             white-space: nowrap;
-            width: 99.5%;
+            width: 55%;
         }
 
         .bill-details td {
@@ -324,18 +336,29 @@
         }
 
         .signature {
+            bottom: 2px;
             font-size: 12px;
+            left: 72px;
             line-height: 14px;
-            margin-top: 2px;
+            position: absolute;
+            right: 0;
             text-align: center;
         }
 
         .signature-image {
+            bottom: 16px;
             display: block;
-            height: 28px;
-            margin: 1px auto 0;
-            max-width: 150px;
+            height: 42px;
+            margin: 0;
+            max-width: 210px;
             object-fit: contain;
+            position: absolute;
+            right: 22px;
+        }
+
+        .signature-cell {
+            overflow: hidden;
+            position: relative;
         }
 
         .bold {
@@ -455,6 +478,14 @@
         ->take(2)
         ->implode('');
     $billingBranch = $invoice->company?->billing_branch_name_address ?: $invoiceField(['billing_branch_name_address', 'billing_branch_address', 'billing_branch']);
+    $billingBranchHtml = preg_replace('/<br\s*\/?>/i', "\n", (string) $billingBranch);
+    $billingBranchHtml = preg_replace('/<\/p>\s*<p[^>]*>/i', "\n", $billingBranchHtml);
+    $billingBranchHtml = preg_replace('/<\/?p[^>]*>/i', "\n", $billingBranchHtml);
+    $billingBranchText = html_entity_decode(strip_tags($billingBranchHtml), ENT_QUOTES, 'UTF-8');
+    $billingBranchLines = collect(preg_split('/\r\n|\r|\n/', $billingBranchText))
+        ->map(fn ($line) => trim(preg_replace('/\s+/', ' ', $line)))
+        ->filter()
+        ->values();
     $companyTagline = $invoice->company?->tagline ?: '';
     $companyGstin = $invoiceField(['gstin', 'gst_no']) ?: ($invoice->company?->gstin ?: '');
     $companyEnrollmentNo = $invoice->company?->enrollment_no ?: $invoiceField(['enrollment_no', 'enrollment']);
@@ -471,19 +502,36 @@
     $empCode = $invoiceField(['emp_code', 'employee_code']);
     $preparedBy = $invoiceField(['prepared_by']);
     $checkedBy = $invoiceField(['checked_by']);
-    $partyAddressHtml = preg_replace('/<br\s*\/?>/i', "\n", (string) $billing_address);
-    $partyAddressHtml = preg_replace('/<\/p>\s*<p[^>]*>/i', "\n", $partyAddressHtml);
-    $partyAddressHtml = preg_replace('/<\/?p[^>]*>/i', "\n", $partyAddressHtml);
-    $partyAddressText = html_entity_decode(strip_tags($partyAddressHtml), ENT_QUOTES, 'UTF-8');
-    $partyDisplayName = $invoice->customer?->billingAddress?->name ?: $invoice->customer?->display_name ?: $invoice->customer?->name;
-    $partyAddressLines = collect(preg_split('/\r\n|\r|\n/', $partyAddressText))
-        ->map(fn ($line) => trim(preg_replace('/\s+/', ' ', $line)))
-        ->reject(fn ($line) => $partyDisplayName && strcasecmp($line, $partyDisplayName) === 0)
-        ->filter()
-        ->values();
+    $billingAddress = $invoice->customer?->billingAddress;
+    $partyDisplayName = $billingAddress?->name ?: $invoice->customer?->display_name ?: $invoice->customer?->name;
+    $partyAddressLines = collect();
 
-    if (! $partyDisplayName && $partyAddressLines->isNotEmpty()) {
-        $partyDisplayName = $partyAddressLines->shift();
+    if ($billingAddress) {
+        $cityState = collect([$billingAddress->city, $billingAddress->state])->filter()->implode(', ');
+        $cityStateZip = collect([$cityState, $billingAddress->zip])->filter()->implode(' ');
+
+        $partyAddressLines = collect([
+            $billingAddress->address_street_1,
+            $billingAddress->address_street_2,
+            $cityStateZip,
+            $billingAddress->country?->name,
+        ])->filter()->values();
+    }
+
+    if ($partyAddressLines->isEmpty()) {
+        $partyAddressHtml = preg_replace('/<br\s*\/?>/i', "\n", (string) $billing_address);
+        $partyAddressHtml = preg_replace('/<\/p>\s*<p[^>]*>/i', "\n", $partyAddressHtml);
+        $partyAddressHtml = preg_replace('/<\/?p[^>]*>/i', "\n", $partyAddressHtml);
+        $partyAddressText = html_entity_decode(strip_tags($partyAddressHtml), ENT_QUOTES, 'UTF-8');
+        $partyAddressLines = collect(preg_split('/\r\n|\r|\n/', $partyAddressText))
+            ->map(fn ($line) => trim(preg_replace('/\s+/', ' ', $line)))
+            ->reject(fn ($line) => $partyDisplayName && strcasecmp($line, $partyDisplayName) === 0)
+            ->filter()
+            ->values();
+
+        if (! $partyDisplayName && $partyAddressLines->isNotEmpty()) {
+            $partyDisplayName = $partyAddressLines->shift();
+        }
     }
     $companyPhone = $invoice->company?->address?->phone;
     $companyEmail = $invoice->company?->notification_email ?: \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
@@ -529,7 +577,8 @@
                     </table>
                 </td>
                 <td class="right-zone branch-box">
-                    <span class="branch-label">Billing Br. Name & Address :</span><br>{!! nl2br(e($billingBranch)) !!}
+                    <span class="branch-label">Billing Br. Name & Address :</span>
+                    <span class="branch-address">{!! nl2br(e($billingBranchLines->implode("\n"))) ?: '&nbsp;' !!}</span>
                 </td>
             </tr>
 
@@ -707,11 +756,11 @@
                 </td>
                 <td width="10%" class="prepared text-center">Prepared by :<br>{{ $preparedBy }}</td>
                 <td width="10%" class="prepared text-center">Checked by :<br>{{ $checkedBy }}</td>
-                <td width="38%">
+                <td width="38%" class="signature-cell">
+                    <span class="emp-box">EMP Code<br>{{ $empCode }}</span>
                     @if (file_exists($signaturePath))
                         <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
                     @endif
-                    <span class="emp-box">EMP Code<br>{{ $empCode }}</span>
                     <div class="signature">Signature</div>
                 </td>
             </tr>

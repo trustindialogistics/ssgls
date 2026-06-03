@@ -13,6 +13,7 @@ import SendInvoiceModal from '@/scripts/admin/components/modal-components/SendIn
 import UploadPodModal from '@/scripts/admin/components/modal-components/UploadPodModal.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
 import LoadingIcon from '@/scripts/components/icons/LoadingIcon.vue'
+import ResponsivePdfViewer from '@/scripts/components/pdf/ResponsivePdfViewer.vue'
 
 import abilities from '@/scripts/admin/stub/abilities'
 
@@ -548,21 +549,6 @@ onSearched = debounce(onSearched, 500)
       </div>
     </div>
 
-    <div
-      class="flex flex-col min-h-0 mt-8 overflow-hidden"
-      style="height: 75vh"
-    >
-      <iframe
-        :key="pdfFrameKey"
-        :src="`${shareableLink}`"
-        class="
-          flex-1
-          border border-gray-400 border-solid
-          bg-white
-          rounded-md
-          frame-style
-        "
-      />
-    </div>
+    <ResponsivePdfViewer :frame-key="pdfFrameKey" :src="shareableLink" />
   </BasePage>
 </template>

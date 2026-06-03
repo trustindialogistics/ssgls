@@ -209,19 +209,10 @@
       </div>
     </div>
 
-    <!-- pdf -->
-    <div
-      class="flex flex-col min-h-0 mt-8 overflow-hidden"
-      style="height: 75vh"
-    >
-      <iframe
-        v-if="shareableLink"
-        ref="report"
-        :src="shareableLink"
-        class="flex-1 border border-gray-400 border-solid rounded-md"
-        @click="ViewReportsPDF"
-      />
-    </div>
+    <ResponsivePdfViewer
+      :src="shareableLink"
+      iframe-class="flex-1 border border-gray-400 border-solid rounded-md"
+    />
   </BasePage>
 </template>
 
@@ -236,6 +227,7 @@ import { useNotificationStore } from '@/scripts/stores/notification'
 import moment from 'moment'
 import { useInvoiceStore } from '@/scripts/customer/stores/invoice'
 import { useGlobalStore } from '@/scripts/customer/stores/global'
+import ResponsivePdfViewer from '@/scripts/components/pdf/ResponsivePdfViewer.vue'
 
 // Router
 const route = useRoute()

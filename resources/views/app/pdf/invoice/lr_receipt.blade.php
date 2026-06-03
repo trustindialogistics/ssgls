@@ -347,16 +347,21 @@
             font-weight: bold;
             height: 49px;
             line-height: 18px;
-            padding-top: 4px;
+            padding-top: 12px;
+            position: relative;
             text-align: center;
         }
 
         .signature-image {
             display: block;
-            height: 28px;
+            height: 34px;
+            left: 0;
             margin: 0 auto;
-            max-width: 150px;
+            max-width: 180px;
             object-fit: contain;
+            position: absolute;
+            right: 0;
+            top: 27px;
         }
 
         .company-separator {
@@ -579,11 +584,13 @@
                                 <span class="label">Consignor</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
+                                <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                             </td>
                             <td class="party-cell">
                                 <span class="label">Consignee</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
+                                <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                             </td>
                         </tr>
                     </table>
