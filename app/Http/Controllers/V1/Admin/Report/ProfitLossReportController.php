@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\Currency;
-use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,39 +31,18 @@ class ProfitLossReportController extends Controller
 
         App::setLocale($locale);
 
-        $payments = Payment::with('invoice')
-            ->whereCompanyId($company->id)
-            ->whereHas('invoice', function ($query) {
-                $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
-            })
-            ->applyFilters($request->only(['from_date', 'to_date']))
+        $lrReceipts = Invoice::where('company_id', $company->id)
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->when($request->from_date, fn ($query, $date) => $query->where('invoice_date', '>=', $date))
+            ->when($request->to_date, fn ($query, $date) => $query->where('invoice_date', '<=', $date))
             ->get();
 
-        $paymentsAmount = $payments->sum('base_amount');
-        $invoiceAmount = $payments
-            ->whereNotNull('invoice_id')
-            ->unique('invoice_id')
-            ->sum(function ($payment) {
-                $invoice = $payment->invoice;
-
-                if (! $invoice) {
-                    return 0;
-                }
-
-                return $invoice->base_total ?? ($invoice->total * $invoice->exchange_rate);
-            });
-        $netProfit = $paymentsAmount - $invoiceAmount;
-
-        $expenseCategories = Expense::with('category')
-            ->whereCompanyId($company->id)
-            ->applyFilters($request->only(['from_date', 'to_date']))
-            ->expensesAttributes()
-            ->get();
-
-        $totalAmount = 0;
-        foreach ($expenseCategories as $category) {
-            $totalAmount += $category->total_amount;
+        $totalIncome = 0;
+        foreach ($lrReceipts as $lrReceipt) {
+            $totalIncome += ($lrReceipt->amountCredit - ($lrReceipt->amountDebit * 100));
         }
+
+        $netProfit = $totalIncome;
 
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $company->id);
         $from_date = Carbon::createFromFormat('Y-m-d', $request->from_date)->translatedFormat($dateFormat);
@@ -89,10 +66,7 @@ class ProfitLossReportController extends Controller
 
         view()->share([
             'company' => $company,
-            'income' => $paymentsAmount,
-            'invoiceAmount' => $invoiceAmount,
-            'expenseCategories' => $expenseCategories,
-            'totalExpense' => $totalAmount,
+            'income' => $totalIncome,
             'netProfit' => $netProfit,
             'colorSettings' => $colorSettings,
             'company' => $company,

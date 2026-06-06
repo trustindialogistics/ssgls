@@ -128,32 +128,252 @@ class InvoicesRequest extends FormRequest
         return $rules;
     }
 
+    public function messages(): array
+    {
+        $templateName = $this->input('template_name');
+
+        if ($templateName === 'lorry_receipt') {
+            return [
+                'invoice_number.required' => 'The challan number field is required.',
+                'invoice_number.unique' => 'The challan number has already been taken.',
+            ];
+        }
+
+        if ($templateName === 'lr_receipt') {
+            return [
+                'invoice_number.required' => 'The docket number field is required.',
+                'invoice_number.unique' => 'The docket number has already been taken.',
+            ];
+        }
+
+        return [];
+    }
+
+    public function attributes(): array
+    {
+        $templateName = $this->input('template_name');
+
+        if ($templateName === 'lorry_receipt') {
+            return [
+                'invoice_number' => 'challan number',
+            ];
+        }
+
+        if ($templateName === 'lr_receipt') {
+            return [
+                'invoice_number' => 'docket number',
+            ];
+        }
+
+        return [
+            'invoice_number' => 'invoice number',
+        ];
+    }
+
     public function getInvoicePayload(): array
     {
         $company_currency = CompanySetting::getSetting('currency', $this->header('company'));
         $current_currency = $this->currency_id;
-        $exchange_rate = $company_currency != $current_currency ? $this->exchange_rate : 1;
-        $currency = Customer::find($this->customer_id)->currency_id;
+        $exchange_rate = $company_currency != $current_currency ? ($this->exchange_rate ?: 1) : 1;
+        $customer = Customer::find($this->customer_id);
+        $currency = $customer?->currency_id ?: ($current_currency ?: $company_currency);
+        $lorryReceiptFinalAmount = $this->lorryReceiptFinalAmountPayable();
+        $invoiceTotal = $lorryReceiptFinalAmount ?? (float) $this->total;
+        $invoiceSubTotal = $lorryReceiptFinalAmount ?? (float) $this->sub_total;
+
+        $existingInvoice = $this->route('invoice');
 
         return collect($this->except('items', 'taxes', 'lorry_documents'))
             ->merge([
                 'creator_id' => $this->user()->id ?? null,
-                'status' => $this->has('invoiceSend') ? Invoice::STATUS_SENT : Invoice::STATUS_DRAFT,
-                'paid_status' => Invoice::STATUS_UNPAID,
+                'status' => $this->invoiceStatus($existingInvoice),
+                'paid_status' => $this->invoicePaidStatus($existingInvoice),
                 'company_id' => $this->header('company'),
                 'tax_per_item' => CompanySetting::getSetting('tax_per_item', $this->header('company')) ?? 'NO ',
                 'discount_per_item' => CompanySetting::getSetting('discount_per_item', $this->header('company')) ?? 'NO',
-                'due_amount' => $this->total,
-                'sent' => (bool) $this->sent ?? false,
-                'viewed' => (bool) $this->viewed ?? false,
+                'sub_total' => $invoiceSubTotal,
+                'total' => $invoiceTotal,
+                'due_amount' => $invoiceTotal,
+                'sent' => $this->invoiceSent($existingInvoice),
+                'viewed' => $this->invoiceViewed($existingInvoice),
                 'exchange_rate' => $exchange_rate,
-                'base_total' => $this->total * $exchange_rate,
+                'base_total' => $invoiceTotal * $exchange_rate,
                 'base_discount_val' => $this->discount_val * $exchange_rate,
-                'base_sub_total' => $this->sub_total * $exchange_rate,
+                'base_sub_total' => $invoiceSubTotal * $exchange_rate,
                 'base_tax' => $this->tax * $exchange_rate,
-                'base_due_amount' => $this->total * $exchange_rate,
+                'base_due_amount' => $invoiceTotal * $exchange_rate,
                 'currency_id' => $currency,
             ])
             ->toArray();
+    }
+
+    private function lorryReceiptFinalAmountPayable(): ?float
+    {
+        if ($this->input('template_name') !== Invoice::TEMPLATE_LORRY_RECEIPT) {
+            return null;
+        }
+
+        $netAmount = $this->amountFromCustomFields([
+            'Net Amount Payable',
+        ]);
+
+        if ($netAmount !== null && $netAmount > 0) {
+            return $netAmount;
+        }
+
+        $detentionAmount = $this->amountFromCustomFields(['Add Detention Rs.', 'Detention Amount']);
+        $extraHireAmount = $this->amountFromCustomFields(['Extra Hire Rs', 'Extra Hire Amount']);
+        $finalOtherAmount = $this->amountFromCustomFields(['Other Rs', 'Final Other Amount']);
+        $lessAdvanceOtherBranchAmount = $this->amountFromCustomFields(['Less Adv. at other branch', 'Less Advance Other Branch Amount']);
+        $lessDeductionClaimsAmount = $this->amountFromCustomFields(['Less Deduction for Claims', 'Less Deduction Claims Amount']);
+        $hasFinalPaymentOperation = collect([
+            $detentionAmount,
+            $extraHireAmount,
+            $finalOtherAmount,
+            $lessAdvanceOtherBranchAmount,
+            $lessDeductionClaimsAmount,
+        ])->contains(fn ($value): bool => $value !== null);
+
+        if (! $hasFinalPaymentOperation) {
+            return null;
+        }
+
+        $grossHire = $this->sumAmounts([
+            $this->amountFromCustomFields(['Lorry Hire', 'Lorry Hire Amount']),
+            $this->amountFromCustomFields(['Add Other Charges', 'Other Charges Amount']),
+        ]) ?? $this->amountFromCustomFields(['Gross Hire Rupees', 'Gross Hire Amount']);
+
+        $balancePayable = $grossHire !== null
+            ? $grossHire - ($this->amountFromCustomFields(['Advance Paid Rs', 'Advance Amount']) ?? 0)
+            : $this->amountFromCustomFields(['Balance Amount', 'Balance Rupees']);
+
+        $extraTotal = $this->sumAmounts([
+            $detentionAmount,
+            $extraHireAmount,
+            $finalOtherAmount,
+        ]) ?? $this->amountFromCustomFields(['Final Total Extra Amount']);
+
+        $grandTotal = $this->sumAmounts([$balancePayable, $extraTotal])
+            ?? $this->amountFromCustomFields(['Grand Total']);
+
+        if ($grandTotal === null) {
+            return null;
+        }
+
+        $deductionTotal = $this->sumAmounts([
+            $lessAdvanceOtherBranchAmount,
+            $lessDeductionClaimsAmount,
+        ]) ?? $this->amountFromCustomFields(['Total Less Amount']);
+
+        return $grandTotal - ($deductionTotal ?? 0);
+    }
+
+    /**
+     * @param  array<int, float|null>  $values
+     */
+    private function sumAmounts(array $values): ?float
+    {
+        $values = collect($values)->filter(fn ($value): bool => $value !== null);
+
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        return (float) $values->sum();
+    }
+
+    /**
+     * @param  array<int, string>  $labels
+     */
+    private function amountFromCustomFields(array $labels): ?float
+    {
+        $value = trim((string) $this->customFieldValue($labels));
+
+        if ($value === '') {
+            return null;
+        }
+
+        $number = str_replace(',', '', $value);
+
+        if (! is_numeric($number)) {
+            return null;
+        }
+
+        return (float) $number;
+    }
+
+    /**
+     * @param  array<int, string>  $labels
+     */
+    private function customFieldValue(array $labels): mixed
+    {
+        $normalizedLabels = collect($labels)
+            ->map(fn (string $label): string => $this->normalizeLabel($label))
+            ->all();
+
+        $matchedValue = null;
+
+        foreach ($this->input('customFields', []) as $field) {
+            $label = $field['label']
+                ?? $field['name']
+                ?? $field['custom_field']['label']
+                ?? $field['custom_field']['name']
+                ?? '';
+
+            if (! in_array($this->normalizeLabel($label), $normalizedLabels, true)) {
+                continue;
+            }
+
+            $value = $field['value'] ?? $field['default_answer'] ?? null;
+
+            if (trim((string) $value) !== '') {
+                return $value;
+            }
+
+            $matchedValue = $value;
+        }
+
+        return $matchedValue;
+    }
+
+    private function normalizeLabel(?string $label): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9]+/i', '', (string) $label));
+    }
+
+    private function invoiceStatus(?Invoice $invoice): string
+    {
+        if ($this->has('invoiceSend')) {
+            return Invoice::STATUS_SENT;
+        }
+
+        return $invoice?->status ?? Invoice::STATUS_DRAFT;
+    }
+
+    private function invoicePaidStatus(?Invoice $invoice): string
+    {
+        return $invoice?->paid_status ?? Invoice::STATUS_UNPAID;
+    }
+
+    private function invoiceSent(?Invoice $invoice): bool
+    {
+        if ($this->has('invoiceSend')) {
+            return true;
+        }
+
+        if ($this->has('sent')) {
+            return $this->boolean('sent');
+        }
+
+        return (bool) ($invoice?->sent ?? false);
+    }
+
+    private function invoiceViewed(?Invoice $invoice): bool
+    {
+        if ($this->has('viewed')) {
+            return $this->boolean('viewed');
+        }
+
+        return (bool) ($invoice?->viewed ?? false);
     }
 }

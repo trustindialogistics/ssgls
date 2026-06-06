@@ -141,6 +141,7 @@ class LorryReceipt extends Model
 
     public static function createFromPayload(array $payload): self
     {
+        $payload = self::normalizePaymentPayload($payload);
         $receipt = self::create($payload);
         $receipt->unique_hash = Hashids::connection(self::class)->encode($receipt->id);
         $receipt->save();
@@ -150,9 +151,119 @@ class LorryReceipt extends Model
 
     public function updateFromPayload(array $payload): self
     {
+        $payload = self::normalizePaymentPayload(array_merge(
+            array_intersect_key($this->getAttributes(), array_flip(self::PAYLOAD_FIELDS)),
+            $payload
+        ));
         $this->update($payload);
 
         return $this->fresh(['ownerCustomer', 'driverCustomer', 'brokerCustomer', 'company']);
+    }
+
+    private static function normalizePaymentPayload(array $payload): array
+    {
+        if (! self::payloadHasFinalPaymentOperation($payload)) {
+            $payload['final_total_extra_amount'] = null;
+            $payload['grand_total_amount'] = null;
+            $payload['total_less_amount'] = null;
+            $payload['net_amount_payable'] = 0;
+            $payload['final_rupees_only'] = null;
+
+            return $payload;
+        }
+
+        $extraTotal = self::sumPayloadAmounts($payload, [
+            'detention_amount',
+            'extra_hire_amount',
+            'final_other_amount',
+        ]) ?? 0;
+        $deductionTotal = self::sumPayloadAmounts($payload, [
+            'less_advance_other_branch_amount',
+            'less_deduction_claims_amount',
+        ]) ?? 0;
+        $balancePayable = self::payloadBalancePayable($payload);
+        $grandTotal = $balancePayable !== null
+            ? $balancePayable + $extraTotal
+            : self::amountFromPayload($payload, 'grand_total_amount');
+
+        $payload['final_total_extra_amount'] = $extraTotal;
+        $payload['total_less_amount'] = $deductionTotal;
+
+        if ($grandTotal !== null) {
+            $payload['grand_total_amount'] = $grandTotal;
+            $payload['net_amount_payable'] = $grandTotal - $deductionTotal;
+        }
+
+        return $payload;
+    }
+
+    private static function payloadHasFinalPaymentOperation(array $payload): bool
+    {
+        return collect([
+            self::amountFromPayload($payload, 'detention_amount'),
+            self::amountFromPayload($payload, 'extra_hire_amount'),
+            self::amountFromPayload($payload, 'final_other_amount'),
+            self::amountFromPayload($payload, 'less_advance_other_branch_amount'),
+            self::amountFromPayload($payload, 'less_deduction_claims_amount'),
+        ])->contains(fn ($amount): bool => $amount !== null);
+    }
+
+    private static function payloadBalancePayable(array $payload): int|float|null
+    {
+        $balanceAmount = self::amountFromPayload($payload, 'balance_amount');
+
+        if ($balanceAmount !== null) {
+            return $balanceAmount;
+        }
+
+        $grossHire = self::amountFromPayload($payload, 'gross_hire_amount')
+            ?? self::amountFromPayload($payload, 'gross_hire_rupees');
+
+        if ($grossHire === null) {
+            $grossHire = self::sumPayloadAmounts($payload, [
+                'lorry_hire_amount',
+                'other_charges_amount',
+            ]);
+        }
+
+        if ($grossHire === null) {
+            return null;
+        }
+
+        return $grossHire - (self::amountFromPayload($payload, 'advance_amount') ?? 0);
+    }
+
+    /**
+     * @param  array<int, string>  $keys
+     */
+    private static function sumPayloadAmounts(array $payload, array $keys): int|float|null
+    {
+        $amounts = collect($keys)
+            ->map(fn (string $key): int|float|null => self::amountFromPayload($payload, $key))
+            ->filter(fn ($amount): bool => $amount !== null);
+
+        if ($amounts->isEmpty()) {
+            return null;
+        }
+
+        return $amounts->sum();
+    }
+
+    private static function amountFromPayload(array $payload, string $key): int|float|null
+    {
+        if (! array_key_exists($key, $payload) || trim((string) $payload[$key]) === '') {
+            return null;
+        }
+
+        $number = str_replace(',', '', (string) $payload[$key]);
+
+        if (! is_numeric($number)) {
+            return null;
+        }
+
+        $amount = (float) $number;
+
+        return (float) (int) $amount === $amount ? (int) $amount : $amount;
     }
 
     public function getPDFData()
@@ -181,7 +292,7 @@ class LorryReceipt extends Model
             'Financer Address' => 'financer_address',
             'Driver Name' => 'driver_name',
             'Driver Address' => 'driver_address',
-            'Driver Place' => 'driver_place',
+            'Driver Place' => 'driver_address',
             'Driver Licence No' => 'driver_licence_no',
             'Driver Licence Date' => 'driver_licence_date',
             'Driver Licence Issued By' => 'driver_licence_issued_by',
@@ -195,14 +306,14 @@ class LorryReceipt extends Model
             'Destination Broker Address' => 'destination_broker_address',
             'Broker Phone No' => 'broker_phone',
             'Paid To' => 'paid_to',
-            'Lorry Hire Amount' => 'lorry_hire_amount',
-            'Other Charges Amount' => 'other_charges_amount',
+            'Lorry Hire' => 'lorry_hire_amount',
+            'Add Other Charges' => 'other_charges_amount',
             'Gross Hire Rupees' => 'gross_hire_rupees',
-            'Advance Cash Cheque No' => 'advance_cash_cheque_no',
+            'Advance Paid by Cash/Cheque No' => 'advance_cash_cheque_no',
             'Advance On' => 'advance_on',
-            'Advance Bank' => 'advance_bank',
-            'Advance Amount' => 'advance_amount',
-            'Balance Payable At' => 'balance_payable_at',
+            'Bank' => 'advance_bank',
+            'Advance Paid Rs' => 'advance_amount',
+            'Balance Payable at' => 'balance_payable_at',
             'Balance Amount' => 'balance_amount',
             'Balance Rupees Only' => 'balance_rupees_only',
             'Hire Passed By' => 'hire_passed_by',
@@ -211,19 +322,19 @@ class LorryReceipt extends Model
             'Advance Received By' => 'advance_received_by',
             'Loaded By' => 'loaded_by',
             'Final Paid To' => 'final_paid_to',
-            'Detention Amount' => 'detention_amount',
-            'Extra Hire Amount' => 'extra_hire_amount',
-            'Final Other Amount' => 'final_other_amount',
+            'Add Detention Rs.' => 'detention_amount',
+            'Extra Hire Rs' => 'extra_hire_amount',
+            'Other Rs' => 'final_other_amount',
             'Final Total Extra Amount' => 'final_total_extra_amount',
             'Grand Total' => 'grand_total_amount',
-            'Less Advance Other Branch Amount' => 'less_advance_other_branch_amount',
-            'Less Deduction Claims Amount' => 'less_deduction_claims_amount',
+            'Less Adv. at other branch' => 'less_advance_other_branch_amount',
+            'Less Deduction for Claims' => 'less_deduction_claims_amount',
             'Total Less Amount' => 'total_less_amount',
-            'Final Balance Paid At' => 'final_balance_paid_at',
+            'Final Balance Amount Paid at' => 'final_balance_paid_at',
             'Final Balance Code' => 'final_balance_code',
             'Final Balance Date' => 'final_balance_on',
             'Net Amount Payable' => 'net_amount_payable',
-            'Final Cash Cheque No' => 'final_cash_cheque_no',
+            'Cash/Cheque No.' => 'final_cash_cheque_no',
             'Final Cash Cheque On' => 'final_cash_cheque_on',
             'Final Bank' => 'final_bank',
             'Final Rupees Only' => 'final_rupees_only',

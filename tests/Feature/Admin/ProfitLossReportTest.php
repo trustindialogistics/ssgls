@@ -1,12 +1,13 @@
 <?php
 
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\LorryReceipt;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Sanctum\Sanctum;
 
-use function Pest\Laravel\getJson;
+use function Pest\Laravel\get;
 
 beforeEach(function () {
     Artisan::call('db:seed', ['--class' => 'DatabaseSeeder', '--force' => true]);
@@ -22,19 +23,15 @@ beforeEach(function () {
     );
 });
 
-getJson('api/v1/dashboard')->assertOk();
-
-getJson('api/v1/search?name=ab')->assertOk();
-
-test('dashboard chart uses lr receipt debit credit and profit loss totals', function () {
+test('profit loss report income uses lr receipt profit loss', function () {
     $user = User::find(1);
     $company = $user->companies()->first();
 
     $lrReceipt = Invoice::factory()->create([
         'company_id' => $company->id,
         'template_name' => Invoice::TEMPLATE_LR_RECEIPT,
-        'invoice_number' => 'LR-DASHBOARD-1',
-        'invoice_date' => '2030-01-15',
+        'invoice_number' => 'LR-PROFIT-LOSS-1',
+        'invoice_date' => '2030-02-15',
         'total' => 0,
         'due_amount' => 0,
     ]);
@@ -49,17 +46,18 @@ test('dashboard chart uses lr receipt debit credit and profit loss totals', func
         'company_id' => $company->id,
         'template_name' => Invoice::TEMPLATE_OFFICE_INVOICE,
         'reference_number' => $lrReceipt->invoice_number,
-        'invoice_date' => '2030-01-20',
-        'total' => 12000,
+        'total' => 12500,
     ]);
 
-    $response = getJson('api/v1/dashboard?from_date=2030-01-01&to_date=2030-01-31')
-        ->assertOk();
+    Expense::factory()->create([
+        'company_id' => $company->id,
+        'expense_date' => '2030-02-20',
+        'amount' => 2500,
+        'base_amount' => 2500,
+    ]);
 
-    expect($response->json('chart_data.debit_totals'))->toBe([5000])
-        ->and($response->json('chart_data.credit_totals'))->toBe([12000])
-        ->and($response->json('chart_data.invoice_totals'))->toBe([7000])
-        ->and($response->json('chart_data.net_income_totals'))->toBe([7000])
-        ->and($response->json('total_sales'))->toBe(7000)
-        ->and($response->json('total_receipts'))->toBe(7000);
+    get("/reports/profit-loss/{$company->unique_hash}?from_date=2030-02-01&to_date=2030-02-28&preview=1")
+        ->assertOk()
+        ->assertSee('-4,875.00')
+        ->assertDontSee('-4,900.00');
 });

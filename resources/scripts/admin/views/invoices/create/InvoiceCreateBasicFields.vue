@@ -407,7 +407,7 @@ watch(
       syncConsigneeFields(customer)
     }
 
-    if (isLorryReceiptTemplate.value) {
+    if (isLorryReceiptTemplate.value && customer) {
       syncLorryPartyPaymentFields(customer)
     }
   },
@@ -422,7 +422,7 @@ watch(
       syncConsignorFields(selectedConsignor.value)
     }
 
-    if (isLorryReceiptTemplate.value) {
+    if (isLorryReceiptTemplate.value && invoiceStore.newInvoice.customer) {
       syncLorryPartyPaymentFields(invoiceStore.newInvoice.customer)
     }
   },

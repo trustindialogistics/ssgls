@@ -6,11 +6,14 @@ use App;
 use App\Facades\Hashids;
 use App\Facades\PDF;
 use App\Mail\SendInvoiceMail;
+use App\Models\LorryReceipt;
+use App\Models\LorryPartyProfile;
 use App\Services\SerialNumberFormatter;
 use App\Space\PdfTemplateUtils;
 use App\Traits\GeneratesPdfTrait;
 use App\Traits\HasCustomFieldsTrait;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,6 +77,11 @@ class Invoice extends Model implements HasMedia
         'formattedDueDate',
         'formattedDueAmount',
         'invoicePdfUrl',
+        'amountDebit',
+        'amountCredit',
+        'amountPaid',
+        'lorryReceiptAdvanceAmount',
+        'lorryReceiptDisplayNetAmount',
     ];
 
     protected function casts(): array
@@ -86,6 +94,21 @@ class Invoice extends Model implements HasMedia
             'discount_val' => 'integer',
             'exchange_rate' => 'float',
         ];
+    }
+
+    protected static function booted()
+    {
+        static::deleting(function (Invoice $invoice) {
+            if ($invoice->template_name === self::TEMPLATE_LORRY_RECEIPT && ! empty($invoice->invoice_number)) {
+                LorryReceipt::query()
+                    ->where('company_id', $invoice->company_id)
+                    ->where(function ($query) use ($invoice) {
+                        $query->where('challan_no', $invoice->invoice_number)
+                            ->orWhere('contract_no', $invoice->invoice_number);
+                    })
+                    ->delete();
+            }
+        });
     }
 
     public function transactions(): HasMany
@@ -150,6 +173,116 @@ class Invoice extends Model implements HasMedia
         }
 
         return false;
+    }
+
+    public function getAmountDebitAttribute(): int|float
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT || empty($this->invoice_number)) {
+            return 0;
+        }
+
+        $documentNumber = strtolower(trim($this->invoice_number));
+
+        if ($documentNumber === '') {
+            return 0;
+        }
+
+        return LorryReceipt::query()
+            ->when($this->company_id, fn ($query, $companyId) => $query->where('company_id', $companyId))
+            ->get([
+                'received_no_bilties',
+                'advance_amount',
+                'net_amount_payable',
+                'detention_amount',
+                'extra_hire_amount',
+                'final_other_amount',
+                'less_advance_other_branch_amount',
+                'less_deduction_claims_amount',
+            ])
+            ->filter(function (LorryReceipt $lorryReceipt) use ($documentNumber): bool {
+                return strtolower(trim((string) $lorryReceipt->received_no_bilties)) === $documentNumber;
+            })
+            ->sum(function (LorryReceipt $lorryReceipt): int|float {
+                $netAmountPayable = $this->lorryReceiptHasFinalPaymentOperation($lorryReceipt)
+                    ? $this->numericTransportAmount($lorryReceipt->net_amount_payable)
+                    : 0;
+
+                return $this->numericTransportAmount($lorryReceipt->advance_amount)
+                    + $netAmountPayable;
+            });
+    }
+
+    public function getAmountCreditAttribute(): int|float
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT || empty($this->invoice_number)) {
+            return 0;
+        }
+
+        $documentNumber = trim($this->invoice_number);
+
+        if ($documentNumber === '') {
+            return 0;
+        }
+
+        $total = self::query()
+            ->where('template_name', self::TEMPLATE_OFFICE_INVOICE)
+            ->whereHas('items.fields', function (Builder $fieldQuery) use ($documentNumber) {
+                $fieldQuery
+                    ->whereHas('customField', function (Builder $customFieldQuery) {
+                        $customFieldQuery
+                            ->where('name', 'Consignment Number')
+                            ->orWhere('label', 'Consignment Number');
+                    })
+                    ->whereRaw('LOWER(string_answer) = ?', [strtolower($documentNumber)]);
+            })
+            ->when($this->company_id, fn ($query, $companyId) => $query->where('company_id', $companyId))
+            ->sum('total');
+
+        return $this->numericTransportAmount($total);
+    }
+
+    public function getAmountPaidAttribute(): int|float
+    {
+        return $this->payments()
+            ->sum('amount');
+    }
+
+    public function getLorryReceiptAdvanceAmountAttribute(): int|float
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
+            return 0;
+        }
+
+        $lorryReceipt = $this->matchingLorryReceipt();
+
+        if ($lorryReceipt) {
+            return $this->numericTransportAmount($lorryReceipt->advance_amount);
+        }
+
+        return $this->customFieldAmount(['Advance Paid Rs', 'Advance Amount']) ?? 0;
+    }
+
+    public function getLorryReceiptDisplayNetAmountAttribute(): int|float|null
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
+            return null;
+        }
+
+        $lorryReceipt = $this->matchingLorryReceipt();
+
+        if ($lorryReceipt) {
+            if ($this->lorryReceiptHasFinalPaymentOperation($lorryReceipt)) {
+                return $this->numericTransportAmount($lorryReceipt->net_amount_payable);
+            }
+
+            return $this->lorryReceiptSectionCBalance($lorryReceipt);
+        }
+
+        if ($this->customFieldsHaveFinalPaymentOperation()) {
+            return $this->customFieldFinalNetAmountPayable();
+        }
+
+        return $this->customFieldSectionCBalance();
     }
 
     public function getAllowEditAttribute()
@@ -393,6 +526,8 @@ class Invoice extends Model implements HasMedia
         ])
             ->find($invoice->id);
 
+        $invoice->syncLorryReceiptRecord();
+
         return $invoice;
     }
 
@@ -407,6 +542,7 @@ class Invoice extends Model implements HasMedia
 
         $data = $request->getInvoicePayload();
         $oldTotal = $this->total;
+        $newTotal = (float) $data['total'];
 
         $total_paid_amount = $this->total - $this->due_amount;
 
@@ -414,12 +550,12 @@ class Invoice extends Model implements HasMedia
             return 'customer_cannot_be_changed_after_payment_is_added';
         }
 
-        if ($request->total >= 0 && $request->total < $total_paid_amount) {
+        if ($newTotal >= 0 && $newTotal < $total_paid_amount) {
             return 'total_invoice_amount_must_be_more_than_paid_amount';
         }
 
-        if ($oldTotal != $request->total) {
-            $oldTotal = (int) round($request->total) - (int) $oldTotal;
+        if ((float) $oldTotal !== $newTotal) {
+            $oldTotal = (int) round($newTotal) - (int) $oldTotal;
         } else {
             $oldTotal = 0;
         }
@@ -472,6 +608,8 @@ class Invoice extends Model implements HasMedia
             'taxes',
         ])
             ->find($this->id);
+
+        $invoice->syncLorryReceiptRecord();
 
         return $invoice;
     }
@@ -843,6 +981,167 @@ class Invoice extends Model implements HasMedia
         }
     }
 
+    public function syncLorryReceiptRecord(): void
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
+            return;
+        }
+
+        $challanNo = $this->invoice_number;
+
+        if (empty($challanNo)) {
+            return;
+        }
+
+        $lorryReceipt = LorryReceipt::query()
+            ->where('company_id', $this->company_id)
+            ->where(function ($query) use ($challanNo) {
+                $query->where('challan_no', $challanNo)
+                    ->orWhere('contract_no', $challanNo);
+            })
+            ->first() ?? new LorryReceipt();
+
+        $lorryReceipt->company_id = $this->company_id;
+        $lorryReceipt->challan_no = $challanNo;
+
+        // Custom fields mappings
+        $fieldMap = [
+            'From' => 'from_name',
+            'To' => 'to_name',
+            'No Of Pages' => 'no_of_pages',
+            'No Of Packages' => 'no_of_pkgs',
+            'Actual Weight' => 'actual_weight',
+            'Charge Weight' => 'charge_weight',
+            'Lorry No' => 'lorry_no',
+            'Regd at' => 'regd_at',
+            'Body Type' => 'body_type',
+            'Make' => 'make',
+            'Model' => 'vehicle_model',
+            'Colour' => 'colour',
+            'Chasis No' => 'chasis_no',
+            'Engine No' => 'engine_no',
+            'Owner Name' => 'owner_name',
+            'Owner Address' => 'owner_address',
+            'Owner Phone No' => 'owner_phone',
+            'Financer Name' => 'financer_name',
+            'Financer Address' => 'financer_address',
+            'Driver Name' => 'driver_name',
+            'Driver Address' => 'driver_address',
+            'Driver Place' => 'driver_place',
+            'Driver Licence No' => 'driver_licence_no',
+            'Driver Licence Date' => 'driver_licence_date',
+            'Driver Licence Issued By' => 'driver_licence_issued_by',
+            'Driver RTO' => 'driver_rto_address',
+            'Driver Valid Up To' => 'driver_valid_up_to',
+            'Broker Name' => 'broker_name',
+            'Broker Address' => 'broker_address',
+            'Advice No' => 'advice_no',
+            'Advice Date' => 'advice_date',
+            'Destination Broker Name' => 'destination_broker_name',
+            'Destination Broker Address' => 'destination_broker_address',
+            'Broker Phone No' => 'broker_phone',
+            'Paid To' => 'paid_to',
+            'Lorry Hire' => 'lorry_hire_amount',
+            'Add Other Charges' => 'other_charges_amount',
+            'Gross Hire Rupees' => 'gross_hire_rupees',
+            'Advance Paid by Cash/Cheque No' => 'advance_cash_cheque_no',
+            'Advance On' => 'advance_on',
+            'Bank' => 'advance_bank',
+            'Advance Paid Rs' => 'advance_amount',
+            'Balance Payable at' => 'balance_payable_at',
+            'Balance Amount' => 'balance_amount',
+            'Balance Rupees Only' => 'balance_rupees_only',
+            'Hire Passed By' => 'hire_passed_by',
+            'Hire Certified By' => 'hire_certified_by',
+            'Hire Prepared By' => 'hire_prepared_by',
+            'Advance Received By' => 'advance_received_by',
+            'Loaded By' => 'loaded_by',
+            'Final Paid To' => 'final_paid_to',
+            'Add Detention Rs.' => 'detention_amount',
+            'Extra Hire Rs' => 'extra_hire_amount',
+            'Other Rs' => 'final_other_amount',
+            'Final Total Extra Amount' => 'final_total_extra_amount',
+            'Grand Total' => 'grand_total_amount',
+            'Less Adv. at other branch' => 'less_advance_other_branch_amount',
+            'Less Deduction for Claims' => 'less_deduction_claims_amount',
+            'Total Less Amount' => 'total_less_amount',
+            'Final Balance Amount Paid at' => 'final_balance_paid_at',
+            'Final Balance Code' => 'final_balance_code',
+            'Final Balance Date' => 'final_balance_on',
+            'Net Amount Payable' => 'net_amount_payable',
+            'Cash/Cheque No.' => 'final_cash_cheque_no',
+            'Final Cash Cheque On' => 'final_cash_cheque_on',
+            'Final Bank' => 'final_bank',
+            'Final Rupees Only' => 'final_rupees_only',
+            'Final Passed By' => 'final_passed_by',
+            'Final Certified By' => 'final_certified_by',
+            'Final Prepared By' => 'final_prepared_by',
+            'Final Payment Received By' => 'final_payment_received_by',
+            'Received No Of Bilties' => 'received_no_bilties',
+        ];
+
+        foreach ($fieldMap as $label => $attribute) {
+            $value = $this->getCustomFieldValueByLabel($label);
+            $lorryReceipt->{$attribute} = $value;
+        }
+
+        // Also resolve the customer IDs
+        $ownerName = $lorryReceipt->owner_name;
+        if (! empty($ownerName)) {
+            $ownerProfile = LorryPartyProfile::query()
+                ->where('company_id', $this->company_id)
+                ->where('type', LorryPartyProfile::TYPE_OWNER)
+                ->where('name', $ownerName)
+                ->first();
+            $lorryReceipt->owner_customer_id = $ownerProfile?->customer_id;
+        }
+
+        $driverName = $lorryReceipt->driver_name;
+        if (! empty($driverName)) {
+            $driverProfile = LorryPartyProfile::query()
+                ->where('company_id', $this->company_id)
+                ->where('type', LorryPartyProfile::TYPE_DRIVER)
+                ->where('name', $driverName)
+                ->first();
+            $lorryReceipt->driver_customer_id = $driverProfile?->customer_id;
+        }
+
+        $brokerName = $lorryReceipt->broker_name;
+        if (! empty($brokerName)) {
+            $brokerProfile = LorryPartyProfile::query()
+                ->where('company_id', $this->company_id)
+                ->where('type', LorryPartyProfile::TYPE_BROKER)
+                ->where('name', $brokerName)
+                ->first();
+            $lorryReceipt->broker_customer_id = $brokerProfile?->customer_id;
+        }
+
+        $attributes = [];
+        foreach (LorryReceipt::PAYLOAD_FIELDS as $field) {
+            $attributes[$field] = $lorryReceipt->{$field};
+        }
+
+        $attributes['company_id'] = $this->company_id;
+
+        if ($lorryReceipt->exists) {
+            $lorryReceipt->updateFromPayload($attributes);
+        } else {
+            LorryReceipt::createFromPayload($attributes);
+        }
+    }
+
+    public function getCustomFieldValueByLabel(string $label): mixed
+    {
+        $value = $this->fields()
+            ->with('customField')
+            ->whereHas('customField', function ($query) use ($label) {
+                $query->where('label', $label)
+                    ->orWhere('name', $label);
+            })->first();
+
+        return $value?->defaultAnswer;
+    }
+
     private function sanitizeBase64Pdf(string $data, string $fileName): string
     {
         if (strtolower(pathinfo($fileName, PATHINFO_EXTENSION)) !== 'pdf') {
@@ -868,5 +1167,205 @@ class Invoice extends Model implements HasMedia
         }
 
         return $parts[0].','.base64_encode(substr($decoded, $pdfOffset));
+    }
+
+    private function matchingLorryReceipt(): ?LorryReceipt
+    {
+        if (empty($this->invoice_number)) {
+            return null;
+        }
+
+        return LorryReceipt::query()
+            ->when($this->company_id, fn ($query, $companyId) => $query->where('company_id', $companyId))
+            ->where(function ($query) {
+                $query->where('challan_no', $this->invoice_number)
+                    ->orWhere('contract_no', $this->invoice_number);
+            })
+            ->latest()
+            ->first();
+    }
+
+
+
+    private function lorryReceiptSectionCBalance(LorryReceipt $lorryReceipt): int|float|null
+    {
+        $balanceAmount = $this->numericTransportAmount($lorryReceipt->balance_amount);
+
+        if ($balanceAmount > 0) {
+            return $balanceAmount;
+        }
+
+        $grossHireAmount = $this->numericTransportAmount($lorryReceipt->gross_hire_amount);
+
+        if ($grossHireAmount <= 0) {
+            $grossHireAmount = $this->numericTransportAmount($lorryReceipt->lorry_hire_amount)
+                + $this->numericTransportAmount($lorryReceipt->other_charges_amount);
+        }
+
+        if ($grossHireAmount <= 0) {
+            return null;
+        }
+
+        return $grossHireAmount - $this->numericTransportAmount($lorryReceipt->advance_amount);
+    }
+
+    private function lorryReceiptHasFinalPaymentOperation(LorryReceipt $lorryReceipt): bool
+    {
+        return collect([
+            $lorryReceipt->detention_amount,
+            $lorryReceipt->extra_hire_amount,
+            $lorryReceipt->final_other_amount,
+            $lorryReceipt->less_advance_other_branch_amount,
+            $lorryReceipt->less_deduction_claims_amount,
+        ])->contains(fn ($amount): bool => $this->nullableTransportAmount($amount) !== null);
+    }
+
+    private function customFieldsHaveFinalPaymentOperation(): bool
+    {
+        return collect([
+            $this->customFieldAmount(['Add Detention Rs.', 'Detention Amount']),
+            $this->customFieldAmount(['Extra Hire Rs', 'Extra Hire Amount']),
+            $this->customFieldAmount(['Other Rs', 'Final Other Amount']),
+            $this->customFieldAmount(['Less Adv. at other branch', 'Less Advance Other Branch Amount']),
+            $this->customFieldAmount(['Less Deduction for Claims', 'Less Deduction Claims Amount']),
+        ])->contains(fn ($amount): bool => $amount !== null);
+    }
+
+    private function customFieldFinalNetAmountPayable(): int|float|null
+    {
+        $netAmountPayable = $this->customFieldAmount(['Net Amount Payable']);
+
+        if ($netAmountPayable !== null) {
+            return $netAmountPayable;
+        }
+
+        $balancePayable = $this->customFieldSectionCBalance();
+
+        if ($balancePayable === null) {
+            return null;
+        }
+
+        $extraTotal = $this->sumTransportAmounts([
+            $this->customFieldAmount(['Add Detention Rs.', 'Detention Amount']),
+            $this->customFieldAmount(['Extra Hire Rs', 'Extra Hire Amount']),
+            $this->customFieldAmount(['Other Rs', 'Final Other Amount']),
+        ]) ?? 0;
+
+        $deductionTotal = $this->sumTransportAmounts([
+            $this->customFieldAmount(['Less Adv. at other branch', 'Less Advance Other Branch Amount']),
+            $this->customFieldAmount(['Less Deduction for Claims', 'Less Deduction Claims Amount']),
+        ]) ?? 0;
+
+        return $balancePayable + $extraTotal - $deductionTotal;
+    }
+
+    private function customFieldSectionCBalance(): int|float|null
+    {
+        $balanceAmount = $this->customFieldAmount(['Balance Amount', 'Balance Rupees']);
+
+        if ($balanceAmount !== null && $balanceAmount > 0) {
+            return $balanceAmount;
+        }
+
+        $grossHireAmount = $this->sumTransportAmounts([
+            $this->customFieldAmount(['Lorry Hire', 'Lorry Hire Amount']),
+            $this->customFieldAmount(['Add Other Charges', 'Other Charges Amount']),
+        ]) ?? $this->customFieldAmount(['Gross Hire Rupees', 'Gross Hire Amount']);
+
+        if ($grossHireAmount === null || $grossHireAmount <= 0) {
+            return null;
+        }
+
+        return $grossHireAmount - ($this->customFieldAmount(['Advance Paid Rs', 'Advance Amount']) ?? 0);
+    }
+
+    /**
+     * @param  array<int, int|float|null>  $amounts
+     */
+    private function sumTransportAmounts(array $amounts): int|float|null
+    {
+        $amounts = collect($amounts)->filter(fn ($amount): bool => $amount !== null);
+
+        if ($amounts->isEmpty()) {
+            return null;
+        }
+
+        return $amounts->sum();
+    }
+
+    /**
+     * @param  array<int, string>  $labels
+     */
+    private function customFieldAmount(array $labels): int|float|null
+    {
+        if (! $this->relationLoaded('fields')) {
+            return null;
+        }
+
+        $normalizedLabels = collect($labels)
+            ->map(fn (string $label): string => $this->normalizeTransportLabel($label))
+            ->all();
+
+        foreach ($this->fields as $field) {
+            $customField = $field->customField;
+
+            if (! $customField) {
+                continue;
+            }
+
+            $matches = in_array($this->normalizeTransportLabel($customField->label), $normalizedLabels, true)
+                || in_array($this->normalizeTransportLabel($customField->name), $normalizedLabels, true);
+
+            if (! $matches) {
+                continue;
+            }
+
+            $amount = $this->nullableTransportAmount($field->defaultAnswer);
+
+            if ($amount !== null) {
+                return $amount;
+            }
+        }
+
+        return null;
+    }
+
+    private function nullableTransportAmount(mixed $amount): int|float|null
+    {
+        if ($amount === null || trim((string) $amount) === '') {
+            return null;
+        }
+
+        $number = str_replace(',', '', (string) $amount);
+
+        if (! is_numeric($number)) {
+            return null;
+        }
+
+        $numericAmount = (float) $number;
+
+        return (float) (int) $numericAmount === $numericAmount ? (int) $numericAmount : $numericAmount;
+    }
+
+    private function normalizeTransportLabel(?string $label): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9]+/i', '', (string) $label));
+    }
+
+    private function numericTransportAmount(mixed $amount): int|float
+    {
+        if ($amount === null || $amount === '') {
+            return 0;
+        }
+
+        $number = str_replace(',', '', (string) $amount);
+
+        if (! is_numeric($number)) {
+            return 0;
+        }
+
+        $numericAmount = (float) $number;
+
+        return (float) (int) $numericAmount === $numericAmount ? (int) $numericAmount : $numericAmount;
     }
 }

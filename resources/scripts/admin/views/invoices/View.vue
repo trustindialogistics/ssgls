@@ -59,9 +59,22 @@ const invoiceResourcePath = computed(() =>
 const expectedTemplateName = computed(() =>
   isLorryReceiptRoute.value ? 'lorry_receipt' : isLrReceiptRoute.value ? 'lr_receipt' : 'office_invoice'
 )
-const sendButtonLabel = computed(() =>
-  isLorryReceiptView.value ? 'Send Lorry Receipt' : isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
-)
+const canShowSendButton = computed(() => {
+  if (!invoiceData.value || !userStore.hasAbilities(abilities.SEND_INVOICE)) {
+    return false
+  }
+
+  if (invoiceData.value.status === 'DRAFT') {
+    return true
+  }
+
+  return isTransportReceiptView.value && ['SENT', 'VIEWED'].includes(invoiceData.value.status)
+})
+const sendButtonLabel = computed(() => {
+  const action = ['SENT', 'VIEWED'].includes(invoiceData.value?.status) ? 'Resend' : 'Send'
+
+  return isLorryReceiptView.value ? `${action} Lorry Receipt` : isLrReceiptView.value ? `${action} LR Receipt` : t('invoices.send_invoice')
+})
 const sendModalTitle = computed(() =>
   isLorryReceiptView.value ? 'Send Lorry Receipt' : isLrReceiptView.value ? 'Send LR Receipt' : t('invoices.send_invoice')
 )
@@ -298,10 +311,7 @@ onSearched = debounce(onSearched, 500)
         </div>
 
         <BaseButton
-          v-if="
-            invoiceData.status === 'DRAFT' &&
-            userStore.hasAbilities(abilities.SEND_INVOICE)
-          "
+          v-if="canShowSendButton"
           variant="primary"
           class="text-sm"
           @click="onSendInvoice"

@@ -317,6 +317,7 @@ import { useCategoryStore } from '@/scripts/admin/stores/category'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useCustomerStore } from '@/scripts/admin/stores/customer'
 import { useCustomFieldStore } from '@/scripts/admin/stores/custom-field'
+import { useLorryPartyProfileStore } from '@/scripts/admin/stores/lorry-party-profile'
 import { useModalStore } from '@/scripts/stores/modal'
 import ExpenseCustomFields from '@/scripts/admin/components/custom-fields/CreateCustomFields.vue'
 import CategoryModal from '@/scripts/admin/components/modal-components/CategoryModal.vue'
@@ -324,6 +325,7 @@ import ExchangeRateConverter from '@/scripts/admin/components/estimate-invoice-c
 import { useGlobalStore } from '@/scripts/admin/stores/global'
 
 const customerStore = useCustomerStore()
+const lorryPartyProfileStore = useLorryPartyProfileStore()
 const companyStore = useCompanyStore()
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
@@ -446,15 +448,58 @@ async function searchCategory(search) {
 }
 
 async function searchCustomer(search) {
-  let res = await customerStore.fetchCustomers({ search })
-  if(res.data.data.length>0 && customerStore.editCustomer) {
-    let customerFound = res.data.data.find((c) => c.id==customerStore.editCustomer.id)
-    if(!customerFound) {
-      let edit_customer = Object.assign({}, customerStore.editCustomer)
-      res.data.data.unshift(edit_customer)
+  const [customerResponse, profileResponse] = await Promise.all([
+    customerStore.fetchCustomers({ search }),
+    lorryPartyProfileStore.fetchProfiles({ search, limit: 'all' }),
+  ])
+
+  const customersById = new Map()
+  const profileTypesByCustomerId = new Map()
+  const customers = customerResponse.data.data || []
+  const profiles = profileResponse.data.data || []
+
+  customers.forEach((customer) => {
+    customersById.set(customer.id, { ...customer })
+  })
+
+  profiles
+    .filter((profile) => profile.customer_id)
+    .forEach((profile) => {
+      const customerId = profile.customer_id
+      const customer = profile.customer || {
+        id: customerId,
+        name: profile.name,
+        display_name: profile.name,
+      }
+
+      if (!customersById.has(customerId)) {
+        customersById.set(customerId, { ...customer, id: customerId })
+      }
+
+      if (!profileTypesByCustomerId.has(customerId)) {
+        profileTypesByCustomerId.set(customerId, new Set())
+      }
+
+      profileTypesByCustomerId.get(customerId).add(profile.type)
+    })
+
+  profileTypesByCustomerId.forEach((types, customerId) => {
+    const customer = customersById.get(customerId)
+    const name = customer.name || customer.display_name || '-'
+
+    customer.name = `${name} (${Array.from(types).join(', ')})`
+  })
+
+  if (customerStore.editCustomer) {
+    const customerFound = customersById.has(customerStore.editCustomer.id)
+    if (!customerFound) {
+      customersById.set(customerStore.editCustomer.id, {
+        ...customerStore.editCustomer,
+      })
     }
   }
-  return res.data.data
+
+  return Array.from(customersById.values())
 }
 
 async function loadData() {

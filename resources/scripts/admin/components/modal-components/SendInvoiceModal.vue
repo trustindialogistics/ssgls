@@ -272,9 +272,11 @@ async function setInitialData() {
     invoiceMailForm.to = await getInvoiceRecipientEmail()
   }
 
-  invoiceMailForm.subject = isLrReceipt.value ? 'New LR' : t('invoices.new_invoice')
-  invoiceMailForm.body = isLrReceipt.value
-    ? getLrMailBody(companyStore.selectedCompanySettings.invoice_mail_body)
+  invoiceMailForm.subject = isTransportReceipt.value
+    ? `New ${transportReceiptTitle.value}`
+    : t('invoices.new_invoice')
+  invoiceMailForm.body = isTransportReceipt.value
+    ? getTransportMailBody(companyStore.selectedCompanySettings.invoice_mail_body)
     : companyStore.selectedCompanySettings.invoice_mail_body
 }
 
@@ -282,14 +284,26 @@ const isLrReceipt = computed(() => {
   return modalData.value?.template_name === 'lr_receipt'
 })
 
-function getLrMailBody(body) {
+const isLorryReceipt = computed(() => {
+  return modalData.value?.template_name === 'lorry_receipt'
+})
+
+const isTransportReceipt = computed(() => {
+  return isLrReceipt.value || isLorryReceipt.value
+})
+
+const transportReceiptTitle = computed(() => {
+  return isLorryReceipt.value ? 'Lorry Receipt' : 'LR'
+})
+
+function getTransportMailBody(body) {
   return String(body || '')
-    .replace(/new invoice/gi, 'new LR')
-    .replace(/invoice/gi, 'LR')
+    .replace(/new invoice/gi, `new ${transportReceiptTitle.value}`)
+    .replace(/invoice/gi, transportReceiptTitle.value)
 }
 
 async function getInvoiceRecipientEmail() {
-  if (modalData.value?.template_name !== 'lr_receipt') {
+  if (!isLrReceipt.value) {
     return modalData.value?.customer?.email
   }
 

@@ -7,7 +7,6 @@ use App\Models\ExchangeRateProvider;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
-use App\Models\LorryReceipt;
 use App\Models\Note;
 use App\Models\Payment;
 use App\Models\RecurringInvoice;
@@ -335,7 +334,7 @@ return [
             'name' => 'Owner List',
             'owner_only' => false,
             'ability' => 'view-invoice',
-            'model' => '',
+            'model' => Invoice::class,
         ],
         [
             'title' => 'navigation.driver-portal',
@@ -345,7 +344,7 @@ return [
             'name' => 'Driver List',
             'owner_only' => false,
             'ability' => 'view-invoice',
-            'model' => '',
+            'model' => Invoice::class,
         ],
         [
             'title' => 'navigation.broker-portal',
@@ -355,7 +354,7 @@ return [
             'name' => 'Broker List',
             'owner_only' => false,
             'ability' => 'view-invoice',
-            'model' => '',
+            'model' => Invoice::class,
         ],
         [
             'title' => 'navigation.items',
@@ -405,7 +404,7 @@ return [
             'name' => 'Lorry Receipts',
             'owner_only' => false,
             'ability' => 'view-invoice',
-            'model' => LorryReceipt::class,
+            'model' => Invoice::class,
         ],
         [
             'title' => 'navigation.recurring-invoices',

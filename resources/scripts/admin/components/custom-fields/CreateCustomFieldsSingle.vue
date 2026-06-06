@@ -50,7 +50,7 @@ const rules = {
   value: {
     required: helpers.withMessage(
       t('validation.required'),
-      requiredIf(props.field.is_required)
+      requiredIf(() => props.field.is_required && !isHiddenTransportField.value)
     ),
   },
 }

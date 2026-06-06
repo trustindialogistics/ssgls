@@ -18,6 +18,8 @@ export const useDashboardStore = (useWindow = false) => {
 
       chartData: {
         months: [],
+        debitTotals: [],
+        creditTotals: [],
         invoiceTotals: [],
         expenseTotals: [],
         receiptTotals: [],
@@ -49,15 +51,19 @@ export const useDashboardStore = (useWindow = false) => {
 
               // Dashboard Chart
               if (this.chartData && response.data.chart_data) {
-                this.chartData.months = response.data.chart_data.months
+                this.chartData.months = response.data.chart_data.months || []
+                this.chartData.debitTotals =
+                  response.data.chart_data.debit_totals || []
+                this.chartData.creditTotals =
+                  response.data.chart_data.credit_totals || []
                 this.chartData.invoiceTotals =
-                  response.data.chart_data.invoice_totals
+                  response.data.chart_data.invoice_totals || []
                 this.chartData.expenseTotals =
-                  response.data.chart_data.expense_totals
+                  response.data.chart_data.expense_totals || []
                 this.chartData.receiptTotals =
-                  response.data.chart_data.receipt_totals
+                  response.data.chart_data.receipt_totals || []
                 this.chartData.netIncomeTotals =
-                  response.data.chart_data.net_income_totals
+                  response.data.chart_data.net_income_totals || []
               }
 
               // Dashboard Chart Labels

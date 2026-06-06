@@ -188,6 +188,15 @@ class CustomFieldsController extends Controller
 
         $fieldNames = $this->getTransportInvoiceFields($templateName);
 
+        if ($templateName === 'lorry_receipt') {
+            $fieldNames['Invoice'] = array_merge(
+                $fieldNames['Invoice'],
+                collect($this->getLegacyLorryReceiptFieldNames())
+                    ->map(fn (string $name): array => ['name' => $name])
+                    ->all()
+            );
+        }
+
         $slugs = [];
 
         foreach ($fieldNames as $modelType => $definitions) {
@@ -197,6 +206,36 @@ class CustomFieldsController extends Controller
         }
 
         return $slugs;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function getLegacyLorryReceiptFieldNames(): array
+    {
+        return [
+            'Lorry Hire Amount',
+            'Other Charges Amount',
+            'Gross Hire Rupees',
+            'Advance Cash Cheque No',
+            'Advance Bank',
+            'Advance Amount',
+            'Balance Payable At',
+            'Balance Amount',
+            'Balance Rupees Only',
+            'Detention Amount',
+            'Extra Hire Amount',
+            'Final Other Amount',
+            'Final Total Extra Amount',
+            'Grand Total',
+            'Less Advance Other Branch Amount',
+            'Less Deduction Claims Amount',
+            'Total Less Amount',
+            'Final Balance Code',
+            'Net Amount Payable',
+            'Final Cash Cheque No',
+            'Final Rupees Only',
+        ];
     }
 
     private function getTransportInvoiceFields(?string $templateName = null): array
@@ -252,8 +291,8 @@ class CustomFieldsController extends Controller
                 'Invoice' => [
                     ['name' => 'From', 'default_answer' => 'Vapi'],
                     ['name' => 'To', 'default_answer' => 'Bengaluru'],
-                    ['name' => 'No Of Pages', 'type' => 'Number', 'default_answer' => 1],
-                    ['name' => 'No Of Packages', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'No Of Pages', 'default_answer' => 1],
+                    ['name' => 'No Of Packages', 'default_answer' => 1000],
                     ['name' => 'Actual Weight', 'default_answer' => '100 kg'],
                     ['name' => 'Charge Weight', 'default_answer' => '1000 kg'],
                     ['name' => 'Lorry No', 'default_answer' => 'GJ05BC1234'],
@@ -285,23 +324,28 @@ class CustomFieldsController extends Controller
                     ['name' => 'Destination Broker Address', 'type' => 'TextArea', 'default_answer' => 'Destination broker address sample'],
                     ['name' => 'Broker Phone No', 'default_answer' => '9876543210'],
                     ['name' => 'Paid To', 'default_answer' => 'M K Infrastructure'],
-                    ['name' => 'Lorry Hire Amount', 'type' => 'Number', 'default_answer' => 1000],
-                    ['name' => 'Other Charges Amount', 'type' => 'Number', 'default_answer' => 100],
-                    ['name' => 'Gross Hire Rupees', 'default_answer' => 1100],
-                    ['name' => 'Advance Cash Cheque No', 'default_answer' => '121'],
+                    ['name' => 'Lorry Hire', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Add Other Charges', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Advance Paid by Cash/Cheque No', 'type' => 'Dropdown', 'options' => [
+                        ['name' => 'UPI'],
+                        ['name' => 'CHEQUE'],
+                        ['name' => 'CASH'],
+                        ['name' => 'NET BANKING'],
+                    ]],
                     ['name' => 'Advance On', 'type' => 'Date', 'default_answer' => '2026-05-17'],
-                    ['name' => 'Advance Bank', 'default_answer' => 'ICICI Bank'],
-                    ['name' => 'Advance Amount', 'type' => 'Number', 'default_answer' => 1000],
-                    ['name' => 'Balance Payable At', 'default_answer' => 'ICICI'],
-                    ['name' => 'Balance Amount', 'type' => 'Number', 'default_answer' => 100],
-                    ['name' => 'Balance Rupees Only', 'type' => 'TextArea', 'default_answer' => 100],
+                    ['name' => 'Bank', 'default_answer' => 'ICICI Bank'],
+                    ['name' => 'Advance Paid Rs', 'type' => 'Number', 'default_answer' => 1000],
+                    ['name' => 'Balance Payable at', 'default_answer' => 'ICICI'],
+                    ['name' => 'Loaded By'],
                     ['name' => 'Final Paid To', 'default_answer' => 'M K Infrastructure'],
-                    ['name' => 'Final Total Extra Amount', 'type' => 'Number', 'default_answer' => 100],
-                    ['name' => 'Grand Total', 'type' => 'Number', 'default_answer' => 1000],
-                    ['name' => 'Total Less Amount', 'type' => 'Number', 'default_answer' => 100],
+                    ['name' => 'Add Detention Rs.', 'type' => 'Number'],
+                    ['name' => 'Extra Hire Rs', 'type' => 'Number'],
+                    ['name' => 'Other Rs', 'type' => 'Number'],
+                    ['name' => 'Less Adv. at other branch', 'type' => 'Number'],
+                    ['name' => 'Less Deduction for Claims', 'type' => 'Number'],
+                    ['name' => 'Final Balance Amount Paid at'],
                     ['name' => 'Final Balance Date', 'type' => 'Date', 'default_answer' => '2026-05-17'],
-                    ['name' => 'Net Amount Payable', 'type' => 'Number', 'default_answer' => 1000],
-                    ['name' => 'Final Cash Cheque No', 'default_answer' => 'CHQ-121'],
+                    ['name' => 'Cash/Cheque No.', 'default_answer' => 'CHQ-121'],
                     ['name' => 'Final Bank', 'default_answer' => 'ICICI Bank'],
                     ['name' => 'Received No Of Bilties', 'type' => 'TextArea', 'default_answer' => 'LR NO 1937*471 wt Orthopedic Goods'],
                 ],

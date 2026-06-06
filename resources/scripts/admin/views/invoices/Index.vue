@@ -231,6 +231,14 @@
           </BaseInvoiceStatusBadge>
         </template>
 
+        <!-- Amount Paid  -->
+        <template #cell-amount_paid="{ row }">
+          <BaseFormatMoney
+            :amount="row.data.amount_paid"
+            :currency="row.data.currency"
+          />
+        </template>
+
         <!-- Due Amount + Paid Status  -->
         <template #cell-due_amount="{ row }">
           <div class="flex justify-between">
@@ -357,8 +365,13 @@ const invoiceColumns = computed(() => {
     { key: 'name', label: t('invoices.customer') },
     { key: 'status', label: t('invoices.status') },
     {
+      key: 'amount_paid',
+      label: 'Amount Paid',
+      tdClass: 'font-medium text-gray-900',
+    },
+    {
       key: 'due_amount',
-      label: t('dashboard.recent_invoices_card.amount_due'),
+      label: 'Due',
     },
     {
       key: 'total',

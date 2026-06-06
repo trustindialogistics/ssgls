@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('lorry_receipts', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('company_id')->nullable();
-            $table->unsignedInteger('owner_customer_id')->nullable();
-            $table->unsignedInteger('driver_customer_id')->nullable();
-            $table->unsignedInteger('broker_customer_id')->nullable();
+            $table->unsignedBigInteger('owner_customer_id')->nullable();
+            $table->unsignedBigInteger('driver_customer_id')->nullable();
+            $table->unsignedBigInteger('broker_customer_id')->nullable();
             $table->string('unique_hash')->nullable()->index();
 
             $table->string('contract_no')->nullable();

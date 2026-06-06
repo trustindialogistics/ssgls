@@ -17,6 +17,7 @@
             />
             <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
               <a
+                v-if="selectedProfiles[profile.key].id"
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
                 @click.stop="openProfileEdit(profile)"
               >
@@ -139,7 +140,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useRouter } from 'vue-router'
@@ -168,6 +169,12 @@ const profileSearch = reactive({
   broker: '',
 })
 
+const profileResolveInProgress = reactive({
+  owner: false,
+  driver: false,
+  broker: false,
+})
+
 const profileInputs = [
   {
     key: 'owner',
@@ -193,15 +200,15 @@ const profileInputs = [
 ]
 
 const createPathByType = {
-  OWNER: '/admin/owner-portal/create',
-  DRIVER: '/admin/driver-portal/create',
-  BROKER: '/admin/broker-portal/create',
+  OWNER: 'owner-portal.create',
+  DRIVER: 'driver-portal.create',
+  BROKER: 'broker-portal.create',
 }
 
 const editPathByType = {
-  OWNER: '/admin/owner-portal',
-  DRIVER: '/admin/driver-portal',
-  BROKER: '/admin/broker-portal',
+  OWNER: 'owner-portal.edit',
+  DRIVER: 'driver-portal.edit',
+  BROKER: 'broker-portal.edit',
 }
 
 const fieldMappingsByType = {
@@ -215,7 +222,7 @@ const fieldMappingsByType = {
   DRIVER: [
     ['Driver Name', 'name'],
     ['Driver Address', 'address'],
-    ['Driver Place', 'place'],
+    ['Driver Place', 'address'],
     ['Driver Licence No', 'licence_no'],
     ['Driver Licence Date', 'licence_date'],
     ['Driver Licence Issued By', 'licence_issued_by'],
@@ -241,7 +248,9 @@ function setField(label, value) {
   const field = invoiceStore.newInvoice.customFields?.find((_field) => _field.label === label)
 
   if (field) {
-    field.value = value || ''
+    field.value = label === 'Advice No'
+      ? String(value || '').toUpperCase()
+      : value || ''
   }
 }
 
@@ -263,17 +272,24 @@ function ensureProfilesLoaded(profile) {
 
 function openProfileCreate(profile, close) {
   close?.()
-  router.push(createPathByType[profile.type])
+  router.push({ name: createPathByType[profile.type] })
 }
 
-function openProfileEdit(profile) {
+async function openProfileEdit(profile) {
+  if (!selectedProfiles[profile.key]?.id) {
+    await resolveSelectedProfile(profile)
+  }
+
   const selectedProfile = selectedProfiles[profile.key]
 
   if (!selectedProfile?.id) {
     return
   }
 
-  router.push(`${editPathByType[profile.type]}/${selectedProfile.id}/edit`)
+  router.push({
+    name: editPathByType[profile.type],
+    params: { id: selectedProfile.id },
+  })
 }
 
 function selectProfile(profile, option, close) {
@@ -292,6 +308,10 @@ function compact(value) {
   return value ? String(value).trim() : ''
 }
 
+function normalize(value) {
+  return compact(value).toLowerCase().replace(/[^a-z0-9]+/g, '')
+}
+
 function formatProfileLines(profile) {
   return [
     compact(profile?.address),
@@ -304,5 +324,84 @@ function fillProfileFields(type, profile) {
   fieldMappingsByType[type].forEach(([label, key]) => {
     setField(label, profile?.[key])
   })
+
+  if (type === 'OWNER') {
+    setField('Paid To', profile?.name)
+    setField('Final Paid To', profile?.name)
+  }
 }
+
+function getFieldValue(label) {
+  return invoiceStore.newInvoice.customFields?.find((field) => field.label === label)?.value || ''
+}
+
+function hydrateSelectedProfilesFromFields() {
+  profileInputs.forEach((profile) => {
+    if (selectedProfiles[profile.key]?.id) {
+      return
+    }
+
+    if (selectedProfiles[profile.key]) {
+      resolveSelectedProfile(profile)
+      return
+    }
+
+    const hydratedProfile = { type: profile.type }
+
+    fieldMappingsByType[profile.type].forEach(([label, key]) => {
+      hydratedProfile[key] = getFieldValue(label)
+    })
+
+    if (
+      compact(hydratedProfile.name) ||
+      compact(hydratedProfile.address) ||
+      compact(hydratedProfile.phone)
+    ) {
+      selectedProfiles[profile.key] = hydratedProfile
+      resolveSelectedProfile(profile)
+    }
+  })
+}
+
+async function resolveSelectedProfile(profile) {
+  const selectedProfile = selectedProfiles[profile.key]
+  const profileName = compact(selectedProfile?.name)
+
+  if (
+    !profileName ||
+    selectedProfile?.id ||
+    profileResolveInProgress[profile.key]
+  ) {
+    return
+  }
+
+  profileResolveInProgress[profile.key] = true
+
+  try {
+    const response = await profileStore.fetchProfiles({
+      search: profileName,
+      type: profile.type,
+      limit: 'all',
+    })
+
+    const matchedProfile = response.data.data.find((option) => {
+      return normalize(option.name) === normalize(profileName)
+    })
+
+    if (matchedProfile && !selectedProfiles[profile.key]?.id) {
+      selectedProfiles[profile.key] = matchedProfile
+      fillProfileFields(profile.type, matchedProfile)
+    }
+  } finally {
+    profileResolveInProgress[profile.key] = false
+  }
+}
+
+watch(
+  () => invoiceStore.newInvoice.customFields,
+  () => {
+    hydrateSelectedProfilesFromFields()
+  },
+  { deep: true, immediate: true }
+)
 </script>

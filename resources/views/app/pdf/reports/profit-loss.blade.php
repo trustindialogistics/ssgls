@@ -193,35 +193,8 @@
                 </td>
             </tr>
         </table>
-        <p class="expenses-title">@lang('pdf_expenses_label')</p>
-        <div class="expenses-table-container">
-            <table class="expenses-table">
-                @foreach ($expenseCategories as $expenseCategory)
-                <tr>
-                    <td>
-                        <p class="expense-title">
-                            {{ $expenseCategory->category->name }}
-                        </p>
-                    </td>
-                    <td>
-                        <p class="expense-amount">
-                            {!! format_money_pdf($expenseCategory->total_amount, $currency) !!}
-                        </p>
-                    </td>
-                </tr>
-                @endforeach
-
-            </table>
-        </div>
     </div>
 
-    <table class="expense-total-indicator-table">
-        <tr>
-            <td class="expense-total-cell">
-                <p class="expense-total">{!! format_money_pdf($totalExpense, $currency) !!}</p>
-            </td>
-        </tr>
-    </table>
     <table class="report-footer">
         <tr>
             <td>

@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Models\Estimate;
 use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,12 +27,13 @@ class DashboardController extends Controller
 
         $this->authorize('view dashboard', $company);
 
+        $debit_totals = [];
+        $credit_totals = [];
         $invoice_totals = [];
         $expense_totals = [];
         $receipt_totals = [];
         $net_income_totals = [];
 
-        $i = 0;
         $months = [];
         $monthCounter = 0;
         $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
@@ -72,16 +72,12 @@ class DashboardController extends Controller
             $bucketStart = $hasCustomRange && $start->lt($startDate) ? $startDate->copy() : $start->copy();
             $bucketEnd = $hasCustomRange && $end->gt($rangeEndDate) ? $rangeEndDate->copy() : $end->copy();
 
-            array_push(
-                $invoice_totals,
-                Invoice::whereBetween(
-                    'invoice_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereRegularInvoice()
-                    ->sum('base_total')
-            );
+            $lrReceiptAmounts = $this->lrReceiptAmountsBetween($bucketStart, $bucketEnd, (int) $company->id);
+
+            $debit_totals[] = $lrReceiptAmounts['debit'];
+            $credit_totals[] = $lrReceiptAmounts['credit'];
+            $invoice_totals[] = $lrReceiptAmounts['profit_loss'];
+
             array_push(
                 $expense_totals,
                 Expense::whereBetween(
@@ -97,20 +93,10 @@ class DashboardController extends Controller
                     })
                     ->sum('base_amount')
             );
-            array_push(
-                $receipt_totals,
-                Payment::whereBetween(
-                    'payment_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->sum('base_amount')
-            );
-            array_push(
-                $net_income_totals,
-                ($receipt_totals[$i] - $expense_totals[$i])
-            );
-            $i++;
+
+            $receipt_totals[] = $lrReceiptAmounts['profit_loss'];
+            $net_income_totals[] = $lrReceiptAmounts['profit_loss'];
+
             array_push($months, $hasCustomRange ? $start->translatedFormat('M y') : $start->translatedFormat('M'));
             $monthCounter++;
             $end->startOfMonth();
@@ -120,26 +106,9 @@ class DashboardController extends Controller
 
         $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
 
-        $total_sales = Invoice::whereBetween(
-            'invoice_date',
-            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
-        )
-            ->whereCompany()
-            ->whereRegularInvoice()
-            ->sum('base_total');
-
-        $total_receipts = Payment::whereBetween(
-            'payment_date',
-            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
-        )
-            ->whereCompany()
-            ->where(function ($query) {
-                $query->whereNull('invoice_id')
-                    ->orWhereHas('invoice', function ($query) {
-                        $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
-                    });
-            })
-            ->sum('base_amount');
+        $totalLrReceiptAmounts = $this->lrReceiptAmountsBetween($startDate, $totalEndDate, (int) $company->id);
+        $total_sales = $totalLrReceiptAmounts['profit_loss'];
+        $total_receipts = $total_sales;
 
         $total_expenses = Expense::whereBetween(
             'expense_date',
@@ -152,6 +121,8 @@ class DashboardController extends Controller
 
         $chart_data = [
             'months' => $months,
+            'debit_totals' => $debit_totals,
+            'credit_totals' => $credit_totals,
             'invoice_totals' => $invoice_totals,
             'expense_totals' => $expense_totals,
             'receipt_totals' => $receipt_totals,
@@ -192,5 +163,30 @@ class DashboardController extends Controller
             'total_expenses' => $total_expenses,
             'total_net_income' => $total_net_income,
         ]);
+    }
+
+    /**
+     * @return array{debit: int|float, credit: int|float, profit_loss: int|float}
+     */
+    private function lrReceiptAmountsBetween(Carbon $start, Carbon $end, int $companyId): array
+    {
+        $lrReceipts = Invoice::where('company_id', $companyId)
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->whereBetween('invoice_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->get();
+
+        $debit = 0;
+        $credit = 0;
+
+        foreach ($lrReceipts as $lrReceipt) {
+            $debit += $lrReceipt->amountDebit;
+            $credit += $lrReceipt->amountCredit;
+        }
+
+        return [
+            'debit' => $debit,
+            'credit' => $credit,
+            'profit_loss' => $credit - $debit,
+        ];
     }
 }

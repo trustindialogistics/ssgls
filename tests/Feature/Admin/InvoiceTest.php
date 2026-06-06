@@ -3,8 +3,10 @@
 use App\Http\Controllers\V1\Admin\Invoice\InvoicesController;
 use App\Http\Requests\InvoicesRequest;
 use App\Mail\SendInvoiceMail;
+use App\Models\CustomField;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\LorryReceipt;
 use App\Models\Tax;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -44,6 +46,184 @@ test('show invoice requires matching template when template is provided', functi
 
     getJson("api/v1/invoices/{$invoice->id}?template_name=".Invoice::TEMPLATE_LR_RECEIPT)
         ->assertNotFound();
+});
+
+test('lorry receipt index exposes net amount payable as display due amount', function () {
+    $user = User::find(1);
+    $company = $user->companies()->first();
+
+    $invoice = Invoice::factory()
+        ->hasItems(1)
+        ->create([
+            'company_id' => $company->id,
+            'template_name' => Invoice::TEMPLATE_LORRY_RECEIPT,
+            'total' => 100,
+            'due_amount' => 100,
+        ]);
+
+    $netAmountPayableField = CustomField::factory()->create([
+        'company_id' => $company->id,
+        'model_type' => 'Invoice',
+        'name' => 'Net Amount Payable',
+        'label' => 'Net Amount Payable',
+        'slug' => 'CUSTOM_INVOICE_NET_AMOUNT_PAYABLE',
+        'type' => 'Number',
+    ]);
+
+    $invoice->fields()->create([
+        'company_id' => $company->id,
+        'custom_field_id' => $netAmountPayableField->id,
+        'type' => 'Number',
+        'number_answer' => 5000,
+    ]);
+
+    $response = getJson('api/v1/invoices?template_name='.Invoice::TEMPLATE_LORRY_RECEIPT)
+        ->assertOk();
+
+    $receipt = collect($response->json('data'))->firstWhere('id', $invoice->id);
+
+    expect($receipt)->not->toBeNull()
+        ->and($receipt['display_due_amount'])->toBe(500000);
+});
+
+test('lr receipt index exposes amount debit and amount credit', function () {
+    $user = User::find(1);
+    $company = $user->companies()->first();
+
+    $lrReceipt = Invoice::factory()->create([
+        'company_id' => $company->id,
+        'template_name' => Invoice::TEMPLATE_LR_RECEIPT,
+        'invoice_number' => 'LR-ACCESSOR-1',
+        'total' => 0,
+        'due_amount' => 0,
+    ]);
+
+    LorryReceipt::create([
+        'company_id' => $company->id,
+        'received_no_bilties' => $lrReceipt->invoice_number,
+        'advance_amount' => '7500',
+    ]);
+
+    $officeInvoice = Invoice::factory()
+        ->hasItems(1)
+        ->create([
+            'company_id' => $company->id,
+            'template_name' => Invoice::TEMPLATE_OFFICE_INVOICE,
+            'total' => 12500,
+        ]);
+
+    $consignmentNumberField = CustomField::factory()->create([
+        'company_id' => $company->id,
+        'model_type' => 'Item',
+        'name' => 'Consignment Number',
+        'label' => 'Consignment Number',
+        'slug' => 'CUSTOM_ITEM_CONSIGNMENT_NUMBER',
+        'type' => 'Text',
+    ]);
+
+    $officeInvoice->items()->first()->fields()->create([
+        'company_id' => $company->id,
+        'custom_field_id' => $consignmentNumberField->id,
+        'type' => 'Text',
+        'string_answer' => $lrReceipt->invoice_number,
+    ]);
+
+    $response = getJson('api/v1/invoices?template_name='.Invoice::TEMPLATE_LR_RECEIPT)
+        ->assertOk();
+
+    $receipt = collect($response->json('data'))->firstWhere('id', $lrReceipt->id);
+
+    expect($receipt)->not->toBeNull()
+        ->and($receipt['amount_debit'])->toBe(750000)
+        ->and($receipt['amount_credit'])->toBe(12500);
+});
+
+test('lr receipt amounts match case-insensitively', function () {
+    $user = User::find(1);
+    $company = $user->companies()->first();
+
+    $lrReceipt = Invoice::factory()->create([
+        'company_id' => $company->id,
+        'template_name' => Invoice::TEMPLATE_LR_RECEIPT,
+        'invoice_number' => 'DOC123',
+        'total' => 0,
+        'due_amount' => 0,
+    ]);
+
+    LorryReceipt::create([
+        'company_id' => $company->id,
+        'received_no_bilties' => 'doc123',
+        'advance_amount' => '8000',
+    ]);
+
+    $officeInvoice = Invoice::factory()
+        ->hasItems(1)
+        ->create([
+            'company_id' => $company->id,
+            'template_name' => Invoice::TEMPLATE_OFFICE_INVOICE,
+            'total' => 15000,
+        ]);
+
+    $consignmentNumberField = CustomField::factory()->create([
+        'company_id' => $company->id,
+        'model_type' => 'Item',
+        'name' => 'Consignment Number',
+        'label' => 'Consignment Number',
+        'slug' => 'CUSTOM_ITEM_CONSIGNMENT_NUMBER',
+        'type' => 'Text',
+    ]);
+
+    $officeInvoice->items()->first()->fields()->create([
+        'company_id' => $company->id,
+        'custom_field_id' => $consignmentNumberField->id,
+        'type' => 'Text',
+        'string_answer' => 'doc123',
+    ]);
+
+    $response = getJson('api/v1/invoices?template_name='.Invoice::TEMPLATE_LR_RECEIPT)
+        ->assertOk();
+
+    $receipt = collect($response->json('data'))->firstWhere('id', $lrReceipt->id);
+
+    expect($receipt)->not->toBeNull()
+        ->and($receipt['amount_debit'])->toBe(800000)
+        ->and($receipt['amount_credit'])->toBe(15000);
+});
+
+test('transport receipt status is preserved when edited', function () {
+    foreach ([Invoice::TEMPLATE_LR_RECEIPT, Invoice::TEMPLATE_LORRY_RECEIPT] as $templateName) {
+        $invoice = Invoice::factory()->create([
+            'template_name' => $templateName,
+            'status' => Invoice::STATUS_SENT,
+            'paid_status' => Invoice::STATUS_UNPAID,
+            'sent' => true,
+            'total' => 5000,
+            'due_amount' => 5000,
+        ]);
+
+        $payload = Invoice::factory()->raw([
+            'template_name' => $templateName,
+            'customer_id' => $invoice->customer_id,
+            'total' => 5000,
+            'sub_total' => 5000,
+            'due_amount' => 5000,
+            'items' => [
+                InvoiceItem::factory()->raw([
+                    'invoice_id' => $invoice->id,
+                    'price' => 5000,
+                    'total' => 5000,
+                ]),
+            ],
+            'taxes' => [],
+        ]);
+
+        putJson('api/v1/invoices/'.$invoice->id, $payload)->assertOk();
+
+        $invoice->refresh();
+
+        $this->assertEquals(Invoice::STATUS_SENT, $invoice->status);
+        $this->assertTrue((bool) $invoice->sent);
+    }
 });
 
 test('create invoice', function () {

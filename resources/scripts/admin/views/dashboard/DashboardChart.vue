@@ -61,6 +61,8 @@
         </div>
 
         <LineChart
+          :debits="dashboardStore.chartData.debitTotals || []"
+          :credits="dashboardStore.chartData.creditTotals || []"
           :invoices="dashboardStore.chartData.invoiceTotals"
           :expenses="dashboardStore.chartData.expenseTotals"
           :receipts="dashboardStore.chartData.receiptTotals"

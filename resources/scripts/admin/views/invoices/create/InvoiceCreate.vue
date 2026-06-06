@@ -304,10 +304,10 @@ const rules = {
     required: helpers.withMessage(t('validation.required'), required),
   },
   exchange_rate: {
-    required: requiredIf(function () {
-      helpers.withMessage(t('validation.required'), required)
-      return invoiceStore.showExchangeRate
-    }),
+    required: helpers.withMessage(
+      t('validation.required'),
+      requiredIf(() => invoiceStore.showExchangeRate && !isTransportReceipt.value)
+    ),
     decimal: helpers.withMessage(t('validation.valid_exchange_rate'), decimal),
   },
 }

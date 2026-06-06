@@ -6,7 +6,7 @@
 
 <script setup>
 import { Chart } from 'chart.js/auto'
-import { ref, reactive, computed, onMounted, watchEffect, inject } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 
 const utils = inject('utils')
@@ -14,33 +14,41 @@ const utils = inject('utils')
 const props = defineProps({
   labels: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
   },
   values: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
+  },
+  debits: {
+    type: Array,
+    default: () => [],
+  },
+  credits: {
+    type: Array,
+    default: () => [],
   },
   invoices: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
   },
   expenses: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
   },
   receipts: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
   },
   income: {
     type: Array,
-    require: true,
-    default: Array,
+    required: true,
+    default: () => [],
   },
 })
 
@@ -51,25 +59,115 @@ const defaultCurrency = computed(() => {
   return companyStore.selectedCompanyCurrency
 })
 
-watchEffect(() => {
-  if (props.labels) {
-    if (myLineChart) {
-      myLineChart.reset()
-      update()
-    }
-  }
+const hasDebitCreditData = computed(() => {
+  return props.debits.length > 0 || props.credits.length > 0
 })
 
-onMounted(() => {
-  let context = graph.value.getContext('2d')
-  let options = reactive({
+const chartType = computed(() => (hasDebitCreditData.value ? 'bar' : 'line'))
+
+function toChartAmounts(values) {
+  return values.map((value) => Number(value || 0) / 100)
+}
+
+function lineDataset(label, data, color, backgroundColor) {
+  return {
+    label,
+    fill: false,
+    tension: 0.3,
+    backgroundColor,
+    borderColor: color,
+    borderCapStyle: 'butt',
+    borderDash: [],
+    borderDashOffset: 0.0,
+    borderJoinStyle: 'miter',
+    pointBorderColor: color,
+    pointBackgroundColor: '#fff',
+    pointBorderWidth: 1,
+    pointHoverRadius: 5,
+    pointHoverBackgroundColor: color,
+    pointHoverBorderColor: 'rgba(220,220,220,1)',
+    pointHoverBorderWidth: 2,
+    pointRadius: 4,
+    pointHitRadius: 10,
+    data,
+  }
+}
+
+function buildMixedDatasets() {
+  return [
+    {
+      label: 'Amount Debited',
+      backgroundColor: 'rgba(239, 68, 68, 0.65)',
+      borderColor: 'rgb(220, 38, 38)',
+      borderWidth: 1,
+      borderRadius: 4,
+      data: toChartAmounts(props.debits),
+      order: 2,
+    },
+    {
+      label: 'Amount Credited',
+      backgroundColor: 'rgba(34, 197, 94, 0.65)',
+      borderColor: 'rgb(22, 163, 74)',
+      borderWidth: 1,
+      borderRadius: 4,
+      data: toChartAmounts(props.credits),
+      order: 2,
+    },
+    {
+      ...lineDataset(
+        'Profit/Loss',
+        toChartAmounts(props.income),
+        'rgba(88, 81, 216, 1)',
+        'rgba(236, 235, 249)'
+      ),
+      type: 'line',
+      order: 1,
+    },
+  ]
+}
+
+function buildDefaultDatasets() {
+  return [
+    lineDataset(
+      'Sales',
+      toChartAmounts(props.invoices),
+      '#040405',
+      'rgba(230, 254, 249)'
+    ),
+    lineDataset(
+      'Receipts',
+      toChartAmounts(props.receipts),
+      'rgb(2, 201, 156)',
+      'rgba(230, 254, 249)'
+    ),
+    lineDataset(
+      'Expenses',
+      toChartAmounts(props.expenses),
+      'rgb(255,0,0)',
+      'rgba(245, 235, 242)'
+    ),
+    lineDataset(
+      'Net Income',
+      toChartAmounts(props.income),
+      'rgba(88, 81, 216, 1)',
+      'rgba(236, 235, 249)'
+    ),
+  ]
+}
+
+function buildDatasets() {
+  return hasDebitCreditData.value ? buildMixedDatasets() : buildDefaultDatasets()
+}
+
+function buildOptions() {
+  return {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       tooltip: {
         enabled: true,
         callbacks: {
-          label: function (context) {
+          label(context) {
             return utils.formatMoney(
               Math.round(context.parsed.y * 100),
               defaultCurrency.value
@@ -78,120 +176,49 @@ onMounted(() => {
         },
       },
       legend: {
-        display: false,
+        display: hasDebitCreditData.value,
       },
     },
-  })
+  }
+}
 
-  let data = reactive({
+watch(
+  () => [
+    props.labels,
+    props.debits,
+    props.credits,
+    props.invoices,
+    props.expenses,
+    props.receipts,
+    props.income,
+  ],
+  () => update(),
+  { deep: true }
+)
+
+onMounted(() => {
+  const context = graph.value.getContext('2d')
+  const data = {
     labels: props.labels,
-    datasets: [
-      {
-        label: 'Sales',
-        fill: false,
-        tension: 0.3,
-        backgroundColor: 'rgba(230, 254, 249)',
-        borderColor: '#040405',
-        borderCapStyle: 'butt',
-        borderDash: [],
-        borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
-        pointBorderColor: '#040405',
-        pointBackgroundColor: '#fff',
-        pointBorderWidth: 1,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#040405',
-        pointHoverBorderColor: 'rgba(220,220,220,1)',
-        pointHoverBorderWidth: 2,
-        pointRadius: 4,
-        pointHitRadius: 10,
-        data: props.invoices.map((invoice) => invoice / 100),
-      },
-      {
-        label: 'Receipts',
-        fill: false,
-        tension: 0.3,
-        backgroundColor: 'rgba(230, 254, 249)',
-        borderColor: 'rgb(2, 201, 156)',
-        borderCapStyle: 'butt',
-        borderDash: [],
-        borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
-        pointBorderColor: 'rgb(2, 201, 156)',
-        pointBackgroundColor: '#fff',
-        pointBorderWidth: 1,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: 'rgb(2, 201, 156)',
-        pointHoverBorderColor: 'rgba(220,220,220,1)',
-        pointHoverBorderWidth: 2,
-        pointRadius: 4,
-        pointHitRadius: 10,
-        data: props.receipts.map((receipt) => receipt / 100),
-      },
-      {
-        label: 'Expenses',
-        fill: false,
-        tension: 0.3,
-        backgroundColor: 'rgba(245, 235, 242)',
-        borderColor: 'rgb(255,0,0)',
-        borderCapStyle: 'butt',
-        borderDash: [],
-        borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
-        pointBorderColor: 'rgb(255,0,0)',
-        pointBackgroundColor: '#fff',
-        pointBorderWidth: 1,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: 'rgb(255,0,0)',
-        pointHoverBorderColor: 'rgba(220,220,220,1)',
-        pointHoverBorderWidth: 2,
-        pointRadius: 4,
-        pointHitRadius: 10,
-        data: props.expenses.map((expense) => expense / 100),
-      },
-      {
-        label: 'Net Income',
-        fill: false,
-        tension: 0.3,
-        backgroundColor: 'rgba(236, 235, 249)',
-        borderColor: 'rgba(88, 81, 216, 1)',
-        borderCapStyle: 'butt',
-        borderDash: [],
-        borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
-        pointBorderColor: 'rgba(88, 81, 216, 1)',
-        pointBackgroundColor: '#fff',
-        pointBorderWidth: 1,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: 'rgba(88, 81, 216, 1)',
-        pointHoverBorderColor: 'rgba(220,220,220,1)',
-        pointHoverBorderWidth: 2,
-        pointRadius: 4,
-        pointHitRadius: 10,
-        data: props.income.map((_i) => _i / 100),
-      },
-    ],
-  })
+    datasets: buildDatasets(),
+  }
 
   myLineChart = new Chart(context, {
-    type: 'line',
+    type: chartType.value,
     data: data,
-    options: options,
+    options: buildOptions(),
   })
 })
 
 function update() {
+  if (!myLineChart) {
+    return
+  }
+
+  myLineChart.config.type = chartType.value
+  myLineChart.options.plugins.legend.display = hasDebitCreditData.value
   myLineChart.data.labels = props.labels
-  myLineChart.data.datasets[0].data = props.invoices.map(
-    (invoice) => invoice / 100
-  )
-  myLineChart.data.datasets[1].data = props.receipts.map(
-    (receipt) => receipt / 100
-  )
-  myLineChart.data.datasets[2].data = props.expenses.map(
-    (expense) => expense / 100
-  )
-  myLineChart.data.datasets[3].data = props.income.map((_i) => _i / 100)
+  myLineChart.data.datasets = buildDatasets()
   myLineChart.update('none')
 }
 </script>

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('lorry_party_profiles', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('company_id')->nullable();
-            $table->unsignedInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('type');
 
             $table->string('code')->nullable();

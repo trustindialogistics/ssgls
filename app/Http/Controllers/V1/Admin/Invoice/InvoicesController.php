@@ -23,16 +23,25 @@ class InvoicesController extends Controller
         $this->authorize('viewAny', Invoice::class);
 
         $limit = $request->input('limit', 10);
+        $with = ['customer', 'media', 'currency'];
+
+        if (in_array($request->input('template_name'), [Invoice::TEMPLATE_LR_RECEIPT, Invoice::TEMPLATE_LORRY_RECEIPT], true)) {
+            $with[] = 'fields.customField';
+        }
 
         $invoices = Invoice::whereCompany()
             ->applyFilters($request->all())
-            ->with(['customer', 'media', 'currency'])
+            ->with($with)
             ->latest()
             ->paginateData($limit);
 
         return InvoiceResource::collection($invoices)
             ->additional(['meta' => [
-                'invoice_total_count' => Invoice::whereCompany()->count(),
+                'invoice_total_count' => Invoice::whereCompany()
+                    ->when($request->filled('template_name'), function ($query) use ($request) {
+                        $query->where('template_name', $request->input('template_name'));
+                    })
+                    ->count(),
             ]]);
     }
 

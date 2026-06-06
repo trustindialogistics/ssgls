@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('transport_invoices', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('company_id')->nullable();
-            $table->unsignedInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
 
             // LR / Bill fields
             $table->string('lr_number')->nullable();
