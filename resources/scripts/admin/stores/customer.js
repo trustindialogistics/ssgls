@@ -25,7 +25,8 @@ export const useCustomerStore = (useWindow = false) => {
       currentCustomer: {
         ...customerStub(),
       },
-      editCustomer: null
+      editCustomer: null,
+      loadedType: null,
     }),
 
     getters: {
@@ -86,6 +87,7 @@ export const useCustomerStore = (useWindow = false) => {
             .then((response) => {
               this.customers = response.data.data
               this.totalCustomers = response.data.meta.customer_total_count
+              this.loadedType = params?.type || 'CUSTOMER'
               resolve(response)
             })
             .catch((err) => {

@@ -49,7 +49,7 @@ class UsersController extends Controller
 
         $user = User::createFromRequest($request);
 
-        return new UserResource($user);
+        return new UserResource($user->load(['companies', 'roles']));
     }
 
     /**
@@ -61,7 +61,7 @@ class UsersController extends Controller
     {
         $this->authorize('view', $user);
 
-        return new UserResource($user);
+        return new UserResource($user->load(['companies', 'roles']));
     }
 
     /**
@@ -76,7 +76,7 @@ class UsersController extends Controller
 
         $user->updateFromRequest($request);
 
-        return new UserResource($user);
+        return new UserResource($user->load(['companies', 'roles']));
     }
 
     /**

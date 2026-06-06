@@ -485,6 +485,7 @@
         ->take(2)
         ->implode('');
     $companyTagline = $invoice->company?->tagline ?: '';
+    $companyTopHeading = $invoice->company?->top_heading ?: 'Subject to Vapi Jurisdiction';
     $companyAddress = trim(strip_tags($company_address)) ? $company_address : '';
     $companyPhone = $invoice->company?->address?->phone;
     $companyEmail = \App\Models\CompanySetting::getSetting('notification_email', $invoice->company_id);
@@ -559,7 +560,7 @@
                     <table class="brand-block">
                         <tr>
                             <td class="company-panel">
-                                <div class="jurisdiction">Subject to Vapi Jurisdiction</div>
+                                <div class="jurisdiction">{{ $companyTopHeading }}</div>
                                 <div class="header-contact">
                                     Mob. {{ $mobile }}<br>
                                     E-mail : {{ $email }}

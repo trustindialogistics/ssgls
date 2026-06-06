@@ -29,6 +29,7 @@ class LorryPartyProfileResource extends JsonResource
             'advice_date' => $this->advice_date,
             'destination_broker_name' => $this->destination_broker_name,
             'destination_broker_address' => $this->destination_broker_address,
+            'bank_account_no' => $this->bank_account_no,
             'created_at' => $this->created_at,
             'formatted_created_at' => optional($this->created_at)->format('d M Y'),
             'customer' => $this->when($this->relationLoaded('customer') && $this->customer, function () {

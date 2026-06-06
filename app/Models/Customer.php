@@ -318,6 +318,15 @@ class Customer extends Authenticatable implements HasMedia
     {
         $filters = collect($filters);
 
+        if ($filters->get('type')) {
+            $types = is_array($filters->get('type'))
+                ? $filters->get('type')
+                : explode(',', $filters->get('type'));
+            $query->whereIn('customers.type', $types);
+        } else {
+            $query->where('customers.type', 'CUSTOMER');
+        }
+
         if ($filters->get('search')) {
             $query->whereSearch($filters->get('search'));
         }

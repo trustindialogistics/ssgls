@@ -137,6 +137,7 @@
       </div>
     </div>
   </div>
+  <LorryPartyProfileModal @saved="handleProfileSaved" />
 </template>
 
 <script setup>
@@ -146,9 +147,12 @@ import { useDebounceFn } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
 import { useLorryPartyProfileStore } from '@/scripts/admin/stores/lorry-party-profile'
+import { useModalStore } from '@/scripts/stores/modal'
+import LorryPartyProfileModal from '@/scripts/admin/components/modal-components/LorryPartyProfileModal.vue'
 
 const invoiceStore = useInvoiceStore()
 const profileStore = useLorryPartyProfileStore()
+const modalStore = useModalStore()
 const router = useRouter()
 
 const selectedProfiles = reactive({
@@ -218,6 +222,7 @@ const fieldMappingsByType = {
     ['Owner Phone No', 'phone'],
     ['Financer Name', 'financer_name'],
     ['Financer Address', 'financer_address'],
+    ['Owner Bank Account No', 'bank_account_no'],
   ],
   DRIVER: [
     ['Driver Name', 'name'],
@@ -228,15 +233,17 @@ const fieldMappingsByType = {
     ['Driver Licence Issued By', 'licence_issued_by'],
     ['Driver RTO', 'rto_address'],
     ['Driver Valid Up To', 'valid_up_to'],
+    ['Driver Bank Account No', 'bank_account_no'],
   ],
   BROKER: [
     ['Broker Name', 'name'],
     ['Broker Address', 'address'],
-    ['Advice No', 'advice_no'],
+    ['Broker Pan No', 'advice_no'],
     ['Advice Date', 'advice_date'],
     ['Destination Broker Name', 'destination_broker_name'],
     ['Destination Broker Address', 'destination_broker_address'],
     ['Broker Phone No', 'phone'],
+    ['Broker Bank Account No', 'bank_account_no'],
   ],
 }
 
@@ -248,7 +255,7 @@ function setField(label, value) {
   const field = invoiceStore.newInvoice.customFields?.find((_field) => _field.label === label)
 
   if (field) {
-    field.value = label === 'Advice No'
+    field.value = label === 'Broker Pan No'
       ? String(value || '').toUpperCase()
       : value || ''
   }
@@ -272,7 +279,19 @@ function ensureProfilesLoaded(profile) {
 
 function openProfileCreate(profile, close) {
   close?.()
-  router.push({ name: createPathByType[profile.type] })
+  profileStore.$patch((state) => {
+    state.current = {
+      type: profile.type,
+      name: '',
+      phone: '',
+      address: '',
+      bank_account_no: '',
+    }
+  })
+  modalStore.openModal({
+    title: `New ${profile.singular}`,
+    componentName: 'LorryPartyProfileModal',
+  })
 }
 
 async function openProfileEdit(profile) {
@@ -286,10 +305,23 @@ async function openProfileEdit(profile) {
     return
   }
 
-  router.push({
-    name: editPathByType[profile.type],
-    params: { id: selectedProfile.id },
+  const response = await profileStore.fetchProfile(selectedProfile.id)
+  if (response.data?.data) {
+    profileStore.$patch((state) => {
+      state.current = response.data.data
+    })
+  }
+
+  modalStore.openModal({
+    title: `Edit ${profile.singular}`,
+    componentName: 'LorryPartyProfileModal',
   })
+}
+
+function handleProfileSaved({ type, profile }) {
+  const key = type.toLowerCase()
+  selectedProfiles[key] = profile
+  fillProfileFields(type, profile)
 }
 
 function selectProfile(profile, option, close) {

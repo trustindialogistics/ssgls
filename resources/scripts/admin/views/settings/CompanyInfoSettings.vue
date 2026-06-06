@@ -32,6 +32,10 @@
           <BaseInput v-model="companyForm.tagline" type="text" />
         </BaseInputGroup>
 
+        <BaseInputGroup :label="$t('settings.company_info.top_heading')">
+          <BaseInput v-model="companyForm.top_heading" type="text" />
+        </BaseInputGroup>
+
         <BaseInputGroup :label="$t('settings.company_info.phone')">
           <BaseInput v-model="companyForm.address.phone" />
         </BaseInputGroup>
@@ -181,6 +185,7 @@ const companyForm = reactive({
   enrollment_no: null,
   pan_no: null,
   tagline: null,
+  top_heading: null,
   billing_branch_name_address: null,
   notification_email:
     companyStore.selectedCompany?.notification_email ||

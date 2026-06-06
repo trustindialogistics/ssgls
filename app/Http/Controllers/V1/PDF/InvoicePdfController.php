@@ -20,12 +20,23 @@ class InvoicePdfController extends Controller
             abort(404);
         }
 
+        $includeDocuments = $request->has('include_documents') || $request->has('documents');
+
         if ($request->has('preview')) {
-            return $invoice->getPDFData();
+            return $invoice->getPDFData(null, $includeDocuments);
+        }
+
+        if ($includeDocuments) {
+            $pdf = $invoice->getPDFData(null, true);
+
+            return response()->make($pdf->stream(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$invoice->invoice_number.'-with-documents.pdf"',
+            ]);
         }
 
         if ($request->has('copy')) {
-            $pdf = $invoice->getPDFData();
+            $pdf = $invoice->getPDFData($request->query('copy'));
 
             return response()->make($pdf->stream(), 200, [
                 'Content-Type' => 'application/pdf',

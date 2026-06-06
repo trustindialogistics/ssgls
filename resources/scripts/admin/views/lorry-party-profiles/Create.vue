@@ -62,6 +62,11 @@
           <BaseInputGrid class="col-span-5 lg:col-span-4">
             <template v-if="type === 'OWNER'">
               <ProfileField
+                v-model="form.bank_account_no"
+                label="Owner Bank Account No."
+                :content-loading="isLoadingExisting"
+              />
+              <ProfileField
                 v-model="form.financer_name"
                 label="Financer Name"
                 :content-loading="isLoadingExisting"
@@ -76,6 +81,11 @@
             </template>
 
             <template v-else-if="type === 'DRIVER'">
+              <ProfileField
+                v-model="form.bank_account_no"
+                label="Driver Bank Account No."
+                :content-loading="isLoadingExisting"
+              />
               <ProfileField
                 v-model="form.place"
                 label="Name of Place"
@@ -114,8 +124,13 @@
 
             <template v-else-if="type === 'BROKER'">
               <ProfileField
+                v-model="form.bank_account_no"
+                label="Broker Bank Account No."
+                :content-loading="isLoadingExisting"
+              />
+              <ProfileField
                 v-model="form.advice_no"
-                label="Advice No."
+                label="Broker Pan No."
                 :content-loading="isLoadingExisting"
               />
               <ProfileField
@@ -214,6 +229,7 @@ const emptyForm = {
   name: '',
   address: '',
   phone: '',
+  bank_account_no: '',
   financer_name: '',
   financer_address: '',
   place: '',

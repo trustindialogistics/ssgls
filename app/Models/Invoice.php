@@ -730,7 +730,7 @@ class Invoice extends Model implements HasMedia
         }
     }
 
-    public function getPDFData(?string $copyType = null)
+    public function getPDFData(?string $copyType = null, bool $includeDocuments = false)
     {
         $taxes = collect();
 
@@ -773,9 +773,11 @@ class Invoice extends Model implements HasMedia
         ];
         $copyLabel = $copyLabels[$copyType ?: request()->query('copy')] ?? '';
 
+        $includeDocs = $includeDocuments || request()->has('include_documents') || request()->has('documents');
+
         view()->share([
             'invoice' => $this,
-            'lorryDocumentCollections' => self::LORRY_DOCUMENT_COLLECTIONS,
+            'lorryDocumentCollections' => $includeDocs ? self::LORRY_DOCUMENT_COLLECTIONS : [],
             'customFields' => $customFields,
             'company_address' => $this->getCompanyAddress(),
             'shipping_address' => $this->getCustomerShippingAddress(),
@@ -1035,7 +1037,7 @@ class Invoice extends Model implements HasMedia
             'Driver Valid Up To' => 'driver_valid_up_to',
             'Broker Name' => 'broker_name',
             'Broker Address' => 'broker_address',
-            'Advice No' => 'advice_no',
+            'Broker Pan No' => 'advice_no',
             'Advice Date' => 'advice_date',
             'Destination Broker Name' => 'destination_broker_name',
             'Destination Broker Address' => 'destination_broker_address',
@@ -1078,6 +1080,9 @@ class Invoice extends Model implements HasMedia
             'Final Prepared By' => 'final_prepared_by',
             'Final Payment Received By' => 'final_payment_received_by',
             'Received No Of Bilties' => 'received_no_bilties',
+            'Owner Bank Account No' => 'owner_bank_account_no',
+            'Driver Bank Account No' => 'driver_bank_account_no',
+            'Broker Bank Account No' => 'broker_bank_account_no',
         ];
 
         foreach ($fieldMap as $label => $attribute) {
@@ -1350,6 +1355,30 @@ class Invoice extends Model implements HasMedia
     private function normalizeTransportLabel(?string $label): string
     {
         return strtolower(preg_replace('/[^a-z0-9]+/i', '', (string) $label));
+    }
+
+    public function getMatchingLorryReceiptInvoiceId(): ?int
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT || empty($this->invoice_number)) {
+            return null;
+        }
+
+        $lorryReceipt = LorryReceipt::query()
+            ->where('company_id', $this->company_id)
+            ->where('received_no_bilties', $this->invoice_number)
+            ->first();
+
+        if (! $lorryReceipt) {
+            return null;
+        }
+
+        $invoice = Invoice::query()
+            ->where('company_id', $this->company_id)
+            ->where('template_name', self::TEMPLATE_LORRY_RECEIPT)
+            ->where('invoice_number', $lorryReceipt->challan_no)
+            ->first();
+
+        return $invoice?->id;
     }
 
     private function numericTransportAmount(mixed $amount): int|float

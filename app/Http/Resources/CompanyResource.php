@@ -24,6 +24,7 @@ class CompanyResource extends JsonResource
             'enrollment_no' => $this->enrollment_no,
             'pan_no' => $this->pan_no,
             'tagline' => $this->tagline,
+            'top_heading' => $this->top_heading,
             'billing_branch_name_address' => $this->billing_branch_name_address,
             'notification_email' => CompanySetting::getSetting('notification_email', $this->id),
             'logo' => $this->logo,

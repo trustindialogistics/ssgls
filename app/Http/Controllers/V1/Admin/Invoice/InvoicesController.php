@@ -63,7 +63,7 @@ class InvoicesController extends Controller
 
         GenerateInvoicePdfJob::dispatch($invoice);
 
-        return new InvoiceResource($invoice->load(['media', 'customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
+        return new InvoiceResource($invoice->load(['media', 'customer.billingAddress', 'customer.shippingAddress', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     /**
@@ -79,7 +79,7 @@ class InvoicesController extends Controller
             abort(404);
         }
 
-        return new InvoiceResource($invoice->load(['media', 'customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
+        return new InvoiceResource($invoice->load(['media', 'customer.billingAddress', 'customer.shippingAddress', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     /**
@@ -100,7 +100,7 @@ class InvoicesController extends Controller
 
         GenerateInvoicePdfJob::dispatch($invoice, true);
 
-        return new InvoiceResource($invoice->load(['media', 'customer', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
+        return new InvoiceResource($invoice->load(['media', 'customer.billingAddress', 'customer.shippingAddress', 'currency', 'items.taxes', 'items.fields.customField', 'fields.customField', 'taxes']));
     }
 
     /**

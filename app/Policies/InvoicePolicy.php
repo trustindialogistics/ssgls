@@ -31,9 +31,9 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function view(User $user, $invoice): bool
+    public function view(User $user, $invoice = null): bool
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('view-invoice', Invoice::class);
         }
 
@@ -63,9 +63,9 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function update(User $user, $invoice): bool
+    public function update(User $user, $invoice = null): bool
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('edit-invoice', Invoice::class);
         }
 
@@ -81,9 +81,9 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function delete(User $user, $invoice): bool
+    public function delete(User $user, $invoice = null): bool
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('delete-invoice', Invoice::class);
         }
 
@@ -99,9 +99,9 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function restore(User $user, $invoice): bool
+    public function restore(User $user, $invoice = null): bool
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('delete-invoice', Invoice::class);
         }
 
@@ -117,9 +117,9 @@ class InvoicePolicy
      *
      * @return mixed
      */
-    public function forceDelete(User $user, $invoice): bool
+    public function forceDelete(User $user, $invoice = null): bool
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('delete-invoice', Invoice::class);
         }
 
@@ -136,9 +136,9 @@ class InvoicePolicy
      * @param  Payment  $payment
      * @return mixed
      */
-    public function send(User $user, $invoice)
+    public function send(User $user, $invoice = null)
     {
-        if ($invoice === Invoice::class) {
+        if ($invoice === null || $invoice === Invoice::class) {
             return BouncerFacade::can('send-invoice', Invoice::class);
         }
 

@@ -51,6 +51,11 @@ class CompanyRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'top_heading' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
             'billing_branch_name_address' => [
                 'nullable',
                 'string',
@@ -80,6 +85,7 @@ class CompanyRequest extends FormRequest
                 'enrollment_no',
                 'pan_no',
                 'tagline',
+                'top_heading',
                 'billing_branch_name_address',
             ])
             ->toArray();

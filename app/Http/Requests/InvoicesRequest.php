@@ -178,8 +178,8 @@ class InvoicesRequest extends FormRequest
         $customer = Customer::find($this->customer_id);
         $currency = $customer?->currency_id ?: ($current_currency ?: $company_currency);
         $lorryReceiptFinalAmount = $this->lorryReceiptFinalAmountPayable();
-        $invoiceTotal = $lorryReceiptFinalAmount ?? (float) $this->total;
-        $invoiceSubTotal = $lorryReceiptFinalAmount ?? (float) $this->sub_total;
+        $invoiceTotal = $lorryReceiptFinalAmount !== null ? $lorryReceiptFinalAmount * 100 : (float) $this->total;
+        $invoiceSubTotal = $lorryReceiptFinalAmount !== null ? $lorryReceiptFinalAmount * 100 : (float) $this->sub_total;
 
         $existingInvoice = $this->route('invoice');
 

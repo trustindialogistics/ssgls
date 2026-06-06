@@ -487,6 +487,7 @@
         ->filter()
         ->values();
     $companyTagline = $invoice->company?->tagline ?: '';
+    $companyTopHeading = $invoice->company?->top_heading ?: 'Subject to Vapi Jurisdiction';
     $companyGstin = $invoiceField(['gstin', 'gst_no']) ?: ($invoice->company?->gstin ?: '');
     $companyEnrollmentNo = $invoice->company?->enrollment_no ?: $invoiceField(['enrollment_no', 'enrollment']);
     $companyTaxIdentityLabel = $companyEnrollmentNo ? 'Enrollment No' : 'GSTIN';
@@ -509,12 +510,14 @@
     if ($billingAddress) {
         $cityState = collect([$billingAddress->city, $billingAddress->state])->filter()->implode(', ');
         $cityStateZip = collect([$cityState, $billingAddress->zip])->filter()->implode(' ');
+        $phone = $billingAddress->phone ?: ($invoice->customer?->phone ?? null);
 
         $partyAddressLines = collect([
             $billingAddress->address_street_1,
             $billingAddress->address_street_2,
             $cityStateZip,
             $billingAddress->country?->name,
+            $phone ? 'Phone: ' . $phone : null,
         ])->filter()->values();
     }
 
@@ -557,7 +560,7 @@
                     <table class="brand-row">
                         <tr>
                             <td class="logo-cell">
-                                <div class="jurisdiction">Subject to Vapi Jurisdiction</div>
+                                <div class="jurisdiction">{{ $companyTopHeading }}</div>
                                 @if ($logo)
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else

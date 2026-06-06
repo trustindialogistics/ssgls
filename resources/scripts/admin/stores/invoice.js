@@ -580,8 +580,12 @@ export const useInvoiceStore = (useWindow = false) => {
 
         if (route.query.customer) {
           let response = await customerStore.fetchCustomer(route.query.customer)
-          this.newInvoice.customer = response.data.data
-          this.newInvoice.customer_id = response.data.data.id
+          if (transportTemplateName === 'lr_receipt') {
+            this.newInvoice.consignor = response.data.data
+          } else {
+            this.newInvoice.customer = response.data.data
+            this.newInvoice.customer_id = response.data.data.id
+          }
         }
 
         let editActions = []

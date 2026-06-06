@@ -93,7 +93,7 @@
                 class="flex justify-center !w-10 !h-10 p-2 mr-5 text-sm text-white bg-gray-200 rounded-full font-base"
               />
               <div class="mt-1">
-                <label class="text-lg font-medium text-gray-900">Consignee</label>
+                <label class="text-lg font-medium text-gray-900">Consignor</label>
               </div>
             </div>
           </PopoverButton>
@@ -205,6 +205,7 @@
       </BaseInputGroup>
 
       <ExchangeRateConverter
+        v-if="!isTransportReceiptTemplate"
         :store="invoiceStore"
         store-prop="newInvoice"
         :v="v"
@@ -226,6 +227,8 @@ import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useCustomerStore } from '@/scripts/admin/stores/customer'
 import { useModalStore } from '@/scripts/stores/modal'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
+import { useRouter } from 'vue-router'
+import { useLorryPartyProfileStore } from '@/scripts/admin/stores/lorry-party-profile'
 
 const props = defineProps({
   v: {
@@ -247,8 +250,10 @@ const companyStore = useCompanyStore()
 const customerStore = useCustomerStore()
 const modalStore = useModalStore()
 const globalStore = useGlobalStore()
+const router = useRouter()
 const selectedConsignor = ref(null)
 const consignorSearch = ref('')
+const isInitialized = ref(false)
 
 const enableTime = computed(() => {
   return (
@@ -270,7 +275,15 @@ const isLorryReceiptTemplate = computed(() => {
 const isTransportReceiptTemplate = computed(() => {
   return isLrReceiptTemplate.value || isLorryReceiptTemplate.value
 })
-const customerLabel = computed(() => isLorryReceiptTemplate.value ? 'Party' : 'Consignor')
+const customerLabel = computed(() => {
+  if (isLorryReceiptTemplate.value) {
+    return 'Party'
+  }
+  if (isLrReceiptTemplate.value) {
+    return 'Consignee'
+  }
+  return 'Consignor'
+})
 const numberLabel = computed(() => isLorryReceiptTemplate.value ? 'Challan No.' : 'Docket No.')
 
 const debounceSearchConsignors = useDebounceFn(() => {
@@ -343,9 +356,26 @@ function partyName(customer) {
   return compact(customer?.name || customer?.display_name)
 }
 
-function syncLorryPartyPaymentFields(customer) {
+async function syncLorryPartyPaymentFields(customer) {
   setInvoiceField('Paid To', partyName(customer))
   setInvoiceField('Final Paid To', partyName(customer))
+
+  if (customer && customer.id) {
+    try {
+      const lorryPartyProfileStore = useLorryPartyProfileStore()
+      const response = await lorryPartyProfileStore.fetchProfiles({
+        customer_id: customer.id,
+        limit: 'all',
+      })
+      const profiles = response.data?.data || []
+      const ownerProfile = profiles.find((p) => p.type === 'OWNER')
+      if (ownerProfile) {
+        setInvoiceField('Owner Bank Account No', ownerProfile.bank_account_no)
+      }
+    } catch (e) {
+      console.error('Failed to sync lorry party bank account no', e)
+    }
+  }
 }
 
 async function selectConsignor(customer, close) {
@@ -369,7 +399,8 @@ function fetchConsignors(search = '') {
 }
 
 function ensureConsignorsLoaded() {
-  if (!customerStore.customers.length) {
+  if (!customerStore.customers.length || customerStore.loadedType !== 'CUSTOMER') {
+    customerStore.customers = []
     fetchConsignors()
   }
 }
@@ -382,7 +413,7 @@ function openCustomerModal(close) {
   modalStore.openModal({
     title: 'Add Customer',
     componentName: 'CustomerModal',
-    variant: 'md',
+    size: 'lg',
   })
 }
 
@@ -396,13 +427,17 @@ async function editConsignor() {
   modalStore.openModal({
     title: 'Edit Customer',
     componentName: 'CustomerModal',
-    variant: 'md',
+    size: 'lg',
   })
 }
 
 watch(
   () => invoiceStore.newInvoice.customer,
   (customer) => {
+    if (props.isEdit && !isInitialized.value) {
+      return
+    }
+
     if (isLrReceiptTemplate.value) {
       syncConsigneeFields(customer)
     }
@@ -417,6 +452,10 @@ watch(
 watch(
   () => invoiceStore.newInvoice.customFields,
   () => {
+    if (props.isEdit && !isInitialized.value) {
+      return
+    }
+
     if (isLrReceiptTemplate.value) {
       syncConsigneeFields(invoiceStore.newInvoice.customer)
       syncConsignorFields(selectedConsignor.value)
@@ -434,6 +473,74 @@ watch(
   (isLr) => {
     if (!isLr) {
       selectedConsignor.value = null
+    }
+  },
+  { immediate: true }
+)
+
+async function initializeConsignorFromCustomFields() {
+  if (!isLrReceiptTemplate.value) {
+    isInitialized.value = true
+    return
+  }
+
+  if (invoiceStore.newInvoice.consignor) {
+    selectedConsignor.value = invoiceStore.newInvoice.consignor
+    isInitialized.value = true
+    return
+  }
+
+  const consignorField = getInvoiceField('Consignor')
+  if (!consignorField || !consignorField.value) {
+    isInitialized.value = true
+    return
+  }
+
+  // Extract the first line of the custom field value (which is the customer name)
+  const lines = consignorField.value.split('\n')
+  const name = lines[0]?.trim()
+
+  if (!name) {
+    isInitialized.value = true
+    return
+  }
+
+  try {
+    const response = await customerStore.fetchCustomers({
+      display_name: name,
+      page: 1,
+    })
+
+    const customer = response.data?.data?.find(
+      (c) => (c.name || c.display_name) === name
+    )
+
+    if (customer) {
+      const fullCustomerRes = await customerStore.fetchCustomer(customer.id)
+      selectedConsignor.value = fullCustomerRes.data.data
+    }
+  } catch (error) {
+    console.error('Failed to initialize consignor customer from custom fields', error)
+  } finally {
+    isInitialized.value = true
+  }
+}
+
+watch(
+  () => props.isLoading,
+  async (loading) => {
+    if (!loading && isLrReceiptTemplate.value) {
+      if (props.isEdit) {
+        await initializeConsignorFromCustomFields()
+      } else {
+        if (invoiceStore.newInvoice.consignor) {
+          selectedConsignor.value = invoiceStore.newInvoice.consignor
+          syncConsignorFields(selectedConsignor.value)
+        }
+        isInitialized.value = true
+      }
+    } else if (!props.isEdit) {
+      isInitialized.value = true
     }
   },
   { immediate: true }

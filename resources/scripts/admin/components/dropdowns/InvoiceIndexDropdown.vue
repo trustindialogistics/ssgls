@@ -47,6 +47,24 @@
       </BaseDropdownItem>
     </router-link>
 
+    <!-- View Lorry Receipt -->
+    <router-link
+      v-if="
+        isLrReceipt &&
+        row.matching_lorry_receipt_invoice_id &&
+        userStore.hasAbilities(abilities.VIEW_INVOICE)
+      "
+      :to="`/admin/lorry-receipts/${row.matching_lorry_receipt_invoice_id}/view`"
+    >
+      <BaseDropdownItem>
+        <BaseIcon
+          name="EyeIcon"
+          class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+        />
+        View Lorry Receipt
+      </BaseDropdownItem>
+    </router-link>
+
     <!-- Send Invoice Mail  -->
     <BaseDropdownItem v-if="canSendInvoice(row)" @click="sendInvoice(row)">
       <BaseIcon
@@ -116,6 +134,19 @@
         class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
       />
       View POD
+    </BaseDropdownItem>
+
+    <!-- View Attached Documents -->
+    <BaseDropdownItem
+      v-slot="{ active }"
+      v-if="isLorryReceipt && hasLorryDocuments"
+      @click="viewAttachedDocuments(row)"
+    >
+      <BaseIcon
+        name="PhotoIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      View Attached Document
     </BaseDropdownItem>
 
     <!--  Delete Invoice  -->
@@ -203,6 +234,9 @@ const isViewRoute = computed(() => ['invoices.view', 'lr-receipts.view', 'lorry-
 const isLrReceipt = computed(() => isLrReceiptRoute.value || props.row?.template_name === 'lr_receipt')
 const isLorryReceipt = computed(() => isLorryReceiptRoute.value || props.row?.template_name === 'lorry_receipt')
 const isTransportReceipt = computed(() => isLrReceipt.value || isLorryReceipt.value)
+const hasLorryDocuments = computed(() => {
+  return props.row?.lorry_documents && Object.values(props.row.lorry_documents).some(doc => doc !== null)
+})
 const receiptTitle = computed(() => isLorryReceipt.value ? 'Lorry Receipt' : 'LR Receipt')
 const sendLabel = computed(() => isTransportReceipt.value ? `Send ${receiptTitle.value}` : t('invoices.send_invoice'))
 const resendLabel = computed(() => isTransportReceipt.value ? `Resend ${receiptTitle.value}` : t('invoices.resend_invoice'))
@@ -345,5 +379,10 @@ function openPodUpload(invoice) {
 
 function viewPod(invoice) {
   window.open(invoice.pod_url, '_blank', 'noopener')
+}
+
+function viewAttachedDocuments(invoice) {
+  let pdfUrl = `${window.location.origin}/invoices/pdf/${invoice.unique_hash}?include_documents=1`
+  window.open(pdfUrl, '_blank', 'noopener')
 }
 </script>

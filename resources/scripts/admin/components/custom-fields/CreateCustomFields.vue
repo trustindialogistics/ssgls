@@ -182,6 +182,7 @@ const lorryFieldSectionDefinitions = [
     labels: [
       'Owner Address',
       'Owner Phone No',
+      'Owner Bank Account No',
       'Financer Name',
       'Financer Address',
       'Driver Address',
@@ -190,12 +191,14 @@ const lorryFieldSectionDefinitions = [
       'Driver Licence Issued By',
       'Driver RTO',
       'Driver Valid Up To',
+      'Driver Bank Account No',
       'Broker Address',
-      'Advice No',
+      'Broker Pan No',
       'Advice Date',
       'Destination Broker Name',
       'Destination Broker Address',
       'Broker Phone No',
+      'Broker Bank Account No',
     ],
   },
   {
@@ -371,11 +374,11 @@ function syncLorryReceiptDerivedFields() {
   setFieldValue('No Of Pages', '1')
   setFieldValue('Driver Place', findField('Driver Address')?.value)
 
-  const adviceNoField = findField('Advice No')
-  const adviceNo = String(adviceNoField?.value || '').toUpperCase()
+  const brokerPanNoField = findField('Broker Pan No')
+  const brokerPanNo = String(brokerPanNoField?.value || '').toUpperCase()
 
-  if (adviceNoField && adviceNoField.value !== adviceNo) {
-    adviceNoField.value = adviceNo
+  if (brokerPanNoField && brokerPanNoField.value !== brokerPanNo) {
+    brokerPanNoField.value = brokerPanNo
   }
 }
 

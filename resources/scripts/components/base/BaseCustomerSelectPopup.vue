@@ -289,76 +289,84 @@
                   border-t border-gray-200
                 "
               >
-                <li
-                  v-for="(customer, index) in customerStore.customers"
-                  :key="index"
-                  href="#"
-                  class="
-                    flex
-                    px-6
-                    py-2
-                    border-b border-gray-200 border-solid
-                    cursor-pointer
-                    hover:cursor-pointer hover:bg-gray-100
-                    focus:outline-hidden focus:bg-gray-100
-                    last:border-b-0
-                  "
-                  @click="selectNewCustomer(customer.id, close)"
+                <div
+                  v-if="isLoadingCustomers"
+                  class="flex justify-center p-5"
                 >
-                  <span
+                  <BaseSpinner class="h-6 w-6 text-primary-500" />
+                </div>
+                <template v-else>
+                  <li
+                    v-for="(customer, index) in customerStore.customers"
+                    :key="index"
+                    href="#"
                     class="
                       flex
-                      items-center
-                      content-center
-                      justify-center
-                      w-10
-                      h-10
-                      mr-4
-                      text-xl
-                      font-semibold
-                      leading-9
-                      text-white
-                      bg-gray-300
-                      rounded-full
-                      avatar
+                      px-6
+                      py-2
+                      border-b border-gray-200 border-solid
+                      cursor-pointer
+                      hover:cursor-pointer hover:bg-gray-100
+                      focus:outline-hidden focus:bg-gray-100
+                      last:border-b-0
                     "
+                    @click="selectNewCustomer(customer.id, close)"
                   >
-                    {{ initGenerator(customer.name) }}
-                  </span>
+                    <span
+                      class="
+                        flex
+                        items-center
+                        content-center
+                        justify-center
+                        w-10
+                        h-10
+                        mr-4
+                        text-xl
+                        font-semibold
+                        leading-9
+                        text-white
+                        bg-gray-300
+                        rounded-full
+                        avatar
+                      "
+                    >
+                      {{ initGenerator(customer.name) }}
+                    </span>
 
-                  <div class="flex flex-col justify-center text-left">
-                    <BaseText
-                      v-if="customer.name"
-                      :text="customer.name"
-                      class="
-                        m-0
-                        text-base
-                        font-normal
-                        leading-tight
-                        cursor-pointer
-                      "
-                    />
-                    <BaseText
-                      v-if="customer.contact_name"
-                      :text="customer.contact_name"
-                      class="
-                        m-0
-                        text-sm
-                        font-medium
-                        text-gray-400
-                        cursor-pointer
-                      "
-                    />
+                    <div class="flex flex-col justify-center text-left">
+                      <BaseText
+                        v-if="customer.name"
+                        :text="customer.name"
+                        class="
+                          m-0
+                          text-base
+                          font-normal
+                          leading-tight
+                          cursor-pointer
+                        "
+                      />
+                      <BaseText
+                        v-if="customer.contact_name"
+                        :text="customer.contact_name"
+                        class="
+                          m-0
+                          text-sm
+                          font-medium
+                          text-gray-400
+                          cursor-pointer
+                        "
+                      />
+                    </div>
+                  </li>
+                  <div
+                    v-if="customerStore.customers.length === 0"
+                    class="flex justify-center p-5 text-gray-400"
+                  >
+                    <label class="text-base text-gray-500 cursor-pointer">
+                      {{ $t('customers.no_customers_found') }}
+                    </label>
                   </div>
-                </li>
-                <div
-                  v-if="customerStore.customers.length === 0"
-                  class="flex justify-center p-5 text-gray-400"
-                >
-                  <label class="text-base text-gray-500 cursor-pointer">
-                    {{ $t('customers.no_customers_found') }}
-                  </label>
-                </div>
+                </template>
               </ul>
             </div>
 
@@ -416,7 +424,7 @@ import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import abilities from '@/scripts/admin/stub/abilities'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import CustomerModal from '@/scripts/admin/components/modal-components/CustomerModal.vue'
 
 const props = defineProps({
@@ -450,9 +458,11 @@ const invoiceStore = useInvoiceStore()
 const recurringInvoiceStore = useRecurringInvoiceStore()
 const userStore = useUserStore()
 const routes = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const search = ref(null)
 const isSearchingCustomer = ref(false)
+const isLoadingCustomers = ref(false)
 
 const selectedCustomer = computed(() => {
   switch (props.type) {
@@ -490,16 +500,23 @@ async function editCustomer() {
   modalStore.openModal({
     title: t('customers.edit_customer'),
     componentName: 'CustomerModal',
+    size: 'lg',
   })
 }
 
 async function fetchInitialCustomers() {
-  await customerStore.fetchCustomers({
+  let params = {
     filter: {},
     orderByField: '',
     orderBy: '',
     customer_id: props.customerId,
-  })
+  }
+
+  if (props.label === 'Party') {
+    params.type = 'OWNER,DRIVER,BROKER'
+  }
+
+  await customerStore.fetchCustomers(params)
 }
 
 async function ensureCustomersLoaded() {
@@ -507,17 +524,17 @@ async function ensureCustomersLoaded() {
     return
   }
 
-  if (props.label === 'Consignee') {
-    search.value = null
-    await fetchInitialCustomers()
+  const expectedType = props.label === 'Party' ? 'OWNER,DRIVER,BROKER' : 'CUSTOMER'
+
+  if (customerStore.customers.length && customerStore.loadedType === expectedType) {
     return
   }
 
-  if (customerStore.customers.length) {
-    return
-  }
-
+  search.value = null
+  customerStore.customers = []
+  isLoadingCustomers.value = true
   await fetchInitialCustomers()
+  isLoadingCustomers.value = false
 }
 
 const debounceSearchCustomer = useDebounceFn(() => {
@@ -532,9 +549,15 @@ async function searchCustomer() {
     page: 1,
   }
 
+  if (props.label === 'Party') {
+    data.type = 'OWNER,DRIVER,BROKER'
+  }
+
   customerStore.$reset()
+  isLoadingCustomers.value = true
   await customerStore.fetchCustomers(data)
   isSearchingCustomer.value = false
+  isLoadingCustomers.value = false
 }
 
 function openCustomerModal(close) {
@@ -545,7 +568,7 @@ function openCustomerModal(close) {
   modalStore.openModal({
     title: t('customers.add_customer'),
     componentName: 'CustomerModal',
-    variant: 'md',
+    size: 'lg',
   })
 }
 

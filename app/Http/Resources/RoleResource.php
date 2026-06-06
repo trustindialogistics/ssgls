@@ -21,6 +21,7 @@ class RoleResource extends JsonResource
             'name' => $this->name,
             'title' => $this->title,
             'level' => $this->level,
+            'scope' => $this->scope,
             'formatted_created_at' => $this->getFormattedAt(),
             'abilities' => AbilityResource::collection($this->getAbilities()),
         ];

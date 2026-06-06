@@ -55,6 +55,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  type: {
+    type: String,
+    default: '',
+  },
 })
 
 const { t } = useI18n()
@@ -75,6 +79,10 @@ const selectedCustomer = computed({
 async function searchCustomers(search) {
   let data = {
     search,
+  }
+
+  if (props.type) {
+    data.type = props.type
   }
 
   if (props.fetchAll) {
@@ -99,6 +107,7 @@ async function addCustomer() {
   modalStore.openModal({
     title: t('customers.add_new_customer'),
     componentName: 'CustomerModal',
+    size: 'lg',
   })
 }
 </script>

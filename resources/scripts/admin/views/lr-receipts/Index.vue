@@ -44,12 +44,13 @@
       :row-on-xl="true"
       @clear="clearFilter"
     >
-      <BaseInputGroup :label="$t('customers.customer', 1)">
+      <BaseInputGroup :label="isLorryReceiptRoute ? 'Party' : $t('customers.customer', 1)">
         <BaseCustomerSelectInput
           v-model="filters.customer_id"
           :placeholder="$t('customers.type_or_click')"
           value-prop="id"
           label="name"
+          :type="isLorryReceiptRoute ? 'OWNER,DRIVER,BROKER' : 'CUSTOMER'"
         />
       </BaseInputGroup>
 

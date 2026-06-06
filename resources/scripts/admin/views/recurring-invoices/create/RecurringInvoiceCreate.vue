@@ -335,6 +335,7 @@ async function editCustomer() {
   modalStore.openModal({
     title: t('customers.edit_customer'),
     componentName: 'CustomerModal',
+    size: 'lg',
   })
 }
 

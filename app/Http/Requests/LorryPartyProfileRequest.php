@@ -33,6 +33,7 @@ class LorryPartyProfileRequest extends FormRequest
             'advice_date' => ['nullable', 'string'],
             'destination_broker_name' => ['nullable', 'string'],
             'destination_broker_address' => ['nullable', 'string'],
+            'bank_account_no' => ['nullable', 'string'],
         ];
     }
 }

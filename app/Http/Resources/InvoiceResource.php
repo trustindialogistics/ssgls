@@ -76,6 +76,7 @@ class InvoiceResource extends JsonResource
             'lorry_receipt_display_net_amount' => $this->template_name === Invoice::TEMPLATE_LORRY_RECEIPT
                 ? ($this->lorryReceiptDisplayNetAmount !== null ? $this->lorryReceiptDisplayNetAmount * 100 : null)
                 : $this->lorryReceiptDisplayNetAmount,
+            'matching_lorry_receipt_invoice_id' => $this->getMatchingLorryReceiptInvoiceId(),
             'formatted_created_at' => $this->formattedCreatedAt,
             'invoice_pdf_url' => $this->invoicePdfUrl,
             'pod_url' => $pod ? url('/reports/invoices/'.$this->id.'/pod') : null,
@@ -98,6 +99,9 @@ class InvoiceResource extends JsonResource
             'customer' => $this->when($this->relationLoaded('customer') && $this->customer, function () {
                 return new CustomerResource($this->customer);
             }),
+            'consignor' => $this->when($this->template_name === Invoice::TEMPLATE_LR_RECEIPT && $this->relationLoaded('fields'), function () {
+                return $this->getConsignorCustomer();
+            }),
             'creator' => $this->whenLoaded('creator', function () {
                 return new UserResource($this->creator);
             }),
@@ -114,6 +118,35 @@ class InvoiceResource extends JsonResource
                 return new CurrencyResource($this->currency);
             }),
         ];
+    }
+
+    private function getConsignorCustomer(): ?CustomerResource
+    {
+        $consignorValue = $this->fieldValue('Consignor');
+        if (! $consignorValue) {
+            return null;
+        }
+
+        $lines = explode("\n", $consignorValue);
+        $name = trim($lines[0] ?? '');
+
+        if (! $name) {
+            return null;
+        }
+
+        $customer = \App\Models\Customer::whereCompany()
+            ->where(function ($query) use ($name) {
+                $query->where('name', $name)
+                    ->orWhere('display_name', $name);
+            })
+            ->with(['billingAddress', 'shippingAddress'])
+            ->first();
+
+        if (! $customer) {
+            return null;
+        }
+
+        return new CustomerResource($customer);
     }
 
     private function displayDueAmount(): int|float|null
