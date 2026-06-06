@@ -115,10 +115,20 @@ function buildMixedDatasets() {
     },
     {
       ...lineDataset(
-        'Profit/Loss',
-        toChartAmounts(props.income),
+        'Consignment Profit/Loss',
+        toChartAmounts(props.invoices),
         'rgba(88, 81, 216, 1)',
         'rgba(236, 235, 249)'
+      ),
+      type: 'line',
+      order: 1,
+    },
+    {
+      ...lineDataset(
+        'True Net Income',
+        toChartAmounts(props.income),
+        'rgba(249, 115, 22, 1)',
+        'rgba(254, 243, 199)'
       ),
       type: 'line',
       order: 1,

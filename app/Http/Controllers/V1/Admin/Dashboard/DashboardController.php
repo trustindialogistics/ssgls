@@ -95,7 +95,7 @@ class DashboardController extends Controller
             );
 
             $receipt_totals[] = $lrReceiptAmounts['profit_loss'];
-            $net_income_totals[] = $lrReceiptAmounts['profit_loss'];
+            $net_income_totals[] = $lrReceiptAmounts['profit_loss'] - $expense_totals[count($expense_totals) - 1];
 
             array_push($months, $hasCustomRange ? $start->translatedFormat('M y') : $start->translatedFormat('M'));
             $monthCounter++;
@@ -107,8 +107,8 @@ class DashboardController extends Controller
         $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
 
         $totalLrReceiptAmounts = $this->lrReceiptAmountsBetween($startDate, $totalEndDate, (int) $company->id);
-        $total_sales = $totalLrReceiptAmounts['profit_loss'];
-        $total_receipts = $total_sales;
+        $total_sales = $totalLrReceiptAmounts['credit'];
+        $total_receipts = $totalLrReceiptAmounts['profit_loss'];
 
         $total_expenses = Expense::whereBetween(
             'expense_date',
