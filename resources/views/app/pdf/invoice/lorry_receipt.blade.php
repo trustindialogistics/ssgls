@@ -279,8 +279,8 @@
     <div class="t c" style="left:289pt; top:68pt; width:55pt;">Challan No.<br><span class="b">{{ $invoice->invoice_number }}</span></div>
     <div class="t c" style="left:352pt; top:62pt; width:39pt;">No. Of<br>Pages<br><span class="b">{{ $v('No Of Pages') }}</span></div>
     <div class="t c" style="left:402pt; top:68pt; width:48pt;">No. Pkgs.<br><span class="b">{{ $v('No Of Packages') }}</span></div>
-    <div class="t c" style="left:462pt; top:57pt; width:54pt;">Actual Wt.<br><span class="b">{{ $v('Actual Weight') }}</span></div>
-    <div class="t c" style="left:462pt; top:91pt; width:54pt;">Charge Wt.<br><span class="b">{{ $v('Charge Weight') }}</span></div>
+    <div class="t c" style="left:462pt; top:58pt; width:54pt; line-height:7.2pt;">Actual Wt.<br><span class="b" style="display:block; font-size:5.6pt; line-height:5.8pt; margin-top:1.2pt;">{{ $v('Actual Weight') }}</span></div>
+    <div class="t c" style="left:462pt; top:92pt; width:54pt; line-height:7.2pt;">Charge Wt.<br><span class="b" style="display:block; font-size:5.6pt; line-height:5.8pt; margin-top:1.2pt;">{{ $v('Charge Weight') }}</span></div>
     <div class="t c" style="left:302pt; top:124pt; width:45pt;">Lorry No.<br><span class="b">{{ $v('Lorry No') }}</span></div><div class="t c" style="left:354pt; top:124pt; width:37pt;">Rate<br><span class="b">{{ $v('Rate') }}</span></div><div class="t c" style="left:464pt; top:124pt; width:48pt;">Dist. Kms.<br><span class="b">{{ $v('Distance Kms') }}</span></div>
 
     <div class="t b" style="left:5pt; top:98pt;">Lorry Hire Contract No.</div><div class="line" style="left:105pt; top:97pt; width:172pt;">{{ $v('Lorry Hire Contract No') }}</div>
@@ -334,9 +334,9 @@
     <div class="e-label" style="left:310pt; top:688pt; width:104pt;">Net Amount payable</div><div class="e-rs" style="left:419pt; top:690pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:690pt; width:58pt;">{{ $netAmountPayable }}</div>
 
     <div class="t" style="left:22pt; top:701pt;">Cash/Cheque No.</div><div class="line" style="left:88pt; top:700pt; width:160pt;">{{ $v(['Cash/Cheque No.', 'Final Cash Cheque No']) }}</div>
-    <div class="t" style="left:250pt; top:701pt;">On</div><div class="line" style="left:263pt; top:700pt; width:143pt;">{{ $v(['Final Cash Cheque On', 'Final Balance Date']) }}</div><div class="t" style="left:408pt; top:701pt;">Bank</div>
+    <div class="t" style="left:250pt; top:701pt;">On</div><div class="line" style="left:263pt; top:700pt; width:72pt;">{{ $v(['Final Cash Cheque On', 'Final Balance Date']) }}</div><div class="t" style="left:340pt; top:701pt;">Bank</div><div class="line" style="left:362pt; top:700pt; width:54pt;">{{ $v('Final Bank') }}</div>
     <div class="t" style="left:22pt; top:715pt;">Rupees</div><div class="line" style="left:53pt; top:714pt; width:363pt;">{{ $finalRupeesOnly }}</div><div class="t" style="left:418pt; top:715pt;">Only</div>
-    <div class="sig-box" style="left:430pt; top:724pt; width:87pt; height:24pt; font-size:5pt; font-weight:bold; line-height:7pt; padding-top:2pt;">FINAL PAYMENT<br>RECD BY ME</div>
+    <div class="sig-box" style="left:438pt; top:724pt; width:80pt; height:24pt; font-size:4.8pt; font-weight:bold; line-height:6.5pt; padding-top:2pt;">FINAL PAYMENT<br>RECD BY ME</div>
 
     <div class="sig" style="left:20pt; top:735pt; width:80pt;"></div><div class="t c" style="left:30pt; top:740pt; width:75pt;">Passed by</div><div class="sig" style="left:157pt; top:735pt; width:105pt;"></div><div class="t c" style="left:172pt; top:740pt; width:80pt;">Certified by</div><div class="sig" style="left:315pt; top:735pt; width:90pt;"></div><div class="t c" style="left:326pt; top:740pt; width:85pt;">Prepared by</div><div class="top" style="top:752pt;"></div>
 
