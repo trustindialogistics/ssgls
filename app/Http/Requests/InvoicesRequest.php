@@ -107,7 +107,7 @@ class InvoicesRequest extends FormRequest
 
         $customer = Customer::find($this->customer_id);
 
-        if ($customer && $companyCurrency) {
+        if ($customer && $companyCurrency && ! in_array($this->input('template_name'), ['lorry_receipt', 'lr_receipt'])) {
             if ((string) $customer->currency_id !== $companyCurrency) {
                 $rules['exchange_rate'] = [
                     'required',
