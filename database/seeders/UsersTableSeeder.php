@@ -18,10 +18,10 @@ class UsersTableSeeder extends Seeder
     public function run(): void
     {
         $user = User::create([
-            'email' => 'admin@invoiceshelf.com',
-            'name' => 'Jane Doe',
+            'email' => 'ssgls2026@gmail.com',
+            'name' => 'SSGLS Admin',
             'role' => 'super admin',
-            'password' => 'invoiceshelf@123',
+            'password' => 'iloveyouprachi',
         ]);
 
         $company = Company::create([

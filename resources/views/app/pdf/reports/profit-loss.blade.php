@@ -193,6 +193,51 @@
                 </td>
             </tr>
         </table>
+
+        <!-- Detailed Lorry Receipt Breakdown -->
+        <p style="margin-top: 40px; font-weight: bold; font-size: 15px; color: #040405; border-bottom: 2px solid #EAF1FB; padding-bottom: 6px;">
+            {{ __('Detailed Breakdown') }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: #F9FBFF; border-bottom: 1px solid #EAF1FB;">
+                    <th style="padding: 8px 10px; text-align: left; font-size: 11px; font-weight: bold; color: #040405; width: 25%;">{{ __('LR No.') }}</th>
+                    <th style="padding: 8px 10px; text-align: right; font-size: 11px; font-weight: bold; color: #040405; width: 25%;">{{ __('Income') }}</th>
+                    <th style="padding: 8px 10px; text-align: right; font-size: 11px; font-weight: bold; color: #040405; width: 25%;">{{ __('Expenses') }}</th>
+                    <th style="padding: 8px 10px; text-align: right; font-size: 11px; font-weight: bold; color: #040405; width: 25%;">{{ __('Net Profit / Loss') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if(count($lrReceipts) > 0)
+                    @foreach ($lrReceipts as $lrReceipt)
+                        @php
+                            $netVal = $lrReceipt->amountCredit - $lrReceipt->amountDebit;
+                            $netColor = $netVal >= 0 ? '#2ec4b6' : '#e71d36'; // Teal for profit, Red for loss
+                        @endphp
+                        <tr style="border-bottom: 1px solid #EAF1FB;">
+                            <td style="padding: 8px 10px; text-align: left; font-size: 11px; color: #595959;">
+                                {{ $lrReceipt->invoice_number }}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: right; font-size: 11px; color: #595959;">
+                                {!! format_money_pdf($lrReceipt->amountCredit, $currency) !!}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: right; font-size: 11px; color: #595959;">
+                                {!! format_money_pdf($lrReceipt->amountDebit, $currency) !!}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: right; font-size: 11px; font-weight: bold; color: {{ $netColor }};">
+                                {!! format_money_pdf($netVal, $currency) !!}
+                            </td>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="4" style="padding: 15px; text-align: center; font-size: 11px; color: #a5acc1;">
+                            {{ __('No records found') }}
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
     </div>
 
     <table class="report-footer">

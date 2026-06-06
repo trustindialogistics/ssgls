@@ -39,7 +39,7 @@ class ProfitLossReportController extends Controller
 
         $totalIncome = 0;
         foreach ($lrReceipts as $lrReceipt) {
-            $totalIncome += ($lrReceipt->amountCredit - ($lrReceipt->amountDebit * 100));
+            $totalIncome += ($lrReceipt->amountCredit - $lrReceipt->amountDebit);
         }
 
         $netProfit = $totalIncome;
@@ -73,6 +73,7 @@ class ProfitLossReportController extends Controller
             'from_date' => $from_date,
             'to_date' => $to_date,
             'currency' => $currency,
+            'lrReceipts' => $lrReceipts,
         ]);
         $pdf = PDF::loadView('app.pdf.reports.profit-loss');
 

@@ -65,9 +65,7 @@ class InvoiceResource extends JsonResource
             'base_tax' => $this->base_tax,
             'base_due_amount' => $this->base_due_amount,
             'currency_id' => $this->currency_id,
-            'amount_debit' => $this->template_name === Invoice::TEMPLATE_LR_RECEIPT
-                ? $this->amountDebit * 100
-                : $this->amountDebit,
+            'amount_debit' => $this->amountDebit,
             'amount_credit' => $this->amountCredit,
             'amount_paid' => $this->amountPaid,
             'lorry_receipt_advance_amount' => $this->template_name === Invoice::TEMPLATE_LORRY_RECEIPT

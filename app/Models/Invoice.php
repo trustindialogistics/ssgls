@@ -207,8 +207,8 @@ class Invoice extends Model implements HasMedia
                     ? $this->numericTransportAmount($lorryReceipt->net_amount_payable)
                     : 0;
 
-                return $this->numericTransportAmount($lorryReceipt->advance_amount)
-                    + $netAmountPayable;
+                return ($this->numericTransportAmount($lorryReceipt->advance_amount)
+                    + $netAmountPayable) * 100;
             });
     }
 

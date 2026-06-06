@@ -115,8 +115,8 @@ class LorryPartyProfilesController extends Controller
     private function syncAssociatedCustomer(LorryPartyProfile $profile, array $payload): void
     {
         $companyId = $payload['company_id'] ?? $profile->company_id;
-        $currencyIdSetting = \App\Models\CompanySetting::getSetting('currency_id', $companyId);
-        $currencyId = $currencyIdSetting ? (int) $currencyIdSetting : 1;
+        $currencyIdSetting = \App\Models\CompanySetting::getSetting('currency', $companyId);
+        $currencyId = $currencyIdSetting ? (int) $currencyIdSetting : 17;
 
         $customerPayload = [
             'company_id' => $companyId,

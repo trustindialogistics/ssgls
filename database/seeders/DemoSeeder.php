@@ -20,10 +20,10 @@ class DemoSeeder extends Seeder
     {
         // Create demo user
         $user = User::factory()->create([
-            'email' => 'demo@invoiceshelf.com',
-            'name' => 'Demo User',
+            'email' => 'ssgls2026@gmail.com',
+            'name' => 'SSGLS Admin',
             'role' => 'super admin',
-            'password' => 'demo',
+            'password' => 'iloveyouprachi',
         ]);
 
         // Create demo company
