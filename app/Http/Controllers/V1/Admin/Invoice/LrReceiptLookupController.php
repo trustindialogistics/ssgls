@@ -62,6 +62,8 @@ class LrReceiptLookupController extends Controller
                 'Destination' => $this->customFieldValue($lrReceipt->fields, 'To'),
                 'Vehicle No' => $this->customFieldValue($lrReceipt->fields, 'Truck No'),
                 'Invoice No' => $item ? $this->customFieldValue($item->fields, 'Invoice No') : null,
+                'Pkg' => $item ? $this->customFieldValue($item->fields, 'No of Articles') : null,
+                'Charged Weight Kgs' => $item ? $this->customFieldValue($item->fields, 'Charged Weight') : null,
             ],
         ]);
     }

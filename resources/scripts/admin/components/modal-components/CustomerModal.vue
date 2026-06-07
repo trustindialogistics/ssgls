@@ -165,6 +165,15 @@
 
           <BaseInputGrid class="col-span-5 lg:col-span-4">
             <BaseInputGroup :label="$t('customers.name')">
+              <template #labelRight>
+                <button
+                  type="button"
+                  class="text-xs text-primary-500 hover:text-primary-600 focus:outline-hidden"
+                  @click="copyDisplayNameToBillingName"
+                >
+                  Copy Display Name
+                </button>
+              </template>
               <BaseInput
                 v-model="customerStore.currentCustomer.billing.name"
                 type="text"
@@ -372,7 +381,17 @@ function copyAddress() {
   customerStore.copyAddress()
 }
 
+function copyDisplayNameToBillingName() {
+  if (customerStore.currentCustomer.billing) {
+    customerStore.currentCustomer.billing.name = customerStore.currentCustomer.name
+  }
+}
+
 async function setInitialData() {
+  if (modalStore.title?.includes('Add')) {
+    customerStore.resetCurrentCustomer()
+  }
+
   if (!customerStore.isEdit) {
     customerStore.currentCustomer.currency_id =
       companyStore.selectedCompanyCurrency.id

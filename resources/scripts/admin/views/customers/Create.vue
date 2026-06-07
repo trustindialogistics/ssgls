@@ -284,6 +284,15 @@
               :label="$t('customers.name')"
               :content-loading="isFetchingInitialData"
             >
+              <template #labelRight>
+                <button
+                  type="button"
+                  class="text-xs text-primary-500 hover:text-primary-600 focus:outline-hidden"
+                  @click="copyDisplayNameToBillingName"
+                >
+                  Copy Display Name
+                </button>
+              </template>
               <BaseInput
                 v-model.trim="customerStore.currentCustomer.billing.name"
                 :content-loading="isFetchingInitialData"
@@ -747,6 +756,12 @@ const v$ = useVuelidate(rules, customerStore, {
 customerStore.resetCurrentCustomer()
 
 customerStore.fetchCustomerInitialSettings(isEdit.value)
+
+function copyDisplayNameToBillingName() {
+  if (customerStore.currentCustomer.billing) {
+    customerStore.currentCustomer.billing.name = customerStore.currentCustomer.name
+  }
+}
 
 async function submitCustomerData() {
   v$.value.$touch()

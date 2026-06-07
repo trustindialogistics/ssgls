@@ -692,6 +692,8 @@ function applyLrReceiptDetails(details) {
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Vehicle No', itemFields['Vehicle No']) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Invoice No', itemFields['Invoice No']) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Consignment Date', details.invoice_date) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Pkg', itemFields.Pkg) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Charged Weight Kgs', itemFields['Charged Weight Kgs']) || itemUpdated
 
   if (itemUpdated) {
     props.store.$patch((state) => {

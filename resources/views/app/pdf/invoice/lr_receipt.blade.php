@@ -551,6 +551,24 @@
         $noOfArticles = '';
     }
     $signaturePath = base_path('resources/static/img/PDF/authorized_signature.jpeg');
+
+    $parseParty = function ($partyText) {
+        $lines = collect(explode("\n", (string) $partyText))
+            ->map(fn($line) => trim($line))
+            ->filter()
+            ->values();
+
+        $name = $lines->first() ?: '';
+        $addressLines = $lines->slice(1)->values()->all();
+
+        return [
+            'name' => $name,
+            'address' => implode("\n", $addressLines),
+        ];
+    };
+
+    $consignorData = $parseParty($consignorName);
+    $consigneeData = $parseParty($consigneeName);
 @endphp
 
     <div class="wrapper">
@@ -582,14 +600,14 @@
                     <table class="party-table">
                         <tr>
                             <td class="party-cell">
-                                <span class="label">Consignor</span> ______________________________
-                                <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
+                                <span class="label">Consignor</span> <span style="font-weight: bold; font-size: 8.5px; padding-left: 5px;">{{ $consignorData['name'] }}</span>
+                                <div class="party-lines party-details">{!! nl2br(e($consignorData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
-                                <span class="label">Consignee</span> ______________________________
-                                <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
+                                <span class="label">Consignee</span> <span style="font-weight: bold; font-size: 8.5px; padding-left: 5px;">{{ $consigneeData['name'] }}</span>
+                                <div class="party-lines party-details">{!! nl2br(e($consigneeData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>
