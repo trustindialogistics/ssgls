@@ -82,6 +82,8 @@ class Invoice extends Model implements HasMedia
         'amountPaid',
         'lorryReceiptAdvanceAmount',
         'lorryReceiptDisplayNetAmount',
+        'formattedAdvanceOn',
+        'formattedFinalBalanceOn',
     ];
 
     protected function casts(): array
@@ -876,6 +878,9 @@ class Invoice extends Model implements HasMedia
     public function addInvoicePayment($amount)
     {
         $this->due_amount += $amount;
+        if ($this->due_amount > $this->total) {
+            $this->due_amount = $this->total;
+        }
         $this->base_due_amount = $this->due_amount * $this->exchange_rate;
 
         $this->changeInvoiceStatus($this->due_amount);
@@ -884,6 +889,9 @@ class Invoice extends Model implements HasMedia
     public function subtractInvoicePayment($amount)
     {
         $this->due_amount -= $amount;
+        if ($this->due_amount < 0) {
+            $this->due_amount = 0;
+        }
         $this->base_due_amount = $this->due_amount * $this->exchange_rate;
 
         $this->changeInvoiceStatus($this->due_amount);
@@ -1188,6 +1196,28 @@ class Invoice extends Model implements HasMedia
             })
             ->latest()
             ->first();
+    }
+
+    public function getFormattedAdvanceOnAttribute(): ?string
+    {
+        $lorryReceipt = $this->matchingLorryReceipt();
+        if (!$lorryReceipt || empty($lorryReceipt->advance_on)) {
+            return null;
+        }
+
+        $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
+        return Carbon::parse($lorryReceipt->advance_on)->translatedFormat($dateFormat);
+    }
+
+    public function getFormattedFinalBalanceOnAttribute(): ?string
+    {
+        $lorryReceipt = $this->matchingLorryReceipt();
+        if (!$lorryReceipt || empty($lorryReceipt->final_balance_on)) {
+            return null;
+        }
+
+        $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
+        return Carbon::parse($lorryReceipt->final_balance_on)->translatedFormat($dateFormat);
     }
 
 

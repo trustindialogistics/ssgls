@@ -239,3 +239,29 @@ test('create payment with partially paid', function () {
         'paid_status' => $response['data']['invoice']['paid_status'],
     ]);
 });
+
+test('deleting a payment with deductions restores invoice due amount up to the invoice total', function () {
+    $invoice = Invoice::factory()->create([
+        'total' => 10000,
+        'due_amount' => 10000,
+        'exchange_rate' => 1,
+    ]);
+
+    $payment = Payment::factory()->create([
+        'invoice_id' => $invoice->id,
+        'amount' => 9500,
+        'tds_amount' => 600,
+        'deduction_amount' => 0,
+        'exchange_rate' => 1,
+    ]);
+
+    $invoice->subtractInvoicePayment($payment->getSettlementAmount());
+
+    expect($invoice->fresh()->due_amount)->toBe(0);
+
+    Payment::deletePayments([$payment->id]);
+
+    $invoice = $invoice->fresh();
+    expect($invoice->due_amount)->toBe(10000);
+    expect($invoice->paid_status)->toBe(Invoice::STATUS_UNPAID);
+});

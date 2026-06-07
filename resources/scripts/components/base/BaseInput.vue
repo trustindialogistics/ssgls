@@ -98,6 +98,7 @@
         inputAddonClass,
         inputInvalidClass,
         inputDisabledClass,
+        autoUppercase && ['text', 'url', 'search'].includes(type) ? 'uppercase' : '',
       ]"
       @input="emitValue"
     />
@@ -212,6 +213,10 @@ const props = defineProps({
   modelModifiers: {
     default: () => ({}),
   },
+  autoUppercase: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const slots = useSlots()
@@ -276,7 +281,13 @@ const computedContainerClass = computed(() => {
 
 function emitValue(e) {
   let val = e.target.value
-  if (props.modelModifiers.uppercase) {
+  if (props.autoUppercase && ['text', 'url', 'search'].includes(props.type)) {
+    const start = e.target.selectionStart
+    const end = e.target.selectionEnd
+    val = val.toUpperCase()
+    e.target.value = val
+    e.target.setSelectionRange(start, end)
+  } else if (props.modelModifiers.uppercase) {
     val = val.toUpperCase()
   }
 

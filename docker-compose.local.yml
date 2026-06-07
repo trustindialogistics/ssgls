@@ -27,7 +27,7 @@ services:
       DOMPDF_ENABLE_REMOTE: "false"
       OFFICIAL_DOCUMENT_ARCHIVE_PATH: "/official-documents"
     volumes:
-      - ./database/database.sqlite:/var/www/html/storage/app/database.sqlite
+      - D:/SSGLS_DATABASE/database.sqlite:/var/www/html/storage/app/database.sqlite
       - ./storage/app/public:/var/www/html/storage/app/public
       - ./storage/app/templates:/var/www/html/storage/app/templates
       - C:/DONOTTOUCH/IMPDOCUMENT:/official-documents

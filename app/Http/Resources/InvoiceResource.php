@@ -74,6 +74,8 @@ class InvoiceResource extends JsonResource
             'lorry_receipt_display_net_amount' => $this->template_name === Invoice::TEMPLATE_LORRY_RECEIPT
                 ? ($this->lorryReceiptDisplayNetAmount !== null ? $this->lorryReceiptDisplayNetAmount * 100 : null)
                 : $this->lorryReceiptDisplayNetAmount,
+            'formatted_advance_on' => $this->formatted_advance_on,
+            'formatted_final_balance_on' => $this->formatted_final_balance_on,
             'matching_lorry_receipt_invoice_id' => $this->getMatchingLorryReceiptInvoiceId(),
             'formatted_created_at' => $this->formattedCreatedAt,
             'invoice_pdf_url' => $this->invoicePdfUrl,

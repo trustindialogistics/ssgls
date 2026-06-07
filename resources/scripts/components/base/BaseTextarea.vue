@@ -12,7 +12,7 @@
     v-bind="$attrs"
     ref="textarea"
     :value="modelValue"
-    :class="[defaultInputClass, inputBorderClass]"
+    :class="[defaultInputClass, inputBorderClass, autoUppercase ? 'uppercase' : '']"
     :disabled="disabled"
     @input="onInput"
   />
@@ -55,6 +55,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  autoUppercase: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const textarea = ref(null)
@@ -83,7 +87,16 @@ const loadingPlaceholderSize = computed(() => {
 const emit = defineEmits(['update:modelValue'])
 
 function onInput(e) {
-  emit('update:modelValue', e.target.value)
+  let val = e.target.value
+  if (props.autoUppercase) {
+    const start = e.target.selectionStart
+    const end = e.target.selectionEnd
+    val = val.toUpperCase()
+    e.target.value = val
+    e.target.setSelectionRange(start, end)
+  }
+
+  emit('update:modelValue', val)
 
   if (props.autosize) {
     e.target.style.height = 'auto'
