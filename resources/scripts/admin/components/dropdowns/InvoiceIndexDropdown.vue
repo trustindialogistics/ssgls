@@ -65,6 +65,18 @@
       </BaseDropdownItem>
     </router-link>
 
+    <!-- Download PDF -->
+    <BaseDropdownItem
+      v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
+      @click="downloadPdf"
+    >
+      <BaseIcon
+        name="ArrowDownTrayIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      {{ downloadLabel }}
+    </BaseDropdownItem>
+
     <!-- Send Invoice Mail  -->
     <BaseDropdownItem v-if="canSendInvoice(row)" @click="sendInvoice(row)">
       <BaseIcon
@@ -242,6 +254,23 @@ const sendLabel = computed(() => isTransportReceipt.value ? `Send ${receiptTitle
 const resendLabel = computed(() => isTransportReceipt.value ? `Resend ${receiptTitle.value}` : t('invoices.resend_invoice'))
 const cloneLabel = computed(() => isTransportReceipt.value ? `Clone ${receiptTitle.value}` : t('invoices.clone_invoice'))
 const deleteMessage = computed(() => isTransportReceipt.value ? `Are you sure you want to delete this ${receiptTitle.value}?` : t('invoices.confirm_delete'))
+
+const downloadLabel = computed(() => {
+  if (isLorryReceipt.value) {
+    return 'Download Lorry Receipt'
+  }
+  if (isLrReceipt.value) {
+    return 'Download LR Receipt'
+  }
+  return 'Download Invoice'
+})
+
+function downloadPdf() {
+  let templateParam = props.row.template_name ? `&template_name=${props.row.template_name}` : ''
+  let copyParam = props.lrCopyType ? `&copy=${props.lrCopyType}` : ''
+  let downloadUrl = `${window.location.origin}/invoices/pdf/${props.row.unique_hash}?download=1${templateParam}${copyParam}`
+  window.open(downloadUrl, '_blank')
+}
 
 function canReSendInvoice(row) {
   return (

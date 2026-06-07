@@ -22,9 +22,11 @@ class EstimatePdfController extends Controller
             return $pdf;
         }
 
+        $disposition = $request->has('download') ? 'attachment' : 'inline';
+
         return response()->make($pdf->stream(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$estimate->estimate_number.'.pdf"',
+            'Content-Disposition' => $disposition.'; filename="'.$estimate->estimate_number.'.pdf"',
         ]);
     }
 }

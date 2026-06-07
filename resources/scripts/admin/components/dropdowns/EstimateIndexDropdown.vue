@@ -62,6 +62,19 @@
       </BaseDropdownItem>
     </router-link>
 
+    <!-- Download Estimate -->
+    <BaseDropdownItem
+      v-slot="{ active }"
+      v-if="userStore.hasAbilities(abilities.VIEW_ESTIMATE)"
+      @click="downloadPdf"
+    >
+      <BaseIcon
+        name="ArrowDownTrayIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      Download Estimate
+    </BaseDropdownItem>
+
     <!-- Clone Estimate into new estimate  -->
     <BaseDropdownItem
       v-if="userStore.hasAbilities(abilities.CREATE_ESTIMATE)"
@@ -345,6 +358,11 @@ function copyPdfUrl() {
     type: 'success',
     message: t('general.copied_pdf_url_clipboard'),
   })
+}
+
+function downloadPdf() {
+  let downloadUrl = `${window.location.origin}/estimates/pdf/${props.row.unique_hash}?download=1`
+  window.open(downloadUrl, '_blank')
 }
 
 async function cloneEstimateData(data) {

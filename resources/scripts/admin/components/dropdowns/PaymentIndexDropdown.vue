@@ -54,6 +54,18 @@
       </BaseDropdownItem>
     </router-link>
 
+    <!-- Download Payment -->
+    <BaseDropdownItem
+      v-if="userStore.hasAbilities(abilities.VIEW_PAYMENT)"
+      @click="downloadPdf"
+    >
+      <BaseIcon
+        name="ArrowDownTrayIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      Download Payment Receipt
+    </BaseDropdownItem>
+
     <!-- Send Estimate  -->
     <BaseDropdownItem
       v-if="
@@ -152,6 +164,11 @@ function copyPdfUrl() {
     type: 'success',
     message: t('general.copied_pdf_url_clipboard'),
   })
+}
+
+function downloadPdf() {
+  let downloadUrl = `${window.location.origin}/payments/pdf/${props.row?.unique_hash}?download=1`
+  window.open(downloadUrl, '_blank')
 }
 
 async function sendPayment(payment) {

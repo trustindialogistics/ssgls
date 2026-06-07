@@ -68,7 +68,7 @@
               />
               <ProfileField
                 v-model="form.financer_name"
-                label="Financer Name"
+                label="Owner PAN No."
                 :content-loading="isLoadingExisting"
               />
               <ProfileField
@@ -131,12 +131,6 @@
               <ProfileField
                 v-model="form.advice_no"
                 label="Broker Pan No."
-                :content-loading="isLoadingExisting"
-              />
-              <ProfileField
-                v-model="form.advice_date"
-                label="Dt."
-                type="date"
                 :content-loading="isLoadingExisting"
               />
               <ProfileField

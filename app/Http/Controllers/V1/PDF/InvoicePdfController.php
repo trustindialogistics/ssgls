@@ -21,6 +21,7 @@ class InvoicePdfController extends Controller
         }
 
         $includeDocuments = $request->has('include_documents') || $request->has('documents');
+        $disposition = $request->has('download') ? 'attachment' : 'inline';
 
         if ($request->has('preview')) {
             return $invoice->getPDFData(null, $includeDocuments);
@@ -31,7 +32,7 @@ class InvoicePdfController extends Controller
 
             return response()->make($pdf->stream(), 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$invoice->invoice_number.'-with-documents.pdf"',
+                'Content-Disposition' => $disposition.'; filename="'.$invoice->invoice_number.'-with-documents.pdf"',
             ]);
         }
 
@@ -40,10 +41,15 @@ class InvoicePdfController extends Controller
 
             return response()->make($pdf->stream(), 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$invoice->invoice_number.'-'.$request->query('copy').'.pdf"',
+                'Content-Disposition' => $disposition.'; filename="'.$invoice->invoice_number.'-'.$request->query('copy').'.pdf"',
             ]);
         }
 
-        return $invoice->getGeneratedPDFOrStream('invoice');
+        $response = $invoice->getGeneratedPDFOrStream('invoice');
+        if ($request->has('download')) {
+            $response->headers->set('Content-Disposition', 'attachment; filename="'.$invoice->invoice_number.'.pdf"');
+        }
+
+        return $response;
     }
 }

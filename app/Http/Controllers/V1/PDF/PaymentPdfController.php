@@ -20,6 +20,11 @@ class PaymentPdfController extends Controller
             return view('app.pdf.payment.payment');
         }
 
-        return $payment->getGeneratedPDFOrStream('payment');
+        $response = $payment->getGeneratedPDFOrStream('payment');
+        if ($request->has('download')) {
+            $response->headers->set('Content-Disposition', 'attachment; filename="'.$payment->payment_number.'.pdf"');
+        }
+
+        return $response;
     }
 }
