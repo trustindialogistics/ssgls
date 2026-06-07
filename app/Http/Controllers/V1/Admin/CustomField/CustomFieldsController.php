@@ -338,7 +338,10 @@ class CustomFieldsController extends Controller
                     ['name' => 'Advance On', 'type' => 'Date', 'default_answer' => '2026-05-17'],
                     ['name' => 'Bank', 'default_answer' => 'ICICI Bank'],
                     ['name' => 'Advance Paid Rs', 'type' => 'Number', 'default_answer' => 1000],
-                    ['name' => 'Balance Payable at', 'default_answer' => 'ICICI'],
+                    ['name' => 'Balance Payable at', 'type' => 'Dropdown', 'options' => [
+                        ['name' => 'VAPI'],
+                        ['name' => 'UMB'],
+                    ]],
                     ['name' => 'Loaded By'],
                     ['name' => 'Final Paid To', 'default_answer' => 'M K Infrastructure'],
                     ['name' => 'Add Detention Rs.', 'type' => 'Number'],
@@ -346,7 +349,10 @@ class CustomFieldsController extends Controller
                     ['name' => 'Other Rs', 'type' => 'Number'],
                     ['name' => 'Less Adv. at other branch', 'type' => 'Number'],
                     ['name' => 'Less Deduction for Claims', 'type' => 'Number'],
-                    ['name' => 'Final Balance Amount Paid at'],
+                    ['name' => 'Final Balance Amount Paid at', 'type' => 'Dropdown', 'options' => [
+                        ['name' => 'VAPI'],
+                        ['name' => 'UMB'],
+                    ]],
                     ['name' => 'Final Balance Date', 'type' => 'Date', 'default_answer' => '2026-05-17'],
                     ['name' => 'Cash/Cheque No.', 'type' => 'Dropdown', 'options' => [
                         ['name' => 'UPI'],

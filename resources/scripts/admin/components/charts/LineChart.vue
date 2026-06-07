@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container h-[300px]">
+  <div class="graph-container h-[320px] w-full">
     <canvas id="graph" ref="graph" />
   </div>
 </template>
@@ -63,130 +63,145 @@ const hasDebitCreditData = computed(() => {
   return props.debits.length > 0 || props.credits.length > 0
 })
 
-const chartType = computed(() => (hasDebitCreditData.value ? 'bar' : 'line'))
-
 function toChartAmounts(values) {
   return values.map((value) => Number(value || 0) / 100)
 }
 
-function lineDataset(label, data, color, backgroundColor) {
+function lineDataset(label, data, color, isDashed = false) {
   return {
     label,
     fill: false,
-    tension: 0.3,
-    backgroundColor,
+    tension: 0.4,
+    backgroundColor: color,
     borderColor: color,
-    borderCapStyle: 'butt',
-    borderDash: [],
-    borderDashOffset: 0.0,
-    borderJoinStyle: 'miter',
+    borderWidth: 3,
+    borderDash: isDashed ? [6, 4] : [],
     pointBorderColor: color,
     pointBackgroundColor: '#fff',
-    pointBorderWidth: 1,
-    pointHoverRadius: 5,
+    pointBorderWidth: 2,
+    pointHoverRadius: 6,
     pointHoverBackgroundColor: color,
-    pointHoverBorderColor: 'rgba(220,220,220,1)',
+    pointHoverBorderColor: '#fff',
     pointHoverBorderWidth: 2,
     pointRadius: 4,
-    pointHitRadius: 10,
+    pointHitRadius: 12,
+    type: 'line',
+    order: 1,
     data,
   }
 }
 
-function buildMixedDatasets() {
-  return [
-    {
-      label: 'Amount Debited',
-      backgroundColor: 'rgba(239, 68, 68, 0.65)',
-      borderColor: 'rgb(220, 38, 38)',
-      borderWidth: 1,
-      borderRadius: 4,
-      data: toChartAmounts(props.debits),
-      order: 2,
-    },
-    {
-      label: 'Amount Credited',
-      backgroundColor: 'rgba(34, 197, 94, 0.65)',
-      borderColor: 'rgb(22, 163, 74)',
-      borderWidth: 1,
-      borderRadius: 4,
-      data: toChartAmounts(props.credits),
-      order: 2,
-    },
-    {
-      ...lineDataset(
-        'Consignment Profit/Loss',
-        toChartAmounts(props.invoices),
-        'rgba(88, 81, 216, 1)',
-        'rgba(236, 235, 249)'
-      ),
-      type: 'line',
-      order: 1,
-    },
-    {
-      ...lineDataset(
-        'True Net Income',
-        toChartAmounts(props.income),
-        'rgba(249, 115, 22, 1)',
-        'rgba(254, 243, 199)'
-      ),
-      type: 'line',
-      order: 1,
-    },
-  ]
-}
-
-function buildDefaultDatasets() {
-  return [
-    lineDataset(
-      'Sales',
-      toChartAmounts(props.invoices),
-      '#040405',
-      'rgba(230, 254, 249)'
-    ),
-    lineDataset(
-      'Receipts',
-      toChartAmounts(props.receipts),
-      'rgb(2, 201, 156)',
-      'rgba(230, 254, 249)'
-    ),
-    lineDataset(
-      'Expenses',
-      toChartAmounts(props.expenses),
-      'rgb(255,0,0)',
-      'rgba(245, 235, 242)'
-    ),
-    lineDataset(
-      'Net Income',
-      toChartAmounts(props.income),
-      'rgba(88, 81, 216, 1)',
-      'rgba(236, 235, 249)'
-    ),
-  ]
+function barDataset(label, data, bgColor, borderColor) {
+  return {
+    label,
+    backgroundColor: bgColor,
+    borderColor: borderColor,
+    borderWidth: 1.5,
+    borderRadius: 6,
+    borderSkipped: false,
+    barPercentage: 0.8,
+    categoryPercentage: 0.6,
+    type: 'bar',
+    order: 2,
+    data,
+  }
 }
 
 function buildDatasets() {
-  return hasDebitCreditData.value ? buildMixedDatasets() : buildDefaultDatasets()
+  return [
+    lineDataset(
+      'Consignment Profit/Loss',
+      toChartAmounts(props.receipts),
+      'rgba(16, 185, 129, 1)' // Emerald Green line
+    ),
+  ]
 }
 
 function buildOptions() {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       tooltip: {
         enabled: true,
+        backgroundColor: '#1f2937', // Dark charcoal tooltip
+        titleColor: '#fff',
+        titleFont: {
+          family: 'Inter, system-ui, sans-serif',
+          weight: 'bold',
+          size: 13,
+        },
+        bodyColor: '#e5e7eb',
+        bodyFont: {
+          family: 'Inter, system-ui, sans-serif',
+          size: 12,
+        },
+        padding: 12,
+        cornerRadius: 8,
+        borderColor: '#374151',
+        borderWidth: 1,
         callbacks: {
           label(context) {
-            return utils.formatMoney(
+            const formatted = utils.formatMoney(
               Math.round(context.parsed.y * 100),
               defaultCurrency.value
             )
+            return `  ${context.dataset.label}: ${formatted}`
           },
         },
       },
       legend: {
-        display: hasDebitCreditData.value,
+        display: true,
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          boxWidth: 8,
+          boxHeight: 8,
+          padding: 20,
+          font: {
+            family: 'Inter, system-ui, sans-serif',
+            size: 12,
+            weight: '500',
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false, // Clean look: no vertical lines
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            family: 'Inter, system-ui, sans-serif',
+            size: 11,
+          },
+        },
+      },
+      y: {
+        grid: {
+          color: '#f3f4f6', // Light gray dashed horizontal lines
+          borderDash: [5, 5],
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            family: 'Inter, system-ui, sans-serif',
+            size: 11,
+          },
+          callback(value) {
+            if (value >= 1000 || value <= -1000) {
+              return (value / 1000).toLocaleString() + 'k'
+            }
+            return value.toLocaleString()
+          },
+        },
       },
     },
   }
@@ -214,7 +229,7 @@ onMounted(() => {
   }
 
   myLineChart = new Chart(context, {
-    type: chartType.value,
+    type: 'bar', // Mixed chart uses 'bar' base type so we can mix lines and bars
     data: data,
     options: buildOptions(),
   })
@@ -225,10 +240,16 @@ function update() {
     return
   }
 
-  myLineChart.config.type = chartType.value
-  myLineChart.options.plugins.legend.display = hasDebitCreditData.value
-  myLineChart.data.labels = props.labels
-  myLineChart.data.datasets = buildDatasets()
-  myLineChart.update('none')
+  myLineChart.destroy()
+
+  const context = graph.value.getContext('2d')
+  myLineChart = new Chart(context, {
+    type: 'bar',
+    data: {
+      labels: props.labels,
+      datasets: buildDatasets(),
+    },
+    options: buildOptions(),
+  })
 }
 </script>

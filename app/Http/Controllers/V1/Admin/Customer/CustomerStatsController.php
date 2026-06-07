@@ -33,59 +33,25 @@ class CustomerStatsController extends Controller
         $netProfits = [];
 
         [$startDate, $endDate] = $this->resolveDateRange($request);
-        $cursor = $startDate->copy()->startOfMonth();
-        $lastMonth = $endDate->copy()->startOfMonth();
 
-        while ($cursor->lessThanOrEqualTo($lastMonth)) {
-            $bucketStart = $cursor->copy()->startOfMonth();
-            $bucketEnd = $cursor->copy()->endOfMonth();
+        // Fetch individual LRs for the trend line
+        $lrReceiptsForChart = Invoice::whereCompany()
+            ->whereCustomer($customer->id)
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->whereBetween('invoice_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->orderBy('invoice_date', 'desc')
+            ->limit(25)
+            ->get()
+            ->reverse()
+            ->values();
 
-            if ($bucketStart->lessThan($startDate)) {
-                $bucketStart = $startDate->copy();
-            }
-
-            if ($bucketEnd->greaterThan($endDate)) {
-                $bucketEnd = $endDate->copy();
-            }
-
-            array_push(
-                $invoiceTotals,
-                Invoice::whereBetween(
-                    'invoice_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereCustomer($customer->id)
-                    ->sum('base_total') ?? 0
-            );
-            array_push(
-                $expenseTotals,
-                Expense::whereBetween(
-                    'expense_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereUser($customer->id)
-                    ->sum('base_amount') ?? 0
-            );
-            array_push(
-                $receiptTotals,
-                Payment::whereBetween(
-                    'payment_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereCustomer($customer->id)
-                    ->sum('base_amount') ?? 0
-            );
-
-            $i = count($receiptTotals) - 1;
-            array_push(
-                $netProfits,
-                ($receiptTotals[$i] - $expenseTotals[$i])
-            );
-            array_push($months, $cursor->translatedFormat('M y'));
-            $cursor->addMonth()->startOfMonth();
+        foreach ($lrReceiptsForChart as $lrReceipt) {
+            $months[] = $lrReceipt->invoice_number;
+            $plr = $lrReceipt->amountCredit - $lrReceipt->amountDebit;
+            $receiptTotals[] = $plr;
+            $invoiceTotals[] = $lrReceipt->amountCredit;
+            $expenseTotals[] = $lrReceipt->amountDebit;
+            $netProfits[] = $plr;
         }
 
         $salesTotal = Invoice::whereBetween(
@@ -94,14 +60,24 @@ class CustomerStatsController extends Controller
         )
             ->whereCompany()
             ->whereCustomer($customer->id)
+            ->whereRegularInvoice()
             ->sum('base_total');
-        $totalReceipts = Payment::whereBetween(
-            'payment_date',
-            [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
-        )
-            ->whereCompany()
+
+        // Consignment Profit/Loss is the sum of profit/loss of all customer's LRs in that date range
+        $chartLrReceipts = Invoice::whereCompany()
             ->whereCustomer($customer->id)
-            ->sum('base_amount');
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->whereBetween('invoice_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+
+        $totalDebit = 0;
+        $totalCredit = 0;
+        foreach ($chartLrReceipts as $lr) {
+            $totalDebit += $lr->amountDebit;
+            $totalCredit += $lr->amountCredit;
+        }
+        $totalReceipts = $totalCredit - $totalDebit;
+
         $totalExpenses = Expense::whereBetween(
             'expense_date',
             [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]
@@ -109,6 +85,7 @@ class CustomerStatsController extends Controller
             ->whereCompany()
             ->whereUser($customer->id)
             ->sum('base_amount');
+
         $netProfit = (int) $totalReceipts - (int) $totalExpenses;
 
         $chartData = [

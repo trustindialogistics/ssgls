@@ -127,7 +127,7 @@
 
     <!-- Options -->
     <div :class="classList.dropdown" tabindex="-1">
-      <div class="w-full overflow-y-auto">
+      <div class="w-full">
         <slot name="beforelist" :options="fo"></slot>
 
         <ul :class="classList.options">
@@ -237,6 +237,7 @@ import useDropdown from './composables/useDropdown'
 import useMultiselect from './composables/useMultiselect'
 import useKeyboard from './composables/useKeyboard'
 import useClasses from './composables/useClasses'
+import { onClickOutside } from '@vueuse/core'
 
 export default {
   name: 'BaseMultiselect',
@@ -580,6 +581,10 @@ export default {
       open: dropdown.open,
       close: dropdown.close,
       clearSearch: search.clearSearch,
+    })
+
+    onClickOutside(multiselect.multiselect, () => {
+      multiselect.deactivate()
     })
 
     const options = useOptions(props, context, {

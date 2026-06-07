@@ -584,14 +584,14 @@
                             <td class="party-cell">
                                 <span class="label">Consignor</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consignorName))) !!}</div>
-                                <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
+                                <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
                                 <span class="label">Consignee</span> ______________________________
                                 <div class="party-lines party-details">{!! nl2br(e($fitPartyText($consigneeName))) !!}</div>
-                                <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
+                                <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
                             </td>
                         </tr>
                     </table>

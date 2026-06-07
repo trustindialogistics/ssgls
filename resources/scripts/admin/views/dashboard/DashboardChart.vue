@@ -98,19 +98,14 @@
         </div>
         <div class="p-6">
           <span class="text-xs leading-5 lg:text-sm">
-            {{ $t('dashboard.chart_info.total_receipts') }}
+            Consignment Profit/Loss
           </span>
           <br />
           <span
-            class="
-              block
-              mt-1
-              text-xl
-              font-semibold
-              leading-8
-              lg:text-2xl
-              text-green-400
-            "
+            :class="[
+              'block mt-1 text-xl font-semibold leading-8 lg:text-2xl',
+              dashboardStore.totalReceipts >= 0 ? 'text-green-500' : 'text-red-500'
+            ]"
           >
             <BaseFormatMoney
               :amount="dashboardStore.totalReceipts"

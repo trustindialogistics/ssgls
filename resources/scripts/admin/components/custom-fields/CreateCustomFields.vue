@@ -258,10 +258,15 @@ const lorryFieldSections = computed(() => {
     .map((section) => {
       const fields = section.labels
         .map((label) => {
-          const field = customFieldsWithIndex.value.find((entry) => entry.field.label === label)
+          const field = customFieldsWithIndex.value.find((entry) => {
+            if (label === 'Balance Payable at') {
+              return entry.field.label === 'Balance Payable at' || entry.field.label === 'Balance Payable At'
+            }
+            return entry.field.label === label
+          })
 
           if (field) {
-            assignedLabels.add(label)
+            assignedLabels.add(field.field.label)
           }
 
           return field
@@ -293,32 +298,50 @@ const lorryFieldSections = computed(() => {
 
 function mergeExistingValues() {
   if (props.isEdit) {
-    props.store[props.storeProp].fields.forEach((field) => {
-      const existingIndex = props.store[props.storeProp].customFields.findIndex(
+    const customFields = props.store[props.storeProp].customFields || []
+    const fields = props.store[props.storeProp].fields || []
+
+    if (customFields.length === 0 || fields.length === 0) {
+      return
+    }
+
+    const updatedFields = [...customFields]
+    let changed = false
+
+    fields.forEach((field) => {
+      const existingIndex = updatedFields.findIndex(
         (f) => f.id === field.custom_field_id
       )
 
       if (existingIndex > -1) {
         let value = field.default_answer
 
-        if (value && field.custom_field.type === 'DateTime') {
+        if (value && field.custom_field?.type === 'DateTime') {
           value = moment(field.default_answer, 'YYYY-MM-DD HH:mm:ss').format(
             'YYYY-MM-DD HH:mm'
           )
         }
 
-        props.store[props.storeProp].customFields[existingIndex] = {
-          ...field,
-          id: field.custom_field_id,
-          value: value,
-          label: field.custom_field.label,
-          options: field.custom_field.options,
-          is_required: field.custom_field.is_required,
-          placeholder: field.custom_field.placeholder,
-          order: field.custom_field.order,
+        if (updatedFields[existingIndex].value !== value || !updatedFields[existingIndex].custom_field_id) {
+          updatedFields[existingIndex] = {
+            ...updatedFields[existingIndex],
+            ...field,
+            id: field.custom_field_id,
+            value: value,
+            label: field.custom_field?.label || updatedFields[existingIndex].label,
+            options: field.custom_field?.options || updatedFields[existingIndex].options,
+            is_required: field.custom_field?.is_required || updatedFields[existingIndex].is_required,
+            placeholder: field.custom_field?.placeholder || updatedFields[existingIndex].placeholder,
+            order: field.custom_field?.order || updatedFields[existingIndex].order,
+          }
+          changed = true
         }
       }
     })
+
+    if (changed) {
+      props.store[props.storeProp].customFields = updatedFields
+    }
   }
 }
 
@@ -422,7 +445,8 @@ watch(
   () => {
     mergeExistingValues()
     syncLorryReceiptDerivedFields()
-  }
+  },
+  { deep: true }
 )
 
 watch(

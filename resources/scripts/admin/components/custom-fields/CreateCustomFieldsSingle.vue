@@ -105,7 +105,14 @@ const isHiddenLorryField = computed(() => {
   )
 })
 
-const isHiddenTransportField = computed(() => isHiddenLrField.value || isHiddenLorryField.value)
+const isHiddenOfficeField = computed(() => {
+  return (
+    props.store[props.storeProp]?.template_name === 'office_invoice' &&
+    props.field.label === 'GST Tax Through'
+  )
+})
+
+const isHiddenTransportField = computed(() => isHiddenLrField.value || isHiddenLorryField.value || isHiddenOfficeField.value)
 
 onMounted(() => {
   if (isHiddenLrField.value && props.field.label === 'Time') {

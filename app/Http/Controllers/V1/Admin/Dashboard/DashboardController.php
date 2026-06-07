@@ -107,7 +107,13 @@ class DashboardController extends Controller
         $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
 
         $totalLrReceiptAmounts = $this->lrReceiptAmountsBetween($startDate, $totalEndDate, (int) $company->id);
-        $total_sales = $totalLrReceiptAmounts['credit'];
+        $total_sales = Invoice::whereBetween(
+            'invoice_date',
+            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
+        )
+            ->whereCompany()
+            ->whereRegularInvoice()
+            ->sum('base_total');
         $total_receipts = $totalLrReceiptAmounts['profit_loss'];
 
         $total_expenses = Expense::whereBetween(

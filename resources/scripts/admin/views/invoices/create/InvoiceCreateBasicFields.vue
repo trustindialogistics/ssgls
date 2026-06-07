@@ -204,6 +204,19 @@
         />
       </BaseInputGroup>
 
+      <BaseInputGroup
+        v-if="gstTaxThroughField"
+        :label="gstTaxThroughField.label"
+        :required="gstTaxThroughField.is_required ? true : false"
+      >
+        <BaseMultiselect
+          v-model="gstTaxThroughField.value"
+          :options="gstTaxThroughField.options"
+          label="name"
+          value-prop="name"
+        />
+      </BaseInputGroup>
+
       <ExchangeRateConverter
         v-if="!isTransportReceiptTemplate"
         :store="invoiceStore"
@@ -285,6 +298,9 @@ const customerLabel = computed(() => {
   return 'Consignor'
 })
 const numberLabel = computed(() => isLorryReceiptTemplate.value ? 'Challan No.' : 'Docket No.')
+const gstTaxThroughField = computed(() => {
+  return getInvoiceField('GST Tax Through')
+})
 
 const debounceSearchConsignors = useDebounceFn(() => {
   fetchConsignors(consignorSearch.value)

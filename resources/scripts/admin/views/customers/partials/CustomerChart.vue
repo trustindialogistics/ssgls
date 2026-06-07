@@ -89,14 +89,14 @@
 
         <div class="px-6 py-2">
           <span class="text-xs leading-5 lg:text-sm">
-            {{ $t('dashboard.chart_info.total_receipts') }}
+            Consignment Profit/Loss
           </span>
           <br />
 
           <span
             v-if="isLoading"
             class="block mt-1 text-xl font-semibold leading-8"
-            style="color: #00c99c"
+            :style="{ color: chartData.totalReceipts >= 0 ? '#00c99c' : '#fb7178' }"
           >
             <BaseFormatMoney
               :amount="chartData.totalReceipts"

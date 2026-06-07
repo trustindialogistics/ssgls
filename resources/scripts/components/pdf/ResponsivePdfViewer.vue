@@ -48,10 +48,10 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker'
 import Ls from '@/scripts/services/ls'
 
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+GlobalWorkerOptions.workerPort = new PdfWorker()
 
 const props = defineProps({
   src: {
