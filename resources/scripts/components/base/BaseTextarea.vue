@@ -12,14 +12,15 @@
     v-bind="$attrs"
     ref="textarea"
     :value="modelValue"
-    :class="[defaultInputClass, inputBorderClass, autoUppercase ? 'uppercase' : '']"
+    :class="[defaultInputClass, inputBorderClass, shouldUppercase ? 'uppercase' : '']"
     :disabled="disabled"
     @input="onInput"
   />
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useAttrs } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   contentLoading: {
@@ -57,8 +58,43 @@ const props = defineProps({
   },
   autoUppercase: {
     type: Boolean,
-    default: true,
+    default: null,
   },
+})
+
+const route = useRoute()
+const attrs = useAttrs()
+
+const shouldUppercase = computed(() => {
+  // 1. Never uppercase email or password fields
+  const nameAttr = String(attrs.name || attrs.id || '').toLowerCase()
+
+  if (nameAttr.includes('email') || nameAttr.includes('password')) {
+    return false
+  }
+
+  // 2. If props.autoUppercase is explicitly set to true or false, respect it
+  if (props.autoUppercase !== null && props.autoUppercase !== undefined) {
+    return props.autoUppercase
+  }
+
+  // 3. Otherwise, determine based on route path
+  if (route && route.path) {
+    const pathLower = route.path.toLowerCase()
+    if (
+      pathLower.includes('invoices') ||
+      pathLower.includes('lr-receipts') ||
+      pathLower.includes('lorry-receipts') ||
+      pathLower.includes('owner-portal') ||
+      pathLower.includes('driver-portal') ||
+      pathLower.includes('broker-portal') ||
+      pathLower.includes('/customer')
+    ) {
+      return true
+    }
+  }
+
+  return false
 })
 
 const textarea = ref(null)
@@ -88,7 +124,7 @@ const emit = defineEmits(['update:modelValue'])
 
 function onInput(e) {
   let val = e.target.value
-  if (props.autoUppercase) {
+  if (shouldUppercase.value) {
     const start = e.target.selectionStart
     const end = e.target.selectionEnd
     val = val.toUpperCase()

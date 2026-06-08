@@ -328,13 +328,13 @@ const customFieldStore = useCustomFieldStore()
 const itemCustomFields = computed(() => props.itemData.customFields || [])
 const lastMatchedLrDetails = ref(null)
 const isOfficeInvoiceTemplate = computed(
-  () => props.store[props.storeProp].template_name === 'office_invoice'
+  () => props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'office_invoice'
 )
 const isLrReceiptTemplate = computed(
-  () => props.store[props.storeProp].template_name === 'lr_receipt'
+  () => props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'lr_receipt'
 )
 const isLorryReceiptTemplate = computed(
-  () => props.store[props.storeProp].template_name === 'lorry_receipt'
+  () => props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'lorry_receipt'
 )
 const isTransportEntryTemplate = computed(
   () => isOfficeInvoiceTemplate.value || isLrReceiptTemplate.value || isLorryReceiptTemplate.value
@@ -863,10 +863,12 @@ async function loadItemCustomFields() {
     return
   }
 
+  const templateName = props.storeProp === 'newRecurringInvoice' ? null : props.store[props.storeProp].template_name
+
   const response = await customFieldStore.fetchCustomFields({
     type: 'Item',
     limit: 'all',
-    template_name: props.store[props.storeProp].template_name,
+    template_name: templateName,
   })
 
   let fields = response.data.data.map((field) => ({

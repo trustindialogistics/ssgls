@@ -70,6 +70,39 @@ class PaymentRequest extends FormRequest
             'notes' => [
                 'nullable',
             ],
+            'allocations' => [
+                'nullable',
+                'array',
+            ],
+            'allocations.*.invoice_id' => [
+                'required_with:allocations',
+                Rule::exists('invoices', 'id')
+                    ->where('company_id', $this->header('company'))
+                    ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE),
+            ],
+            'allocations.*.amount' => [
+                'required_with:allocations',
+                'integer',
+                'min:0',
+            ],
+            'allocations.*.tds_amount' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'allocations.*.deduction_amount' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'allocations.*.invoice_paid_status' => [
+                'nullable',
+                Rule::in([
+                    Invoice::STATUS_UNPAID,
+                    Invoice::STATUS_PARTIALLY_PAID,
+                    Invoice::STATUS_PAID,
+                ]),
+            ],
         ];
 
         if ($this->isMethod('PUT')) {

@@ -15,6 +15,19 @@
     :can-deselect="false"
     class="w-full"
   >
+    <template #singlelabel="{ value }">
+      <div class="absolute left-3.5">
+        <span v-if="value.prefix" class="text-gray-400 font-normal mr-1">[{{ value.prefix }}]</span>
+        <span>{{ value.name }}</span>
+      </div>
+    </template>
+
+    <template #option="{ option }">
+      <div>
+        <span v-if="option.prefix" class="text-gray-450 font-normal mr-1">[{{ option.prefix }}]</span>
+        <span>{{ option.name }}</span>
+      </div>
+    </template>
     <template v-if="showAction" #action>
       <BaseSelectAction
         v-if="userStore.hasAbilities(abilities.CREATE_CUSTOMER)"

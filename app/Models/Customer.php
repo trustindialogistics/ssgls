@@ -278,7 +278,8 @@ class Customer extends Authenticatable implements HasMedia
             $query->where(function ($query) use ($term) {
                 $query->where('name', 'LIKE', '%'.$term.'%')
                     ->orWhere('email', 'LIKE', '%'.$term.'%')
-                    ->orWhere('phone', 'LIKE', '%'.$term.'%');
+                    ->orWhere('phone', 'LIKE', '%'.$term.'%')
+                    ->orWhere('prefix', 'LIKE', '%'.$term.'%');
             });
         }
     }
@@ -345,6 +346,10 @@ class Customer extends Authenticatable implements HasMedia
 
         if ($filters->get('phone')) {
             $query->wherePhone($filters->get('phone'));
+        }
+
+        if ($filters->get('prefix')) {
+            $query->where('customers.prefix', 'LIKE', '%'.$filters->get('prefix').'%');
         }
 
         if ($filters->get('orderByField') || $filters->get('orderBy')) {

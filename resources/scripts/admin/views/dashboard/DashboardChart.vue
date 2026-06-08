@@ -191,11 +191,12 @@ const { t } = useI18n()
 const utils = inject('utils')
 const userStore = useUserStore()
 const years = ref([
+  { label: t('dateRange.this_month'), value: 'This month' },
   { label: t('dateRange.this_year'), value: 'This year' },
   { label: t('dateRange.previous_year'), value: 'Previous year' },
   { label: 'Custom Date', value: 'Custom' },
 ])
-const selectedYear = ref('This year')
+const selectedYear = ref('This month')
 const customRange = reactive({
   from_date: moment().startOf('year').format('YYYY-MM-DD'),
   to_date: moment().format('YYYY-MM-DD'),
@@ -223,6 +224,11 @@ function onChangeYear(data) {
 
   if (value === 'Previous year') {
     loadData({ previous_year: true })
+    return
+  }
+
+  if (value === 'This month') {
+    loadData({ view_type: 'day' })
     return
   }
 

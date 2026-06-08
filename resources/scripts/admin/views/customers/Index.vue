@@ -52,6 +52,15 @@
         />
       </BaseInputGroup>
 
+      <BaseInputGroup label="Customer Code" class="text-left">
+        <BaseInput
+          v-model="filters.prefix"
+          type="text"
+          name="prefix"
+          autocomplete="off"
+        />
+      </BaseInputGroup>
+
       <BaseInputGroup :label="$t('customers.contact_name')" class="text-left">
         <BaseInput
           v-model="filters.contact_name"
@@ -151,7 +160,7 @@
         <template #cell-name="{ row }">
           <router-link :to="{ path: `customers/${row.data.id}/view` }">
             <BaseText
-              :text="row.data.name"
+              :text="row.data.prefix ? `[${row.data.prefix}] ${row.data.name}` : row.data.name"
               tag="span"
               class="font-medium text-primary-500 flex flex-col"
             />
@@ -219,6 +228,7 @@ const { t } = useI18n()
 
 let filters = reactive({
   display_name: '',
+  prefix: '',
   contact_name: '',
   phone: '',
 })
@@ -305,6 +315,7 @@ async function fetchData({ page, filter, sort }) {
     display_name: filters.display_name,
     contact_name: filters.contact_name,
     phone: filters.phone,
+    prefix: filters.prefix,
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
     page,
@@ -326,6 +337,7 @@ async function fetchData({ page, filter, sort }) {
 
 function clearFilter() {
   filters.display_name = ''
+  filters.prefix = ''
   filters.contact_name = ''
   filters.phone = ''
 }

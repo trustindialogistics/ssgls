@@ -19,12 +19,16 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         // Create demo user
-        $user = User::factory()->create([
-            'email' => 'ssgls2026@gmail.com',
-            'name' => 'SSGLS Admin',
-            'role' => 'super admin',
-            'password' => 'iloveyouprachi',
-        ]);
+        $user = User::where('email', 'ssgls2026@gmail.com')->first();
+
+        if (!$user) {
+            $user = User::factory()->create([
+                'email' => 'ssgls2026@gmail.com',
+                'name' => 'SSGLS Admin',
+                'role' => 'super admin',
+                'password' => 'iloveyouprachi',
+            ]);
+        }
 
         // Create demo company
         $company = Company::factory()->create([

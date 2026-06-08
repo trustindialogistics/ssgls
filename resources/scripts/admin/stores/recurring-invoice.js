@@ -426,11 +426,13 @@ export const useRecurringInvoiceStore = (useWindow = false) => {
         ])
           .then(async ([res1, res2, res3, res4, res5]) => {
             if (res3.data) {
-              this.templates = invoiceStore.templates
+              this.templates = invoiceStore.templates.filter(
+                (template) => template.name === 'office_invoice'
+              )
             }
 
             if (!isEdit) {
-              this.setTemplate(this.templates[0].name)
+              this.setTemplate(this.templates[0]?.name || 'office_invoice')
             }
 
             if (isEdit && res5?.data) {
@@ -438,7 +440,7 @@ export const useRecurringInvoiceStore = (useWindow = false) => {
                 ...res5.data.data,
               }
 
-              this.setTemplate(res5?.data?.data?.template_name)
+              this.setTemplate(res5?.data?.data?.template_name || 'office_invoice')
             }
             if (isEdit) {
               this.addSalesTaxUs()

@@ -47,6 +47,7 @@ use App\Http\Controllers\V1\Admin\Invoice\CloneInvoiceController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoiceTemplatesController;
 use App\Http\Controllers\V1\Admin\Invoice\LorryReceiptVehicleLookupController;
+use App\Http\Controllers\V1\Admin\Invoice\LrReceiptAutoFillController;
 use App\Http\Controllers\V1\Admin\Invoice\LrReceiptLookupController;
 use App\Http\Controllers\V1\Admin\Invoice\SendInvoiceController;
 use App\Http\Controllers\V1\Admin\Invoice\SendInvoicePreviewController;
@@ -250,6 +251,8 @@ Route::prefix('/v1')->group(function () {
 
             Route::post('/customers/delete', [CustomersController::class, 'delete']);
 
+            Route::get('/customers/suggest-code', [CustomersController::class, 'suggestCode']);
+
             Route::get('customers/{customer}/stats', CustomerStatsController::class);
 
             Route::resource('customers', CustomersController::class);
@@ -279,6 +282,8 @@ Route::prefix('/v1')->group(function () {
             Route::post('/invoices/delete', [InvoicesController::class, 'delete']);
 
             Route::get('/invoices/lr-receipt-lookup', LrReceiptLookupController::class);
+
+            Route::post('/invoices/auto-fill', LrReceiptAutoFillController::class);
 
             Route::get('/invoices/lorry-receipt-vehicle-lookup', LorryReceiptVehicleLookupController::class);
 

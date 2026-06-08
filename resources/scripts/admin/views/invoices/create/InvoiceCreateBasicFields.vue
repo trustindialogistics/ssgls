@@ -26,10 +26,18 @@
           class="flex flex-col p-4 bg-white border border-gray-200 border-solid min-h-[170px] rounded-md"
         >
           <div class="flex relative justify-between gap-3 mb-2">
-            <BaseText
-              :text="selectedConsignor.name || selectedConsignor.display_name"
-              class="flex-1 text-base font-medium text-left text-gray-900"
-            />
+            <div class="flex-1 flex items-center gap-2">
+              <BaseText
+                :text="selectedConsignor.name || selectedConsignor.display_name"
+                class="text-base font-medium text-left text-gray-900"
+              />
+              <span
+                v-if="selectedConsignor.is_temp"
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800"
+              >
+                New Customer (Auto Fill)
+              </span>
+            </div>
             <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
               <a
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
@@ -62,7 +70,7 @@
                 </label>
               </div>
             </div>
-            <div v-if="selectedConsignor.shipping" class="flex flex-col">
+            <div v-if="selectedConsignor.shipping && !isLrReceiptTemplate" class="flex flex-col">
               <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
                 Ship To
               </label>
@@ -434,6 +442,21 @@ function openCustomerModal(close) {
 }
 
 async function editConsignor() {
+  if (selectedConsignor.value?.is_temp) {
+    customerStore.currentCustomer = JSON.parse(JSON.stringify(selectedConsignor.value))
+    if (!customerStore.currentCustomer.currency_id && companyStore.selectedCompanyCurrency) {
+      customerStore.currentCustomer.currency_id = companyStore.selectedCompanyCurrency.id
+    }
+    customerStore.tempRole = 'consignor'
+    customerStore.isEdit = true
+    modalStore.openModal({
+      title: 'Edit Customer',
+      componentName: 'CustomerModal',
+      size: 'lg',
+    })
+    return
+  }
+
   if (!selectedConsignor.value?.id) {
     return
   }
@@ -492,6 +515,16 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => invoiceStore.newInvoice.consignor,
+  (newConsignor) => {
+    if (isLrReceiptTemplate.value) {
+      selectedConsignor.value = newConsignor
+      syncConsignorFields(newConsignor)
+    }
+  }
 )
 
 async function initializeConsignorFromCustomFields() {

@@ -148,7 +148,8 @@
 </template>
 
 <script setup>
-import { computed, ref, useSlots } from 'vue'
+import { computed, ref, useSlots, useAttrs } from 'vue'
+import { useRoute } from 'vue-router'
 
 let inheritAttrs = ref(false)
 
@@ -215,11 +216,51 @@ const props = defineProps({
   },
   autoUppercase: {
     type: Boolean,
-    default: true,
+    default: null,
   },
 })
 
 const slots = useSlots()
+const route = useRoute()
+const attrs = useAttrs()
+
+const shouldUppercase = computed(() => {
+  // 1. Never uppercase email or password fields
+  const typeLower = String(props.type || '').toLowerCase()
+  const nameAttr = String(attrs.name || attrs.id || '').toLowerCase()
+
+  if (
+    typeLower === 'email' ||
+    typeLower === 'password' ||
+    nameAttr.includes('email') ||
+    nameAttr.includes('password')
+  ) {
+    return false
+  }
+
+  // 2. If props.autoUppercase is explicitly set to true or false, respect it
+  if (props.autoUppercase !== null && props.autoUppercase !== undefined) {
+    return props.autoUppercase
+  }
+
+  // 3. Otherwise, determine based on route path
+  if (route && route.path) {
+    const pathLower = route.path.toLowerCase()
+    if (
+      pathLower.includes('invoices') ||
+      pathLower.includes('lr-receipts') ||
+      pathLower.includes('lorry-receipts') ||
+      pathLower.includes('owner-portal') ||
+      pathLower.includes('driver-portal') ||
+      pathLower.includes('broker-portal') ||
+      pathLower.includes('/customer')
+    ) {
+      return true
+    }
+  }
+
+  return false
+})
 
 const emit = defineEmits(['update:modelValue'])
 
@@ -281,7 +322,7 @@ const computedContainerClass = computed(() => {
 
 function emitValue(e) {
   let val = e.target.value
-  if (props.autoUppercase && ['text', 'url', 'search'].includes(props.type)) {
+  if (shouldUppercase.value && ['text', 'url', 'search'].includes(props.type)) {
     const start = e.target.selectionStart
     const end = e.target.selectionEnd
     val = val.toUpperCase()

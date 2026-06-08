@@ -267,14 +267,14 @@ const taxIncludedField = computed({
 })
 
 const isOfficeInvoiceTemplate = computed(() => {
-  return props.store[props.storeProp].template_name === 'office_invoice'
+  return props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'office_invoice'
 })
 
 const isLrReceiptTemplate = computed(() => {
-  return props.store[props.storeProp].template_name === 'lr_receipt'
+  return props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'lr_receipt'
 })
 const isLorryReceiptTemplate = computed(() => {
-  return props.store[props.storeProp].template_name === 'lorry_receipt'
+  return props.storeProp !== 'newRecurringInvoice' && props.store[props.storeProp].template_name === 'lorry_receipt'
 })
 
 const isTransportEntryTemplate = computed(() => {

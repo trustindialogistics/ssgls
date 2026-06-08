@@ -24,10 +24,18 @@
       @click.stop
     >
       <div class="flex relative justify-between gap-3 mb-2">
-        <BaseText
-          :text="selectedCustomer.name"
-          class="flex-1 text-base font-medium text-left text-gray-900"
-        />
+        <div class="flex-1 flex items-center gap-2">
+          <BaseText
+            :text="selectedCustomer.name"
+            class="text-base font-medium text-left text-gray-900"
+          />
+          <span
+            v-if="selectedCustomer.is_temp"
+            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800"
+          >
+            New Customer (Auto Fill)
+          </span>
+        </div>
         <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
           <a
             class="
@@ -127,7 +135,7 @@
           </div>
         </div>
 
-        <div v-if="selectedCustomer.shipping" class="flex flex-col">
+        <div v-if="selectedCustomer.shipping && !isLrReceipt" class="flex flex-col">
           <label
             class="
               mb-1
@@ -464,6 +472,8 @@ const search = ref(null)
 const isSearchingCustomer = ref(false)
 const isLoadingCustomers = ref(false)
 
+const isLrReceipt = computed(() => routes.path?.includes('/admin/lr-receipts'))
+
 const selectedCustomer = computed(() => {
   switch (props.type) {
     case 'estimate':
@@ -496,6 +506,21 @@ if (props.customerId && props.type === 'estimate') {
 }
 
 async function editCustomer() {
+  if (selectedCustomer.value.is_temp) {
+    customerStore.currentCustomer = JSON.parse(JSON.stringify(selectedCustomer.value))
+    if (!customerStore.currentCustomer.currency_id && companyStore.selectedCompanyCurrency) {
+      customerStore.currentCustomer.currency_id = companyStore.selectedCompanyCurrency.id
+    }
+    customerStore.tempRole = 'consignee'
+    customerStore.isEdit = true
+    modalStore.openModal({
+      title: t('customers.edit_customer'),
+      componentName: 'CustomerModal',
+      size: 'lg',
+    })
+    return
+  }
+
   await customerStore.fetchCustomer(selectedCustomer.value.id)
   modalStore.openModal({
     title: t('customers.edit_customer'),

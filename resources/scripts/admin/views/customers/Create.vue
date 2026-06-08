@@ -145,9 +145,8 @@
             </BaseInputGroup>
             -->
 
-            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
-              :label="$t('customers.prefix')"
+              label="Customer Code"
               :error="
                 v$.currentCustomer.prefix.$error &&
                 v$.currentCustomer.prefix.$errors[0].$message
@@ -158,13 +157,14 @@
                 v-model="customerStore.currentCustomer.prefix"
                 :content-loading="isFetchingInitialData"
                 type="text"
-                name="name"
-                class=""
+                name="prefix"
+                :disabled="!customerStore.currentCustomer.billing || !customerStore.currentCustomer.billing.city"
+                placeholder="Enter city to generate code"
                 :invalid="v$.currentCustomer.prefix.$error"
+                @click="onCodeClick"
                 @input="v$.currentCustomer.prefix.$touch()"
               />
             </BaseInputGroup>
-            -->
 
             <BaseInputGroup
               label="GSTIN No"
@@ -336,7 +336,6 @@
             </BaseInputGroup>
             -->
 
-            <!-- Hidden per simplified customer entry request.
             <BaseInputGroup
               :content-loading="isFetchingInitialData"
               :label="$t('customers.city')"
@@ -348,7 +347,6 @@
                 type="text"
               />
             </BaseInputGroup>
-            -->
 
             <BaseInputGroup
               :label="$t('customers.address')"
@@ -610,6 +608,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import http from '@/scripts/http'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -643,6 +642,20 @@ const router = useRouter()
 const route = useRoute()
 
 let isFetchingInitialData = ref(false)
+
+async function onCodeClick() {
+  const city = customerStore.currentCustomer.billing?.city
+  if (city && !customerStore.currentCustomer.prefix) {
+    try {
+      const response = await http.get(`/api/v1/customers/suggest-code?city=${city}`)
+      if (response.data && response.data.code) {
+        customerStore.currentCustomer.prefix = response.data.code
+      }
+    } catch (e) {
+      console.error('Failed to suggest code', e)
+    }
+  }
+}
 let isShowPassword = ref(false)
 let isShowConfirmPassword = ref(false)
 

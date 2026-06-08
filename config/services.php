@@ -46,4 +46,8 @@ return [
         'region' => env('SES_REGION', 'us-east-1'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
 ];

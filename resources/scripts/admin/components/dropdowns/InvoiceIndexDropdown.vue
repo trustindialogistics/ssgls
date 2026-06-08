@@ -77,6 +77,18 @@
       {{ downloadLabel }}
     </BaseDropdownItem>
 
+    <!-- Download Multi LR -->
+    <BaseDropdownItem
+      v-if="isLrReceipt && userStore.hasAbilities(abilities.VIEW_INVOICE)"
+      @click="downloadMultiPdf"
+    >
+      <BaseIcon
+        name="ArrowDownTrayIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      Download Multi LR
+    </BaseDropdownItem>
+
     <!-- Send Invoice Mail  -->
     <BaseDropdownItem v-if="canSendInvoice(row)" @click="sendInvoice(row)">
       <BaseIcon
@@ -98,7 +110,7 @@
     <!-- Record payment  -->
     <router-link v-if="showPaymentAction" :to="`/admin/payments/${row.id}/create`">
       <BaseDropdownItem
-        v-if="row.status == 'SENT' && !isViewRoute"
+        v-if="['SENT', 'VIEWED'].includes(row.status) && !isViewRoute"
       >
         <BaseIcon
           name="CreditCardIcon"
@@ -269,6 +281,12 @@ function downloadPdf() {
   let templateParam = props.row.template_name ? `&template_name=${props.row.template_name}` : ''
   let copyParam = props.lrCopyType ? `&copy=${props.lrCopyType}` : ''
   let downloadUrl = `${window.location.origin}/invoices/pdf/${props.row.unique_hash}?download=1${templateParam}${copyParam}`
+  window.open(downloadUrl, '_blank')
+}
+
+function downloadMultiPdf() {
+  let templateParam = props.row.template_name ? `&template_name=${props.row.template_name}` : ''
+  let downloadUrl = `${window.location.origin}/invoices/pdf/${props.row.unique_hash}?download=1${templateParam}&copy=multi`
   window.open(downloadUrl, '_blank')
 }
 

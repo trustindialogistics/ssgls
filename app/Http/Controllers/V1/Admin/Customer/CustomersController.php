@@ -24,7 +24,7 @@ class CustomersController extends Controller
 
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $customers = Customer::with('creator')
+        $customers = Customer::with(['creator', 'billingAddress'])
             ->whereCompany()
             ->applyFilters($request->all())
             ->withSum([
@@ -35,9 +35,12 @@ class CustomersController extends Controller
             ], 'due_amount')
             ->paginateData($limit);
 
+        $type = $request->get('type', 'CUSTOMER');
+        $types = is_array($type) ? $type : explode(',', $type);
+
         return CustomerResource::collection($customers)
             ->additional(['meta' => [
-                'customer_total_count' => Customer::whereCompany()->count(),
+                'customer_total_count' => Customer::whereCompany()->whereIn('type', $types)->count(),
             ]]);
     }
 
@@ -105,6 +108,44 @@ class CustomersController extends Controller
 
         return response()->json([
             'success' => true,
+        ]);
+    }
+
+    public function suggestCode(Request $request): JsonResponse
+    {
+        $city = $request->get('city');
+        if (empty($city)) {
+            return response()->json(['code' => '']);
+        }
+
+        $cityName = trim(strtoupper($city));
+
+        $dictionary = [
+            'UMBERGAON' => 'UMB',
+            'UMBARGAON' => 'UMB',
+            'VAPI' => 'VAPI',
+            'SURAT' => 'SURAT',
+            'MUMBAI' => 'MUM',
+            'DAMAN' => 'DAM',
+            'SILVASSA' => 'SIL',
+            'AHMEDABAD' => 'AMD',
+        ];
+
+        if (isset($dictionary[$cityName])) {
+            $abbrev = $dictionary[$cityName];
+        } elseif (strlen($cityName) <= 4) {
+            $abbrev = $cityName;
+        } else {
+            $abbrev = substr($cityName, 0, 3);
+        }
+
+        $count = Customer::whereCompany()->count();
+        $sequence = 101 + $count;
+
+        $suggestedCode = $sequence . $abbrev;
+
+        return response()->json([
+            'code' => $suggestedCode,
         ]);
     }
 }

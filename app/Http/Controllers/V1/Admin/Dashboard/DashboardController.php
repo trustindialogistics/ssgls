@@ -34,77 +34,119 @@ class DashboardController extends Controller
         $receipt_totals = [];
         $net_income_totals = [];
 
-        $months = [];
-        $monthCounter = 0;
-        $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
-        $startDate = Carbon::now();
-        $start = Carbon::now();
-        $end = Carbon::now();
-        $rangeEndDate = null;
-        $terms = explode('-', $fiscalYear);
-        $companyStartMonth = intval($terms[0]);
-        $hasCustomRange = $request->filled(['from_date', 'to_date']);
+        $isDaily = $request->get('view_type') === 'day';
 
-        if ($companyStartMonth <= $start->month) {
-            $startDate->month($companyStartMonth)->startOfMonth();
-            $start->month($companyStartMonth)->startOfMonth();
-            $end->month($companyStartMonth)->endOfMonth();
+        if ($isDaily) {
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
+            $totalEndDate = Carbon::now()->endOfMonth()->endOfDay();
+
+            $start = $startDate->copy();
+
+            while ($start->lte($totalEndDate)) {
+                $bucketStart = $start->copy()->startOfDay();
+                $bucketEnd = $start->copy()->endOfDay();
+
+                $lrReceiptAmounts = $this->lrReceiptAmountsBetween($bucketStart, $bucketEnd, (int) $company->id);
+
+                $debit_totals[] = $lrReceiptAmounts['debit'];
+                $credit_totals[] = $lrReceiptAmounts['credit'];
+                $invoice_totals[] = $lrReceiptAmounts['profit_loss'];
+
+                array_push(
+                    $expense_totals,
+                    Expense::whereBetween(
+                        'expense_date',
+                        [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
+                    )
+                        ->whereCompany()
+                        ->where(function ($query) {
+                            $query->whereNull('invoice_id')
+                                ->orWhereHas('invoice', function ($query) {
+                                    $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+                                });
+                        })
+                        ->sum('base_amount')
+                );
+
+                $receipt_totals[] = $lrReceiptAmounts['profit_loss'];
+                $net_income_totals[] = $lrReceiptAmounts['profit_loss'] - $expense_totals[count($expense_totals) - 1];
+
+                $months[] = $start->format('d');
+                $start->addDay();
+            }
         } else {
-            $startDate->subYear()->month($companyStartMonth)->startOfMonth();
-            $start->subYear()->month($companyStartMonth)->startOfMonth();
-            $end->subYear()->month($companyStartMonth)->endOfMonth();
+            $months = [];
+            $monthCounter = 0;
+            $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
+            $startDate = Carbon::now();
+            $start = Carbon::now();
+            $end = Carbon::now();
+            $rangeEndDate = null;
+            $terms = explode('-', $fiscalYear);
+            $companyStartMonth = intval($terms[0]);
+            $hasCustomRange = $request->filled(['from_date', 'to_date']);
+
+            if ($companyStartMonth <= $start->month) {
+                $startDate->month($companyStartMonth)->startOfMonth();
+                $start->month($companyStartMonth)->startOfMonth();
+                $end->month($companyStartMonth)->endOfMonth();
+            } else {
+                $startDate->subYear()->month($companyStartMonth)->startOfMonth();
+                $start->subYear()->month($companyStartMonth)->startOfMonth();
+                $end->subYear()->month($companyStartMonth)->endOfMonth();
+            }
+
+            if ($request->has('previous_year')) {
+                $startDate->subYear()->startOfMonth();
+                $start->subYear()->startOfMonth();
+                $end->subYear()->endOfMonth();
+            }
+
+            if ($hasCustomRange) {
+                $startDate = Carbon::parse($request->from_date)->startOfDay();
+                $rangeEndDate = Carbon::parse($request->to_date)->endOfDay();
+                $start = $startDate->copy()->startOfMonth();
+                $end = $startDate->copy()->endOfMonth();
+            }
+
+            while ($hasCustomRange ? $start->lte($rangeEndDate) : $monthCounter < 12) {
+                $bucketStart = $hasCustomRange && $start->lt($startDate) ? $startDate->copy() : $start->copy();
+                $bucketEnd = $hasCustomRange && $end->gt($rangeEndDate) ? $rangeEndDate->copy() : $end->copy();
+
+                $lrReceiptAmounts = $this->lrReceiptAmountsBetween($bucketStart, $bucketEnd, (int) $company->id);
+
+                $debit_totals[] = $lrReceiptAmounts['debit'];
+                $credit_totals[] = $lrReceiptAmounts['credit'];
+                $invoice_totals[] = $lrReceiptAmounts['profit_loss'];
+
+                array_push(
+                    $expense_totals,
+                    Expense::whereBetween(
+                        'expense_date',
+                        [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
+                    )
+                        ->whereCompany()
+                        ->where(function ($query) {
+                            $query->whereNull('invoice_id')
+                                ->orWhereHas('invoice', function ($query) {
+                                    $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+                                });
+                        })
+                        ->sum('base_amount')
+                );
+
+                $receipt_totals[] = $lrReceiptAmounts['profit_loss'];
+                $net_income_totals[] = $lrReceiptAmounts['profit_loss'] - $expense_totals[count($expense_totals) - 1];
+
+                array_push($months, $hasCustomRange ? $start->translatedFormat('M y') : $start->translatedFormat('M'));
+                $monthCounter++;
+                $end->startOfMonth();
+                $start->addMonth()->startOfMonth();
+                $end->addMonth()->endOfMonth();
+            }
+
+            $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
         }
-
-        if ($request->has('previous_year')) {
-            $startDate->subYear()->startOfMonth();
-            $start->subYear()->startOfMonth();
-            $end->subYear()->endOfMonth();
-        }
-
-        if ($hasCustomRange) {
-            $startDate = Carbon::parse($request->from_date)->startOfDay();
-            $rangeEndDate = Carbon::parse($request->to_date)->endOfDay();
-            $start = $startDate->copy()->startOfMonth();
-            $end = $startDate->copy()->endOfMonth();
-        }
-
-        while ($hasCustomRange ? $start->lte($rangeEndDate) : $monthCounter < 12) {
-            $bucketStart = $hasCustomRange && $start->lt($startDate) ? $startDate->copy() : $start->copy();
-            $bucketEnd = $hasCustomRange && $end->gt($rangeEndDate) ? $rangeEndDate->copy() : $end->copy();
-
-            $lrReceiptAmounts = $this->lrReceiptAmountsBetween($bucketStart, $bucketEnd, (int) $company->id);
-
-            $debit_totals[] = $lrReceiptAmounts['debit'];
-            $credit_totals[] = $lrReceiptAmounts['credit'];
-            $invoice_totals[] = $lrReceiptAmounts['profit_loss'];
-
-            array_push(
-                $expense_totals,
-                Expense::whereBetween(
-                    'expense_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->where(function ($query) {
-                        $query->whereNull('invoice_id')
-                            ->orWhereHas('invoice', function ($query) {
-                                $query->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
-                            });
-                    })
-                    ->sum('base_amount')
-            );
-
-            $receipt_totals[] = $lrReceiptAmounts['profit_loss'];
-            $net_income_totals[] = $lrReceiptAmounts['profit_loss'] - $expense_totals[count($expense_totals) - 1];
-
-            array_push($months, $hasCustomRange ? $start->translatedFormat('M y') : $start->translatedFormat('M'));
-            $monthCounter++;
-            $end->startOfMonth();
-            $start->addMonth()->startOfMonth();
-            $end->addMonth()->endOfMonth();
-        }
-
-        $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
 
         $totalLrReceiptAmounts = $this->lrReceiptAmountsBetween($startDate, $totalEndDate, (int) $company->id);
         $total_sales = Invoice::whereBetween(
@@ -135,7 +177,9 @@ class DashboardController extends Controller
             'net_income_totals' => $net_income_totals,
         ];
 
-        $total_customer_count = Customer::whereCompany()->count();
+        $total_customer_count = Customer::whereCompany()
+            ->where('type', 'CUSTOMER')
+            ->count();
         $total_invoice_count = Invoice::whereCompany()
             ->whereRegularInvoice()
             ->count();

@@ -569,9 +569,50 @@
 
     $consignorData = $parseParty($consignorName);
     $consigneeData = $parseParty($consigneeName);
+
+    $isMulti = request()->has('multi') || request()->query('copy') === 'multi';
+
+    if ($isMulti) {
+        $renderCopies = [
+            [
+                'key' => 'consignee',
+                'label' => 'CONSIGNEE COPY',
+                'bg' => '#ffffff',
+            ],
+            [
+                'key' => 'driver',
+                'label' => 'DRIVER COPY',
+                'bg' => '#eafaf1',
+            ],
+            [
+                'key' => 'consignor',
+                'label' => 'CONSIGNOR COPY',
+                'bg' => '#fdf2f8',
+            ]
+        ];
+    } else {
+        $currentCopy = request()->query('copy');
+        $bg = '#ffffff';
+        if ($currentCopy === 'driver') {
+            $bg = '#eafaf1';
+        } elseif ($currentCopy === 'consignor') {
+            $bg = '#fdf2f8';
+        } elseif ($currentCopy === 'ho') {
+            $bg = '#fefde7';
+        }
+
+        $renderCopies = [
+            [
+                'key' => $currentCopy ?: 'default',
+                'label' => $copyLabel ?: '',
+                'bg' => $bg,
+            ]
+        ];
+    }
 @endphp
 
-    <div class="wrapper">
+@foreach ($renderCopies as $index => $copy)
+    <div class="wrapper" style="background-color: {{ $copy['bg'] }}; @if(!$loop->last) page-break-after: always; margin-bottom: 20px; @endif">
         <table>
             <tr>
                 <td class="header-left">
@@ -678,11 +719,21 @@
 
                 <td class="header-right">
                     <div class="copy-label-box">
-                        ORIGINAL WHITE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNEE COPY<br>
-                        DUPLICATE GREEN&nbsp;&nbsp;&nbsp;: DRIVER COPY<br>
-                        TRIPLICATE PINK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNOR COPY<br>
-                        YELLOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: H. O COPY<br>
-                        DUPLICATE WHITE&nbsp;&nbsp;&nbsp;: FILE COPY
+                        @php
+                            $hasActiveCopy = in_array($copy['key'], ['consignee', 'driver', 'consignor', 'ho', 'file'], true);
+                            $isCopy = fn($name) => $copy['key'] === $name;
+                            $styleLine = function($name) use ($hasActiveCopy, $isCopy) {
+                                if (! $hasActiveCopy) {
+                                    return '';
+                                }
+                                return $isCopy($name) ? 'font-weight: bold; text-decoration: underline;' : 'color: #777; font-size: 8px;';
+                            };
+                        @endphp
+                        <span style="{{ $styleLine('consignee') }}">ORIGINAL WHITE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNEE COPY</span><br>
+                        <span style="{{ $styleLine('driver') }}">DUPLICATE GREEN&nbsp;&nbsp;&nbsp;: DRIVER COPY</span><br>
+                        <span style="{{ $styleLine('consignor') }}">TRIPLICATE PINK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNOR COPY</span><br>
+                        <span style="{{ $styleLine('ho') }}">YELLOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: H. O COPY</span><br>
+                        <span style="{{ $styleLine('file') }}">DUPLICATE WHITE&nbsp;&nbsp;&nbsp;: FILE COPY</span>
                     </div>
                     <table class="top-detail-table">
                         <tr>
@@ -768,6 +819,7 @@
             </tr>
         </table>
     </div>
+@endforeach
 </body>
 
 </html>

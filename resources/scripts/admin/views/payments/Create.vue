@@ -95,6 +95,7 @@
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="isEdit || invoiceList.length === 0"
             :content-loading="isLoadingContent"
             :label="$t('payments.invoice')"
             :help-text="
@@ -148,12 +149,14 @@
                 :currency="paymentStore.currentPayment.currency"
                 :content-loading="isLoadingContent"
                 :invalid="v$.currentPayment.amount.$error"
+                :disabled="!isEdit && invoiceList.length > 0"
                 @update:modelValue="v$.currentPayment.amount.$touch()"
               />
             </div>
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="isEdit || invoiceList.length === 0"
             label="TDS Amount"
             :content-loading="isLoadingContent"
           >
@@ -165,6 +168,7 @@
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="isEdit || invoiceList.length === 0"
             label="Deduction Amount"
             :content-loading="isLoadingContent"
           >
@@ -176,6 +180,7 @@
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="isEdit || invoiceList.length === 0"
             label="Invoice Paid Status"
             :content-loading="isLoadingContent"
           >
@@ -237,6 +242,116 @@
           :custom-field-scope="paymentValidationScope"
           class="mt-6"
         />
+
+        <!-- Bulk Invoice Allocation Table -->
+        <div v-if="!isEdit && invoiceList.length > 0" class="mt-8">
+          <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+              Invoice Allocations
+            </h3>
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium text-gray-750">Total Amount Received:</label>
+              <div class="w-44">
+                <BaseMoney
+                  v-model="totalAmountReceived"
+                  :currency="paymentStore.currentPayment.currency"
+                  placeholder="Enter total amount"
+                  @update:modelValue="onTotalAmountReceivedChange"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="w-12 px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      :checked="isAllSelected"
+                      @change="toggleSelectAllInvoices"
+                      class="rounded text-primary-600 focus:ring-primary-500 h-4 w-4 border-gray-300 cursor-pointer"
+                    />
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Invoice
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Due Amount
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+                    Amount to Pay
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">
+                    TDS Amount
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">
+                    Deductions
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+                    Paid Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="invoice in invoiceList" :key="invoice.id" :class="{'bg-primary-50/10': invoice.selected}">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      v-model="invoice.selected"
+                      @change="toggleInvoiceSelection(invoice)"
+                      class="rounded text-primary-600 focus:ring-primary-500 h-4 w-4 border-gray-300 cursor-pointer"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">
+                      {{ invoice.invoice_number }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ invoice.formattedInvoiceDate }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ utils.formatMoney(invoice.due_amount, paymentStore.currentPayment.currency) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <BaseMoney
+                      v-model="invoice.amount_to_pay"
+                      :currency="paymentStore.currentPayment.currency"
+                      @update:modelValue="onAmountToPayChange(invoice)"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <BaseMoney
+                      v-model="invoice.tds_amount"
+                      :currency="paymentStore.currentPayment.currency"
+                      @update:modelValue="onAllocationChange"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <BaseMoney
+                      v-model="invoice.deduction_amount"
+                      :currency="paymentStore.currentPayment.currency"
+                      @update:modelValue="onAllocationChange"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <BaseMultiselect
+                      v-model="invoice.invoice_paid_status"
+                      :options="invoicePaidStatusOptions"
+                      label="label"
+                      value-prop="value"
+                      track-by="value"
+                      :disabled="!((invoice.tds_amount || 0) > 0 || (invoice.deduction_amount || 0) > 0)"
+                      placeholder="Status"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <!-- Payment Note field -->
         <div class="relative mt-6">
@@ -344,6 +459,21 @@ let isLoadingInvoices = ref(false)
 let invoiceList = ref([])
 const selectedInvoice = ref(null)
 const lastLoadedCustomerId = ref(null)
+const totalAmountReceived = ref(0)
+
+const isAllSelected = computed(() => {
+  return invoiceList.value.length > 0 && invoiceList.value.every((inv) => inv.selected)
+})
+
+const computedMaxPayableAmount = computed(() => {
+  if (!isEdit.value && invoiceList.value.length > 0) {
+    const selectedInvoices = invoiceList.value.filter(inv => inv.selected)
+    if (selectedInvoices.length > 0) {
+      return selectedInvoices.reduce((sum, inv) => sum + inv.due_amount, 0)
+    }
+  }
+  return paymentStore.currentPayment.maxPayableAmount
+})
 
 const paymentValidationScope = 'newEstimate'
 
@@ -413,7 +543,7 @@ const rules = computed(() => {
         required: helpers.withMessage(t('validation.required'), required),
         between: helpers.withMessage(
           t('validation.payment_greater_than_due_amount'),
-          between(0, paymentStore.currentPayment.maxPayableAmount)
+          between(0, computedMaxPayableAmount.value)
         ),
       },
       exchange_rate: {
@@ -528,7 +658,14 @@ function onCustomerChange(customer_id) {
     ])
       .then(async ([res1, res2]) => {
         if (res1) {
-          invoiceList.value = [...res1.data.data]
+          invoiceList.value = res1.data.data.map((inv) => ({
+            ...inv,
+            selected: false,
+            amount_to_pay: 0,
+            tds_amount: 0,
+            deduction_amount: 0,
+            invoice_paid_status: 'PAID',
+          }))
         }
 
         if (res2 && res2.data) {
@@ -544,6 +681,11 @@ function onCustomerChange(customer_id) {
           selectedInvoice.value = invoiceList.value.find(
             (inv) => inv.id === paymentStore.currentPayment.invoice_id
           )
+
+          if (selectedInvoice.value) {
+            selectedInvoice.value.selected = true
+            selectedInvoice.value.amount_to_pay = selectedInvoice.value.due_amount / 100
+          }
 
           paymentStore.currentPayment.maxPayableAmount =
             selectedInvoice.value.due_amount +
@@ -593,6 +735,19 @@ async function submitPaymentData() {
     ...paymentStore.currentPayment,
   }
 
+  if (!isEdit.value && invoiceList.value.length > 0) {
+    const selectedInvoices = invoiceList.value.filter((inv) => inv.selected)
+    if (selectedInvoices.length > 0) {
+      data.allocations = selectedInvoices.map((inv) => ({
+        invoice_id: inv.id,
+        amount: Math.round((inv.amount_to_pay || 0) * 100),
+        tds_amount: Math.round((inv.tds_amount || 0) * 100),
+        deduction_amount: Math.round((inv.deduction_amount || 0) * 100),
+        invoice_paid_status: inv.invoice_paid_status || 'PAID',
+      }))
+    }
+  }
+
   let response = null
 
   try {
@@ -602,10 +757,88 @@ async function submitPaymentData() {
 
     response = await action(data)
 
-    router.push(`/admin/payments/${response.data.data.id}/view`)
+    if (data.allocations && data.allocations.length > 0) {
+      router.push('/admin/payments')
+    } else {
+      router.push(`/admin/payments/${response.data.data.id}/view`)
+    }
   } catch (err) {
     isSaving.value = false
   }
+}
+
+function onTotalAmountReceivedChange(value) {
+  let remainingCents = Math.round((value || 0) * 100)
+  
+  invoiceList.value.forEach((inv) => {
+    if (remainingCents <= 0) {
+      inv.selected = false
+      inv.amount_to_pay = 0
+      inv.tds_amount = 0
+      inv.deduction_amount = 0
+      return
+    }
+    
+    inv.selected = true
+    if (remainingCents >= inv.due_amount) {
+      inv.amount_to_pay = inv.due_amount / 100
+      remainingCents -= inv.due_amount
+    } else {
+      inv.amount_to_pay = remainingCents / 100
+      remainingCents = 0
+    }
+    inv.tds_amount = 0
+    inv.deduction_amount = 0
+  })
+  
+  onAllocationChange()
+}
+
+function toggleInvoiceSelection(invoice) {
+  if (invoice.selected) {
+    invoice.amount_to_pay = invoice.due_amount / 100
+  } else {
+    invoice.amount_to_pay = 0
+    invoice.tds_amount = 0
+    invoice.deduction_amount = 0
+  }
+  onAllocationChange()
+}
+
+function toggleSelectAllInvoices() {
+  const selectAll = !isAllSelected.value
+  invoiceList.value.forEach((inv) => {
+    inv.selected = selectAll
+    if (selectAll) {
+      inv.amount_to_pay = inv.due_amount / 100
+    } else {
+      inv.amount_to_pay = 0
+      inv.tds_amount = 0
+      inv.deduction_amount = 0
+    }
+  })
+  onAllocationChange()
+}
+
+function onAmountToPayChange(invoice) {
+  if ((invoice.amount_to_pay || 0) > 0) {
+    invoice.selected = true
+  } else {
+    invoice.selected = false
+    invoice.tds_amount = 0
+    invoice.deduction_amount = 0
+  }
+  onAllocationChange()
+}
+
+function onAllocationChange() {
+  let total = 0
+  invoiceList.value.forEach((inv) => {
+    if (inv.selected) {
+      total += Math.round((inv.amount_to_pay || 0) * 100)
+    }
+  })
+  paymentStore.currentPayment.amount = total
 }
 
 function selectNewCustomer(id) {
@@ -617,6 +850,7 @@ function selectNewCustomer(id) {
 
   paymentStore.currentPayment.invoice_id = selectedInvoice.value = null
   paymentStore.currentPayment.amount = 0
+  totalAmountReceived.value = 0
   invoiceList.value = []
   lastLoadedCustomerId.value = null
   paymentStore.getNextNumber(params, true)

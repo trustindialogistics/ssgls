@@ -160,8 +160,106 @@ class Payment extends Model implements HasMedia
         ];
     }
 
+    public static function createBulkPayments($request)
+    {
+        return \DB::transaction(function () use ($request) {
+            $createdPayments = [];
+            $paymentNumber = $request->payment_number;
+            
+            $companyCurrency = CompanySetting::getSetting('currency', $request->header('company'));
+            $customer = Customer::find($request->customer_id);
+            $exchangeRate = $companyCurrency != $customer->currency_id ? $request->exchange_rate : 1;
+            
+            foreach ($request->allocations as $index => $alloc) {
+                $allocAmount = (int) $alloc['amount'];
+                if ($allocAmount <= 0) {
+                    continue;
+                }
+                
+                // For the first payment, use user's input. For subsequent, format a new one.
+                if ($index > 0) {
+                    $serial = (new SerialNumberFormatter)
+                        ->setModel(new Payment)
+                        ->setCompany($request->header('company'))
+                        ->setCustomer($request->customer_id)
+                        ->setNextNumbers();
+                    $paymentNumber = $serial->getNextNumber();
+                }
+                
+                $data = [
+                    'payment_date' => $request->payment_date,
+                    'customer_id' => $request->customer_id,
+                    'exchange_rate' => $exchangeRate,
+                    'amount' => $allocAmount,
+                    'tds_amount' => $alloc['tds_amount'] ?? 0,
+                    'deduction_amount' => $alloc['deduction_amount'] ?? 0,
+                    'invoice_paid_status' => $alloc['invoice_paid_status'] ?? null,
+                    'payment_number' => $paymentNumber,
+                    'invoice_id' => $alloc['invoice_id'],
+                    'payment_method_id' => $request->payment_method_id,
+                    'notes' => $request->notes,
+                    'creator_id' => $request->user()->id,
+                    'company_id' => $request->header('company'),
+                    'base_amount' => $allocAmount * $exchangeRate,
+                    'currency_id' => $customer->currency_id,
+                ];
+                
+                // Subtract invoice settlement
+                $invoice = Invoice::find($alloc['invoice_id']);
+                $settlementAmount = $allocAmount + (int)($alloc['tds_amount'] ?? 0) + (int)($alloc['deduction_amount'] ?? 0);
+                self::subtractInvoiceSettlement(
+                    $invoice,
+                    $settlementAmount,
+                    $alloc['invoice_paid_status'] ?? null
+                );
+                
+                // Create payment
+                $payment = Payment::create($data);
+                $payment->unique_hash = Hashids::connection(Payment::class)->encode($payment->id);
+                
+                $serial = (new SerialNumberFormatter)
+                    ->setModel($payment)
+                    ->setCompany($payment->company_id)
+                    ->setCustomer($payment->customer_id)
+                    ->setNextNumbers();
+                
+                $payment->sequence_number = $serial->nextSequenceNumber;
+                $payment->customer_sequence_number = $serial->nextCustomerSequenceNumber;
+                $payment->save();
+                
+                if ((string) $payment['currency_id'] !== $companyCurrency) {
+                    ExchangeRateLog::addExchangeRateLog($payment);
+                }
+                
+                $customFields = $request->customFields;
+                if ($customFields) {
+                    $payment->addCustomFields($customFields);
+                }
+                
+                $payment->syncDeductionExpense();
+                
+                $createdPayments[] = $payment;
+            }
+            
+            if (count($createdPayments) > 0) {
+                return Payment::with([
+                    'customer',
+                    'invoice',
+                    'paymentMethod',
+                    'fields',
+                ])->find($createdPayments[0]->id);
+            }
+            
+            return null;
+        });
+    }
+
     public static function createPayment($request)
     {
+        if ($request->has('allocations') && is_array($request->allocations) && count($request->allocations) > 0) {
+            return self::createBulkPayments($request);
+        }
+
         $data = $request->getPaymentPayload();
 
         if ($request->invoice_id) {

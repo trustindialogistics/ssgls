@@ -11,18 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $templates = Storage::disk('views')->files('/app/pdf/invoice');
-
-        foreach ($templates as $key => $template) {
-            $templateName = Str::before(basename($template), '.blade.php');
-            $this->copyLegacyTemplatePreview($templateName);
+        $invoicePath = resource_path('views/app/pdf/invoice');
+        if (File::exists($invoicePath)) {
+            $templates = File::files($invoicePath);
+            foreach ($templates as $template) {
+                $templateName = Str::before($template->getFilename(), '.blade.php');
+                $this->copyLegacyTemplatePreview($templateName);
+            }
         }
 
-        $templates = Storage::disk('views')->files('/app/pdf/estimate');
-
-        foreach ($templates as $key => $template) {
-            $templateName = Str::before(basename($template), '.blade.php');
-            $this->copyLegacyTemplatePreview($templateName);
+        $estimatePath = resource_path('views/app/pdf/estimate');
+        if (File::exists($estimatePath)) {
+            $templates = File::files($estimatePath);
+            foreach ($templates as $template) {
+                $templateName = Str::before($template->getFilename(), '.blade.php');
+                $this->copyLegacyTemplatePreview($templateName);
+            }
         }
     }
 

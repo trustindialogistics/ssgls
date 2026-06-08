@@ -35,14 +35,12 @@ class CustomFieldsController extends Controller
 
         $customFields = CustomField::applyFilters($request->all())
             ->whereCompany()
-            ->when($request->has('template_name'), function ($query) use ($request, $transportInvoiceSlugs, $selectedTransportInvoiceSlugs) {
-                if ($this->isTransportInvoiceTemplate($request->template_name)) {
+            ->where(function ($query) use ($request, $transportInvoiceSlugs, $selectedTransportInvoiceSlugs) {
+                if ($request->has('template_name') && $this->isTransportInvoiceTemplate($request->template_name)) {
                     $query->whereIn('slug', $selectedTransportInvoiceSlugs);
-
-                    return;
+                } else {
+                    $query->whereNotIn('slug', $transportInvoiceSlugs);
                 }
-
-                $query->whereNotIn('slug', $transportInvoiceSlugs);
             })
             ->latest()
             ->paginateData($limit);

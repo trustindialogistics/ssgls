@@ -10,6 +10,29 @@
     :customer="invoiceStore.newInvoice.customer"
   />
 
+  <!-- Hidden File Input for Auto Fill -->
+  <input
+    type="file"
+    ref="fileInput"
+    accept="image/*,application/pdf"
+    class="hidden"
+    @change="onAutoFillFileSelected"
+  />
+
+  <!-- Pause/Freezing Screen Loader Overlay -->
+  <div
+    v-if="isAutoFilling"
+    class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gray-900/60 backdrop-blur-xs"
+  >
+    <div class="p-8 bg-white rounded-xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-gray-100">
+      <div class="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-primary-500 mb-6"></div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">LR Receipt is being Auto Filled</h3>
+      <p class="text-sm text-gray-500 text-center leading-relaxed">
+        Please wait a moment while we process your document. To ensure all fields are populated correctly, please do not close or navigate away from this screen.
+      </p>
+    </div>
+  </div>
+
   <BasePage class="relative invoice-create-page">
     <form @submit.prevent="submitForm">
       <BasePageHeader :title="pageTitle">
@@ -48,6 +71,25 @@
               </span>
             </BaseButton>
           </router-link>
+
+          <BaseButton
+            v-if="isLrReceipt"
+            class="mr-3"
+            variant="primary-outline"
+            type="button"
+            :loading="isAutoFilling"
+            :disabled="isAutoFilling"
+            @click="triggerAutoFill"
+          >
+            <template #left="slotProps">
+              <BaseIcon
+                v-if="!isAutoFilling"
+                name="SparklesIcon"
+                :class="slotProps.class"
+              />
+            </template>
+            Auto Fill LR
+          </BaseButton>
 
           <BaseButton
             :loading="isSaving"
@@ -194,6 +236,8 @@ import { useModuleStore } from '@/scripts/admin/stores/module'
 import { useNotesStore } from '@/scripts/admin/stores/note'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useCustomFieldStore } from '@/scripts/admin/stores/custom-field'
+import http from '@/scripts/http'
+import { useNotificationStore } from '@/scripts/stores/notification'
 
 import InvoiceItems from '@/scripts/admin/components/estimate-invoice-common/CreateItems.vue'
 import InvoiceTotal from '@/scripts/admin/components/estimate-invoice-common/CreateTotal.vue'
@@ -221,6 +265,99 @@ let router = useRouter()
 const invoiceValidationScope = 'newInvoice'
 let isSaving = ref(false)
 const isMarkAsDefault = ref(false)
+
+const isAutoFilling = ref(false)
+const fileInput = ref(null)
+
+const triggerAutoFill = () => {
+  fileInput.value?.click()
+}
+
+const onAutoFillFileSelected = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  isAutoFilling.value = true
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await http.post('/api/v1/invoices/auto-fill', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    const data = response.data
+
+    // 1. Populate Consignor and Consignee (customer)
+    if (data.consignor) {
+      invoiceStore.newInvoice.consignor = data.consignor
+    }
+    if (data.consignee) {
+      invoiceStore.newInvoice.customer = data.consignee
+      invoiceStore.newInvoice.customer_id = data.consignee.id
+    }
+
+    // 2. Populate basic fields
+    if (data.date) {
+      invoiceStore.newInvoice.invoice_date = data.date
+    }
+    if (data.due_date) {
+      invoiceStore.newInvoice.due_date = data.due_date
+    }
+    // 3. Populate custom fields (From, To, Truck No, Mode of Payment, GST Tax Payable By, etc.)
+    if (data.fields) {
+      Object.entries(data.fields).forEach(([label, value]) => {
+        setInvoiceCustomField(label, value)
+      })
+    }
+
+    // 4. Populate item custom fields on the first item row
+    if (data.item_fields && invoiceStore.newInvoice.items?.[0]) {
+      Object.entries(data.item_fields).forEach(([label, value]) => {
+        setItemCustomField(0, label, value)
+      })
+    }
+
+  } catch (error) {
+    console.error('Failed to auto-fill LR receipt:', error)
+    const notificationStore = useNotificationStore()
+    notificationStore.showNotification({
+      type: 'error',
+      message: error.response?.data?.error || 'Failed to auto-fill LR receipt. Please try again.',
+    })
+  } finally {
+    isAutoFilling.value = false
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+  }
+}
+
+function setInvoiceCustomField(label, value) {
+  const normalizedLabel = label.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const field = invoiceStore.newInvoice.customFields?.find(
+    (f) => f.label.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedLabel
+  )
+  if (field) {
+    field.value = value || ''
+  }
+}
+
+function setItemCustomField(itemIndex, label, value) {
+  const item = invoiceStore.newInvoice.items[itemIndex]
+  if (!item) return
+
+  const normalizedLabel = label.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const field = item.customFields?.find(
+    (f) => f.label.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedLabel
+  )
+  if (field) {
+    field.value = value || ''
+  }
+}
 
 const invoiceNoteFieldList = ref([
   'customer',
@@ -298,7 +435,10 @@ const rules = {
     ),
   },
   customer_id: {
-    required: helpers.withMessage(t('validation.required'), required),
+    required: helpers.withMessage(
+      t('validation.required'),
+      requiredIf(() => !isLrReceipt.value)
+    ),
   },
   invoice_number: {
     required: helpers.withMessage(t('validation.required'), required),

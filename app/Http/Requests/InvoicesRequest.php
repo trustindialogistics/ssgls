@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Address;
 use App\Models\CompanySetting;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -16,6 +17,181 @@ class InvoicesRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('template_name') !== 'lr_receipt') {
+            return;
+        }
+
+        $customFields = $this->input('customFields', []);
+
+        // Find Consignee details in customFields
+        $consigneeNameAddress = $this->getCustomFieldValue($customFields, 'Consignee');
+        $consigneePhone = $this->getCustomFieldValue($customFields, 'Consignee Phone No');
+        $consigneeGstin = $this->getCustomFieldValue($customFields, 'Consignee GST No');
+
+        $consigneeName = $this->extractNameFromAddressBlock($consigneeNameAddress);
+
+        if (! empty($consigneeName)) {
+            $customer = $this->findOrCreateCustomer(
+                $consigneeName,
+                $consigneePhone,
+                $consigneeGstin,
+                $consigneeNameAddress
+            );
+
+            if ($customer) {
+                $this->merge([
+                    'customer_id' => $customer->id,
+                ]);
+            }
+        }
+
+        // Also resolve/create Consignor customer for consistency
+        $consignorNameAddress = $this->getCustomFieldValue($customFields, 'Consignor');
+        $consignorPhone = $this->getCustomFieldValue($customFields, 'Consignor Phone No');
+        $consignorGstin = $this->getCustomFieldValue($customFields, 'Consignor GST No');
+
+        $consignorName = $this->extractNameFromAddressBlock($consignorNameAddress);
+
+        if (! empty($consignorName)) {
+            $this->findOrCreateCustomer(
+                $consignorName,
+                $consignorPhone,
+                $consignorGstin,
+                $consignorNameAddress
+            );
+        }
+    }
+
+    private function getCustomFieldValue(array $customFields, string $label): ?string
+    {
+        $normalizedLabel = strtolower(preg_replace('/[^a-z0-9]+/i', '', $label));
+        foreach ($customFields as $field) {
+            $fieldLabel = $field['label'] ?? '';
+            if (strtolower(preg_replace('/[^a-z0-9]+/i', '', $fieldLabel)) === $normalizedLabel) {
+                return $field['value'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractNameFromAddressBlock(?string $addressBlock): ?string
+    {
+        if (empty($addressBlock)) {
+            return null;
+        }
+        $lines = preg_split('/\r\n|\r|\n/', trim($addressBlock));
+
+        return ! empty($lines[0]) ? trim($lines[0]) : null;
+    }
+
+    private function splitAddress(string $addressBlock, int $maxLineLength = 45): array
+    {
+        $addressBlock = trim($addressBlock);
+        if ($addressBlock === '') {
+            return ['', ''];
+        }
+
+        $lines = preg_split('/\r\n|\r|\n/', $addressBlock);
+        $wrappedLines = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+
+            if (mb_strlen($line) > $maxLineLength) {
+                $wrapped = wordwrap($line, $maxLineLength, "\n", false);
+                $parts = explode("\n", $wrapped);
+                foreach ($parts as $part) {
+                    $wrappedLines[] = trim($part);
+                }
+            } else {
+                $wrappedLines[] = $line;
+            }
+        }
+
+        $street1 = isset($wrappedLines[0]) ? $wrappedLines[0] : '';
+        $street2 = implode("\n", array_slice($wrappedLines, 1));
+
+        return [$street1, $street2];
+    }
+
+    private function findOrCreateCustomer(string $name, ?string $phone, ?string $gstin, ?string $addressBlock): ?Customer
+    {
+        $companyId = (int) $this->header('company');
+        if (! $companyId) {
+            return null;
+        }
+
+        $gstin = trim((string) $gstin);
+        if ($gstin !== '') {
+            $customer = Customer::where('company_id', $companyId)
+                ->where('tax_id', $gstin)
+                ->first();
+            if ($customer) {
+                return $customer;
+            }
+        }
+
+        $normalizedName = strtolower(preg_replace('/[^a-z0-9]+/i', '', $name));
+        $customer = Customer::where('company_id', $companyId)
+            ->get()
+            ->first(function ($c) use ($normalizedName) {
+                return strtolower(preg_replace('/[^a-z0-9]+/i', '', $c->name)) === $normalizedName
+                    || strtolower(preg_replace('/[^a-z0-9]+/i', '', $c->display_name)) === $normalizedName;
+            });
+
+        if ($customer) {
+            return $customer;
+        }
+
+        // Parse address block to format billing/shipping address
+        $addressLines = preg_split('/\r\n|\r|\n/', trim((string) $addressBlock));
+        $actualAddressLines = array_slice($addressLines, 1);
+        $actualAddressBlock = implode("\n", $actualAddressLines);
+
+        [$street1, $street2] = $this->splitAddress($actualAddressBlock);
+
+        // Create new customer
+        $newCustomer = Customer::create([
+            'company_id' => $companyId,
+            'name' => $name,
+            'display_name' => $name,
+            'phone' => $phone,
+            'tax_id' => $gstin,
+        ]);
+
+        $newCustomer->addresses()->create([
+            'company_id' => $companyId,
+            'name' => $name,
+            'address_street_1' => $street1,
+            'address_street_2' => $street2,
+            'city' => '',
+            'state' => '',
+            'zip' => '',
+            'country_id' => 1,
+            'type' => Address::BILLING_TYPE,
+        ]);
+
+        $newCustomer->addresses()->create([
+            'company_id' => $companyId,
+            'name' => $name,
+            'address_street_1' => $street1,
+            'address_street_2' => $street2,
+            'city' => '',
+            'state' => '',
+            'zip' => '',
+            'country_id' => 1,
+            'type' => Address::SHIPPING_TYPE,
+        ]);
+
+        return $newCustomer;
     }
 
     /**

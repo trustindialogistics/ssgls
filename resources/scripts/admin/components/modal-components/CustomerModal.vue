@@ -69,6 +69,17 @@
                 class="mt-1 md:mt-0"
               />
             </BaseInputGroup>
+
+            <BaseInputGroup label="Customer Code">
+              <BaseInput
+                v-model="customerStore.currentCustomer.prefix"
+                type="text"
+                class="mt-1 md:mt-0"
+                :disabled="!customerStore.currentCustomer.billing || !customerStore.currentCustomer.billing.city"
+                placeholder="Enter city to generate code"
+                @click="onCodeClick"
+              />
+            </BaseInputGroup>
           </BaseInputGrid>
         </div>
 
@@ -207,6 +218,14 @@
                 @input="v$.billing.address_street_2.$touch()"
               />
             </BaseInputGroup>
+
+            <BaseInputGroup :label="$t('customers.city')">
+              <BaseInput
+                v-model="customerStore.currentCustomer.billing.city"
+                type="text"
+                class="mt-1 md:mt-0"
+              />
+            </BaseInputGroup>
           </BaseInputGrid>
         </div>
       </div>
@@ -240,6 +259,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import http from '@/scripts/http'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -283,6 +303,20 @@ const isEdit = ref(false)
 const isLoading = ref(false)
 let isShowPassword = ref(false)
 let isShowConfirmPassword = ref(false)
+
+async function onCodeClick() {
+  const city = customerStore.currentCustomer.billing?.city
+  if (city && !customerStore.currentCustomer.prefix) {
+    try {
+      const response = await http.get(`/api/v1/customers/suggest-code?city=${city}`)
+      if (response.data && response.data.code) {
+        customerStore.currentCustomer.prefix = response.data.code
+      }
+    } catch (e) {
+      console.error('Failed to suggest code', e)
+    }
+  }
+}
 
 const modalActive = computed(
   () => modalStore.active && modalStore.componentName === 'CustomerModal'
@@ -416,6 +450,23 @@ async function submitCustomerData() {
 
   let data = {
     ...customerStore.currentCustomer,
+  }
+
+  if (data.is_temp) {
+    try {
+      if (customerStore.tempRole === 'consignor') {
+        invoiceStore.newInvoice.consignor = data
+      } else {
+        invoiceStore.newInvoice.customer = data
+        invoiceStore.newInvoice.customer_id = null
+      }
+      isLoading.value = false
+      closeCustomerModal()
+    } catch (err) {
+      console.error(err)
+      isLoading.value = false
+    }
+    return
   }
 
   try {
