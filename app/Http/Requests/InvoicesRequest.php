@@ -154,15 +154,11 @@ class InvoicesRequest extends FormRequest
         }
 
         $customer = Customer::where('company_id', $companyId)
-            ->where(function ($query) use ($name) {
-                $query->where('name', $name)
-                    ->orWhere('display_name', $name);
-            })->first();
+            ->where('name', $name)->first();
 
         if (! $customer) {
             $customer = Customer::where('company_id', $companyId)
-                ->where(fn($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($name)])
-                                   ->orWhereRaw('LOWER(display_name) = ?', [strtolower($name)]))
+                ->whereRaw('LOWER(name) = ?', [strtolower($name)])
                 ->first();
         }
 
@@ -181,7 +177,6 @@ class InvoicesRequest extends FormRequest
         $newCustomer = Customer::create([
             'company_id' => $companyId,
             'name' => $name,
-            'display_name' => $name,
             'phone' => $phone,
             'tax_id' => $gstin,
             'prefix' => $prefix,
@@ -304,7 +299,8 @@ class InvoicesRequest extends FormRequest
         $customer = Customer::find($this->customer_id);
 
         if ($customer && $companyCurrency && ! in_array($this->input('template_name'), ['lorry_receipt', 'lr_receipt'])) {
-            if ((string) $customer->currency_id !== $companyCurrency) {
+            $customerCurrency = $customer->currency_id ?: $companyCurrency;
+            if ((string) $customerCurrency !== (string) $companyCurrency) {
                 $rules['exchange_rate'] = [
                     'required',
                 ];

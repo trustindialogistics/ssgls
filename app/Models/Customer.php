@@ -337,7 +337,7 @@ class Customer extends Authenticatable implements HasMedia
         }
 
         if ($filters->get('display_name')) {
-            $query->whereDisplayName($filters->get('display_name'));
+            $query->where('customers.name', 'LIKE', '%'.$filters->get('display_name').'%');
         }
 
         if ($filters->get('customer_id')) {

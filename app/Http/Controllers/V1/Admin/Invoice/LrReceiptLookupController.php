@@ -100,7 +100,7 @@ class LrReceiptLookupController extends Controller
             ->get()
             ->first(function (Customer $customer) use ($normalizedPartyName) {
                 return $this->normalizeLabel($customer->name) === $normalizedPartyName
-                    || $this->normalizeLabel($customer->display_name) === $normalizedPartyName;
+                    || $this->normalizeLabel($customer->company_name) === $normalizedPartyName;
             });
     }
 

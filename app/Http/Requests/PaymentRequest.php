@@ -119,7 +119,8 @@ class PaymentRequest extends FormRequest
         $customer = Customer::find($this->customer_id);
 
         if ($customer && $companyCurrency) {
-            if ((string) $customer->currency_id !== $companyCurrency) {
+            $customerCurrency = $customer->currency_id ?: $companyCurrency;
+            if ((string) $customerCurrency !== (string) $companyCurrency) {
                 $rules['exchange_rate'] = [
                     'required',
                 ];
@@ -133,8 +134,8 @@ class PaymentRequest extends FormRequest
     {
         $company_currency = CompanySetting::getSetting('currency', $this->header('company'));
         $current_currency = $this->currency_id;
-        $exchange_rate = $company_currency != $current_currency ? $this->exchange_rate : 1;
-        $currency = Customer::find($this->customer_id)->currency_id;
+        $exchange_rate = $company_currency != $current_currency ? ($this->exchange_rate ?: 1) : 1;
+        $currency = Customer::find($this->customer_id)->currency_id ?: ($current_currency ?: $company_currency);
 
         $validated = collect($this->validated());
         $hasDeduction = ((int) $this->tds_amount > 0) || ((int) $this->deduction_amount > 0);

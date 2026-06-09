@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <div v-if="selectedCustomer.shipping && !isLrReceipt" class="flex flex-col">
+        <div v-if="selectedCustomer.shipping && !isLrReceipt && type !== 'estimate'" class="flex flex-col">
           <label
             class="
               mb-1

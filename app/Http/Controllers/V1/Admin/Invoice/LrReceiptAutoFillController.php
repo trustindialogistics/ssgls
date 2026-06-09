@@ -278,15 +278,11 @@ class LrReceiptAutoFillController extends Controller
         }
 
         $customer = Customer::whereCompany()
-            ->where(function ($query) use ($name) {
-                $query->where('name', $name)
-                    ->orWhere('display_name', $name);
-            })->first();
+            ->where('name', $name)->first();
 
         if (! $customer) {
             $customer = Customer::whereCompany()
-                ->where(fn($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($name)])
-                                   ->orWhereRaw('LOWER(display_name) = ?', [strtolower($name)]))
+                ->whereRaw('LOWER(name) = ?', [strtolower($name)])
                 ->first();
         }
 

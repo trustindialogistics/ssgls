@@ -75,7 +75,7 @@ class ExpenseRequest extends FormRequest
     {
         $company_currency = CompanySetting::getSetting('currency', $this->header('company'));
         $current_currency = $this->currency_id;
-        $exchange_rate = $company_currency != $current_currency ? $this->exchange_rate : 1;
+        $exchange_rate = $company_currency != $current_currency ? ($this->exchange_rate ?: 1) : 1;
 
         return collect($this->validated())
             ->merge([

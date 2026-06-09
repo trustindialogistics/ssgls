@@ -140,10 +140,7 @@ class InvoiceResource extends JsonResource
         }
 
         $customer = \App\Models\Customer::whereCompany()
-            ->where(function ($query) use ($name) {
-                $query->where('name', $name)
-                    ->orWhere('display_name', $name);
-            })
+            ->where('name', $name)
             ->with(['billingAddress', 'shippingAddress'])
             ->first();
 

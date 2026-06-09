@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('rate')->nullable();
             $table->string('distance_kms')->nullable();
 
-            $table->string('regd_at')->nullable();
+            $table->text('regd_at')->nullable();
             $table->string('body_type')->nullable();
             $table->string('make')->nullable();
             $table->string('vehicle_model')->nullable();
@@ -42,16 +42,16 @@ return new class extends Migration
             $table->string('permit_date')->nullable();
             $table->string('permit_valid_in')->nullable();
             $table->string('permit_status_upto')->nullable();
-            $table->string('insured_with')->nullable();
-            $table->string('insurance_division_no')->nullable();
-            $table->string('insurance_certificate_no')->nullable();
-            $table->string('insurance_valid_upto')->nullable();
+            $table->text('insured_with')->nullable();
+            $table->text('insurance_division_no')->nullable();
+            $table->text('insurance_certificate_no')->nullable();
+            $table->text('insurance_valid_upto')->nullable();
 
             $table->string('owner_code')->nullable();
             $table->string('owner_name')->nullable();
             $table->text('owner_address')->nullable();
             $table->string('owner_phone')->nullable();
-            $table->string('financer_name')->nullable();
+            $table->text('financer_name')->nullable();
             $table->text('financer_address')->nullable();
 
             $table->string('driver_name')->nullable();
@@ -59,7 +59,7 @@ return new class extends Migration
             $table->string('driver_place')->nullable();
             $table->string('driver_licence_no')->nullable();
             $table->string('driver_licence_date')->nullable();
-            $table->string('driver_licence_issued_by')->nullable();
+            $table->text('driver_licence_issued_by')->nullable();
             $table->text('driver_rto_address')->nullable();
             $table->string('driver_valid_up_to')->nullable();
 
@@ -67,28 +67,28 @@ return new class extends Migration
             $table->text('broker_address')->nullable();
             $table->string('advice_no')->nullable();
             $table->string('advice_date')->nullable();
-            $table->string('destination_broker_name')->nullable();
+            $table->text('destination_broker_name')->nullable();
             $table->text('destination_broker_address')->nullable();
             $table->string('broker_phone')->nullable();
 
             $table->string('paid_to')->nullable();
             $table->string('lorry_hire_amount')->nullable();
             $table->string('other_charges_amount')->nullable();
-            $table->string('gross_hire_rupees')->nullable();
+            $table->text('gross_hire_rupees')->nullable();
             $table->string('gross_hire_amount')->nullable();
-            $table->string('advance_cash_cheque_no')->nullable();
+            $table->text('advance_cash_cheque_no')->nullable();
             $table->string('advance_on')->nullable();
-            $table->string('advance_bank')->nullable();
+            $table->text('advance_bank')->nullable();
             $table->string('advance_amount')->nullable();
-            $table->string('balance_payable_at')->nullable();
+            $table->text('balance_payable_at')->nullable();
             $table->string('balance_payable_code')->nullable();
-            $table->string('balance_rupees')->nullable();
+            $table->text('balance_rupees')->nullable();
             $table->string('balance_amount')->nullable();
             $table->text('balance_rupees_only')->nullable();
-            $table->string('hire_passed_by')->nullable();
-            $table->string('hire_certified_by')->nullable();
-            $table->string('hire_prepared_by')->nullable();
-            $table->string('advance_received_by')->nullable();
+            $table->text('hire_passed_by')->nullable();
+            $table->text('hire_certified_by')->nullable();
+            $table->text('hire_prepared_by')->nullable();
+            $table->text('advance_received_by')->nullable();
 
             $table->text('loading_remarks')->nullable();
             $table->string('loaded_by')->nullable();
@@ -102,18 +102,18 @@ return new class extends Migration
             $table->string('less_advance_other_branch_amount')->nullable();
             $table->string('less_deduction_claims_amount')->nullable();
             $table->string('total_less_amount')->nullable();
-            $table->string('final_balance_paid_at')->nullable();
+            $table->text('final_balance_paid_at')->nullable();
             $table->string('final_balance_code')->nullable();
             $table->string('final_balance_on')->nullable();
             $table->string('net_amount_payable')->nullable();
-            $table->string('final_cash_cheque_no')->nullable();
+            $table->text('final_cash_cheque_no')->nullable();
             $table->string('final_cash_cheque_on')->nullable();
-            $table->string('final_bank')->nullable();
+            $table->text('final_bank')->nullable();
             $table->text('final_rupees_only')->nullable();
-            $table->string('final_passed_by')->nullable();
-            $table->string('final_certified_by')->nullable();
-            $table->string('final_prepared_by')->nullable();
-            $table->string('final_payment_received_by')->nullable();
+            $table->text('final_passed_by')->nullable();
+            $table->text('final_certified_by')->nullable();
+            $table->text('final_prepared_by')->nullable();
+            $table->text('final_payment_received_by')->nullable();
             $table->text('received_no_bilties')->nullable();
 
             $table->timestamps();
