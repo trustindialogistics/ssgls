@@ -31,6 +31,8 @@ class InvoicesRequest extends FormRequest
         $consigneeNameAddress = $this->getCustomFieldValue($customFields, 'Consignee');
         $consigneePhone = $this->getCustomFieldValue($customFields, 'Consignee Phone No');
         $consigneeGstin = $this->getCustomFieldValue($customFields, 'Consignee GST No');
+        $consigneeCity = $this->input('customer.billing.city') ?? $this->input('customer.shipping.city');
+        $consigneePrefix = $this->input('customer.prefix');
 
         $consigneeName = $this->extractNameFromAddressBlock($consigneeNameAddress);
 
@@ -39,7 +41,9 @@ class InvoicesRequest extends FormRequest
                 $consigneeName,
                 $consigneePhone,
                 $consigneeGstin,
-                $consigneeNameAddress
+                $consigneeNameAddress,
+                $consigneeCity,
+                $consigneePrefix
             );
 
             if ($customer) {
@@ -53,6 +57,8 @@ class InvoicesRequest extends FormRequest
         $consignorNameAddress = $this->getCustomFieldValue($customFields, 'Consignor');
         $consignorPhone = $this->getCustomFieldValue($customFields, 'Consignor Phone No');
         $consignorGstin = $this->getCustomFieldValue($customFields, 'Consignor GST No');
+        $consignorCity = $this->input('consignor.billing.city') ?? $this->input('consignor.shipping.city');
+        $consignorPrefix = $this->input('consignor.prefix');
 
         $consignorName = $this->extractNameFromAddressBlock($consignorNameAddress);
 
@@ -61,7 +67,9 @@ class InvoicesRequest extends FormRequest
                 $consignorName,
                 $consignorPhone,
                 $consignorGstin,
-                $consignorNameAddress
+                $consignorNameAddress,
+                $consignorCity,
+                $consignorPrefix
             );
         }
     }
@@ -122,8 +130,14 @@ class InvoicesRequest extends FormRequest
         return [$street1, $street2];
     }
 
-    private function findOrCreateCustomer(string $name, ?string $phone, ?string $gstin, ?string $addressBlock): ?Customer
-    {
+    private function findOrCreateCustomer(
+        string $name,
+        ?string $phone,
+        ?string $gstin,
+        ?string $addressBlock,
+        ?string $city = null,
+        ?string $prefix = null
+    ): ?Customer {
         $companyId = (int) $this->header('company');
         if (! $companyId) {
             return null;
@@ -165,6 +179,7 @@ class InvoicesRequest extends FormRequest
             'display_name' => $name,
             'phone' => $phone,
             'tax_id' => $gstin,
+            'prefix' => $prefix,
         ]);
 
         $newCustomer->addresses()->create([
@@ -172,7 +187,7 @@ class InvoicesRequest extends FormRequest
             'name' => $name,
             'address_street_1' => $street1,
             'address_street_2' => $street2,
-            'city' => '',
+            'city' => $city ?? '',
             'state' => '',
             'zip' => '',
             'country_id' => 1,
@@ -184,7 +199,7 @@ class InvoicesRequest extends FormRequest
             'name' => $name,
             'address_street_1' => $street1,
             'address_street_2' => $street2,
-            'city' => '',
+            'city' => $city ?? '',
             'state' => '',
             'zip' => '',
             'country_id' => 1,

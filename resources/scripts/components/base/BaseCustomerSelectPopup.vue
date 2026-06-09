@@ -354,8 +354,8 @@
                         "
                       />
                       <BaseText
-                        v-if="customer.contact_name"
-                        :text="customer.contact_name"
+                        v-if="customer.prefix || customer.tax_id || customer.phone || customer.contact_name"
+                        :text="customer.prefix || customer.tax_id || customer.phone || customer.contact_name"
                         class="
                           m-0
                           text-sm

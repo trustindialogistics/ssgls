@@ -92,12 +92,26 @@
               :label="$t('customers.phone')"
               :content-loading="isFetchingInitialData"
             >
-              <BaseInput
-                v-model.trim="customerStore.currentCustomer.phone"
-                :content-loading="isFetchingInitialData"
-                type="text"
-                name="phone"
-              />
+              <div class="flex gap-2 items-center">
+                <BaseInput
+                  v-model.trim="customerStore.currentCustomer.phone"
+                  :content-loading="isFetchingInitialData"
+                  type="text"
+                  name="phone"
+                  class="flex-grow"
+                />
+                <BaseButton
+                  v-if="isContactPickerSupported"
+                  type="button"
+                  variant="primary-outline"
+                  size="sm"
+                  class="h-10 px-3 flex items-center justify-center min-w-[40px] mt-1 md:mt-0"
+                  @click="selectFromMobileContacts"
+                >
+                  <BaseIcon name="UserIcon" class="h-5 w-5" />
+                  <span class="hidden sm:inline ml-1">Contacts</span>
+                </BaseButton>
+              </div>
             </BaseInputGroup>
 
             <!-- Hidden per simplified customer entry request.
@@ -642,6 +656,36 @@ const router = useRouter()
 const route = useRoute()
 
 let isFetchingInitialData = ref(false)
+
+const isContactPickerSupported = ref(
+  typeof window !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window
+)
+
+async function selectFromMobileContacts() {
+  try {
+    const props = ['tel']
+    const opts = { multiple: false }
+    const contacts = await navigator.contacts.select(props, opts)
+    if (contacts && contacts.length > 0) {
+      const contact = contacts[0]
+      let phone = ''
+      if (contact.tel && contact.tel.length > 0) {
+        phone = contact.tel[0].trim()
+      }
+
+      if (phone) {
+        // Strip spaces, dashes, parentheses but keep + at start
+        phone = phone.replace(/[\s\-\(\)]/g, '')
+        customerStore.currentCustomer.phone = phone
+        if (customerStore.currentCustomer.billing) {
+          customerStore.currentCustomer.billing.phone = phone
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to select contact:', error)
+  }
+}
 
 async function onCodeClick() {
   const city = customerStore.currentCustomer.billing?.city

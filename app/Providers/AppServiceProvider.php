@@ -71,6 +71,60 @@ class AppServiceProvider extends ServiceProvider
             Mail::fake();
             Notification::fake();
         }
+
+        // Auto-backup SQLite database on writes/transactions
+        if (config('database.default') === 'sqlite') {
+            // Backup on transaction commits
+            \Illuminate\Support\Facades\Event::listen(
+                \Illuminate\Database\Events\TransactionCommitted::class,
+                function () {
+                    $this->backupDatabase();
+                }
+            );
+
+            // Backup on write queries
+            \Illuminate\Support\Facades\DB::listen(function (\Illuminate\Database\Events\QueryExecuted $query) {
+                $sql = strtolower($query->sql);
+                if (preg_match('/^\s*(insert|update|delete|replace|alter|drop|create|truncate)\b/i', $sql)) {
+                    if (\Illuminate\Support\Facades\DB::transactionLevel() === 0) {
+                        $this->backupDatabase();
+                    }
+                }
+            });
+        }
+    }
+
+    private function backupDatabase(): void
+    {
+        try {
+            $dbPath = config('database.connections.sqlite.database');
+            if ($dbPath && file_exists($dbPath)) {
+                $backupDirs = [
+                    'D:/Backup_Data',
+                    base_path('Backup_Data'),
+                ];
+
+                foreach ($backupDirs as $dir) {
+                    if (!is_dir($dir)) {
+                        @mkdir($dir, 0755, true);
+                    }
+                    if (is_dir($dir) && is_writable($dir)) {
+                        $dest = $dir . '/' . basename($dbPath);
+                        @copy($dbPath, $dest);
+
+                        // Copy WAL and SHM journal files if present
+                        if (file_exists($dbPath . '-wal')) {
+                            @copy($dbPath . '-wal', $dest . '-wal');
+                        }
+                        if (file_exists($dbPath . '-shm')) {
+                            @copy($dbPath . '-shm', $dest . '-shm');
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('DB Backup failed: ' . $e->getMessage());
+        }
     }
 
     /**

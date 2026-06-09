@@ -110,7 +110,8 @@
     <!-- Record payment  -->
     <router-link v-if="showPaymentAction" :to="`/admin/payments/${row.id}/create`">
       <BaseDropdownItem
-        v-if="['SENT', 'VIEWED'].includes(row.status) && !isViewRoute"
+        v-slot="{ active }"
+        v-if="['DRAFT', 'SENT', 'VIEWED'].includes(row.status) && !isViewRoute"
       >
         <BaseIcon
           name="CreditCardIcon"

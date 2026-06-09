@@ -245,11 +245,12 @@ let activity = reactive({
   payments: [],
 })
 let years = reactive([
+  {label: t('dateRange.this_month'), value: 'This month'},
   {label: t('dateRange.this_year'), value: 'This year'},
   {label: t('dateRange.previous_year'), value: 'Previous year'},
   {label: 'Custom Date', value: 'Custom'},
 ])
-let selectedYear = ref('This year')
+let selectedYear = ref('This month')
 const customRange = reactive({
   from_date: moment().startOf('year').format('YYYY-MM-DD'),
   to_date: moment().format('YYYY-MM-DD'),
@@ -304,7 +305,7 @@ watch(
     if (route.params.id) {
       loadCustomer()
     }
-    selectedYear.value = 'This year'
+    selectedYear.value = 'This month'
   },
   { immediate: true }
 )
@@ -313,6 +314,7 @@ async function loadCustomer() {
   isLoading.value = false
   let response = await customerStore.fetchViewCustomer({
     id: route.params.id,
+    view_type: 'day',
   })
 
   if (response.data) {
@@ -335,9 +337,13 @@ async function onChangeYear(data) {
     id: route.params.id,
   }
 
-  selectedValue === 'Previous year'
-    ? (params.previous_year = true)
-    : (params.this_year = true)
+  if (selectedValue === 'Previous year') {
+    params.previous_year = true
+  } else if (selectedValue === 'This month') {
+    params.view_type = 'day'
+  } else {
+    params.this_year = true
+  }
 
   let response = await customerStore.fetchViewCustomer(params)
 

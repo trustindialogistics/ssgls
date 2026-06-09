@@ -146,7 +146,7 @@
                           {{ customer.name || customer.display_name }}
                         </span>
                         <span class="text-xs text-gray-500">
-                          {{ customer.phone || customer.tax_id }}
+                          {{ customer.prefix || customer.tax_id || customer.phone }}
                         </span>
                       </div>
                     </li>

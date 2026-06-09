@@ -325,8 +325,9 @@ onSearched = debounce(onSearched, 500)
           :to="`/admin/payments/${$route.params.id}/create`"
         >
           <BaseButton
+            v-slot:default
             v-if="
-              invoiceData.status === 'SENT' || invoiceData.status === 'VIEWED'
+              ['DRAFT', 'SENT', 'VIEWED'].includes(invoiceData.status)
             "
             variant="primary"
           >

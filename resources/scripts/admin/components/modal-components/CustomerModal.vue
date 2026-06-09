@@ -54,12 +54,25 @@
             </BaseInputGroup>
 
             <BaseInputGroup :label="$t('customers.phone')">
-              <BaseInput
-                v-model.trim="customerStore.currentCustomer.phone"
-                type="text"
-                name="phone"
-                class="mt-1 md:mt-0"
-              />
+              <div class="flex gap-2 items-center w-full">
+                <BaseInput
+                  v-model.trim="customerStore.currentCustomer.phone"
+                  type="text"
+                  name="phone"
+                  class="mt-1 md:mt-0 flex-grow"
+                />
+                <BaseButton
+                  v-if="isContactPickerSupported"
+                  type="button"
+                  variant="primary-outline"
+                  size="sm"
+                  class="h-10 px-3 flex items-center justify-center min-w-[40px] mt-1 md:mt-0"
+                  @click="selectFromMobileContacts"
+                >
+                  <BaseIcon name="UserIcon" class="h-5 w-5" />
+                  <span class="hidden sm:inline ml-1">Contacts</span>
+                </BaseButton>
+              </div>
             </BaseInputGroup>
 
             <BaseInputGroup label="GSTIN No">
@@ -303,6 +316,36 @@ const isEdit = ref(false)
 const isLoading = ref(false)
 let isShowPassword = ref(false)
 let isShowConfirmPassword = ref(false)
+
+const isContactPickerSupported = ref(
+  typeof window !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window
+)
+
+async function selectFromMobileContacts() {
+  try {
+    const props = ['tel']
+    const opts = { multiple: false }
+    const contacts = await navigator.contacts.select(props, opts)
+    if (contacts && contacts.length > 0) {
+      const contact = contacts[0]
+      let phone = ''
+      if (contact.tel && contact.tel.length > 0) {
+        phone = contact.tel[0].trim()
+      }
+
+      if (phone) {
+        // Strip spaces, dashes, parentheses but keep + at start
+        phone = phone.replace(/[\s\-\(\)]/g, '')
+        customerStore.currentCustomer.phone = phone
+        if (customerStore.currentCustomer.billing) {
+          customerStore.currentCustomer.billing.phone = phone
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to select contact:', error)
+  }
+}
 
 async function onCodeClick() {
   const city = customerStore.currentCustomer.billing?.city

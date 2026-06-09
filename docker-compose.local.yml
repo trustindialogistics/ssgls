@@ -29,6 +29,7 @@ services:
       GEMINI_API_KEY: "AQ.Ab8RN6KijH6JvqvgfjKI_D5_mq3L01luU3DM-Pk_mr58JDR7ZQ"
     volumes:
       - D:/SSGLS_DATABASE/database.sqlite:/var/www/html/storage/app/database.sqlite
+      - D:/Backup_Data:/var/www/html/Backup_Data
       - ./storage/app/public:/var/www/html/storage/app/public
       - ./storage/app/templates:/var/www/html/storage/app/templates
       - C:/DONOTTOUCH/IMPDOCUMENT:/official-documents
