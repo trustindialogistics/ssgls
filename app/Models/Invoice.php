@@ -84,6 +84,8 @@ class Invoice extends Model implements HasMedia
         'lorryReceiptDisplayNetAmount',
         'formattedAdvanceOn',
         'formattedFinalBalanceOn',
+        'formattedAmountDebitDate',
+        'formattedAmountCreditDate',
     ];
 
     protected function casts(): array
@@ -1218,6 +1220,99 @@ class Invoice extends Model implements HasMedia
 
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
         return Carbon::parse($lorryReceipt->final_balance_on)->translatedFormat($dateFormat);
+    }
+
+    public function getFormattedAmountDebitDateAttribute(): ?string
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT || empty($this->invoice_number)) {
+            return null;
+        }
+
+        $documentNumber = strtolower(trim($this->invoice_number));
+
+        if ($documentNumber === '') {
+            return null;
+        }
+
+        $lorryReceipts = LorryReceipt::query()
+            ->when($this->company_id, function ($query, $companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->get(['received_no_bilties', 'advance_amount', 'advance_on', 'net_amount_payable', 'final_balance_on', 'detention_amount', 'extra_hire_amount', 'final_other_amount', 'less_advance_other_branch_amount', 'less_deduction_claims_amount']);
+
+        $matchedReceipts = $lorryReceipts->filter(function (LorryReceipt $lr) use ($documentNumber): bool {
+            return strtolower(trim((string) $lr->received_no_bilties)) === $documentNumber;
+        });
+
+        if ($matchedReceipts->isEmpty()) {
+            return null;
+        }
+
+        $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
+        $dates = [];
+
+        foreach ($matchedReceipts as $lorryReceipt) {
+            if ($this->numericTransportAmount($lorryReceipt->advance_amount) > 0 && $lorryReceipt->advance_on) {
+                $dates[] = Carbon::parse($lorryReceipt->advance_on)->translatedFormat($dateFormat);
+            }
+
+            if ($this->lorryReceiptHasFinalPaymentOperation($lorryReceipt) && $lorryReceipt->final_balance_on) {
+                $dates[] = Carbon::parse($lorryReceipt->final_balance_on)->translatedFormat($dateFormat);
+            }
+        }
+
+        if (empty($dates)) {
+            return null;
+        }
+
+        return implode(', ', array_unique($dates));
+    }
+
+    public function getFormattedAmountCreditDateAttribute(): ?string
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT || empty($this->invoice_number)) {
+            return null;
+        }
+
+        $documentNumber = trim($this->invoice_number);
+
+        if ($documentNumber === '') {
+            return null;
+        }
+
+        $matchingInvoices = self::query()
+            ->where('template_name', self::TEMPLATE_OFFICE_INVOICE)
+            ->whereHas('items.fields', function (Builder $fieldQuery) use ($documentNumber) {
+                $fieldQuery
+                    ->whereHas('customField', function (Builder $customFieldQuery) {
+                        $customFieldQuery
+                            ->where('name', 'Consignment Number')
+                            ->orWhere('label', 'Consignment Number');
+                    })
+                    ->whereRaw('LOWER(string_answer) = ?', [strtolower($documentNumber)]);
+            })
+            ->when($this->company_id, function ($query, $companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->with('payments')
+            ->get();
+
+        $dates = [];
+        $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
+
+        foreach ($matchingInvoices as $matchingInvoice) {
+            foreach ($matchingInvoice->payments as $payment) {
+                if ($payment->payment_date) {
+                    $dates[] = Carbon::parse($payment->payment_date)->translatedFormat($dateFormat);
+                }
+            }
+        }
+
+        if (empty($dates)) {
+            return null;
+        }
+
+        return implode(', ', array_unique($dates));
     }
 
 

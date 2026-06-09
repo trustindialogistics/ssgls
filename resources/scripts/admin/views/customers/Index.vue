@@ -160,7 +160,7 @@
         <template #cell-name="{ row }">
           <router-link :to="{ path: `customers/${row.data.id}/view` }">
             <BaseText
-              :text="row.data.prefix ? `[${row.data.prefix}] ${row.data.name}` : row.data.name"
+              :text="row.data.name"
               tag="span"
               class="font-medium text-primary-500 flex flex-col"
             />

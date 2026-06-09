@@ -192,10 +192,12 @@
         :content-loading="isLoading"
       >
         <BaseDatePicker
+          v-slot:default
           v-model="invoiceStore.newInvoice.due_date"
           :content-loading="isLoading"
           :calendar-button="true"
           calendar-button-icon="calendar"
+          :disabled="true"
         />
       </BaseInputGroup>
 

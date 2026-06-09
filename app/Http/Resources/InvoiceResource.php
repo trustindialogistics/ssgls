@@ -88,6 +88,11 @@ class InvoiceResource extends JsonResource
             'lorry_documents' => $lorryDocuments,
             'formatted_invoice_date' => $this->formattedInvoiceDate,
             'formatted_due_date' => $this->formattedDueDate,
+            'formatted_payment_date' => $this->relationLoaded('payments') && $this->payments->isNotEmpty()
+                ? $this->payments->sortByDesc('payment_date')->first()->formattedPaymentDate
+                : null,
+            'formatted_amount_debit_date' => $this->formattedAmountDebitDate,
+            'formatted_amount_credit_date' => $this->formattedAmountCreditDate,
             'allow_edit' => $this->allow_edit,
             'payment_module_enabled' => $this->payment_module_enabled,
             'sales_tax_type' => $this->sales_tax_type,

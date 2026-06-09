@@ -241,8 +241,16 @@
           {{ row.data.formatted_final_balance_on || '-' }}
         </template>
 
+        <template #cell-amount_debit_date="{ row }">
+          {{ row.data.formatted_amount_debit_date || '-' }}
+        </template>
+
         <template #cell-advance_paid_date="{ row }">
           {{ row.data.formatted_advance_on || '-' }}
+        </template>
+
+        <template #cell-amount_credit_date="{ row }">
+          {{ row.data.formatted_amount_credit_date || '-' }}
         </template>
 
         <template #cell-profit_loss="{ row }">
@@ -362,6 +370,14 @@ const invoiceColumns = computed(() => {
     { key: 'name', label: t('invoices.customer') },
     { key: 'status', label: t('invoices.status') },
     { key: 'due_amount', label: amountColumnLabel.value },
+    ...(!isLorryReceiptRoute.value
+      ? [
+          {
+            key: 'amount_debit_date',
+            label: 'Amount Debit Date',
+          },
+        ]
+      : []),
     ...(isLorryReceiptRoute.value
       ? [
           {
@@ -371,6 +387,14 @@ const invoiceColumns = computed(() => {
         ]
       : []),
     { key: 'total', label: creditColumnLabel.value, tdClass: 'font-medium text-gray-900' },
+    ...(!isLorryReceiptRoute.value
+      ? [
+          {
+            key: 'amount_credit_date',
+            label: 'Amount Credit Date',
+          },
+        ]
+      : []),
     ...(isLorryReceiptRoute.value
       ? [
           {

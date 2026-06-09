@@ -18,7 +18,7 @@ class CustomersController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $this->authorize('viewAny', Customer::class);
 
@@ -48,9 +48,9 @@ class CustomersController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  Request  $request
-     * @return JsonResponse
+     * @return CustomerResource
      */
-    public function store(Requests\CustomerRequest $request)
+    public function store(Requests\CustomerRequest $request): CustomerResource
     {
         $this->authorize('create', Customer::class);
 
@@ -62,9 +62,9 @@ class CustomersController extends Controller
     /**
      * Display the specified resource.
      *
-     * @return JsonResponse
+     * @return CustomerResource
      */
-    public function show(Customer $customer)
+    public function show(Customer $customer): CustomerResource
     {
         $this->authorize('view', $customer);
 
@@ -75,9 +75,9 @@ class CustomersController extends Controller
      * Update the specified resource in storage.
      *
      * @param  Request  $request
-     * @return JsonResponse
+     * @return CustomerResource|JsonResponse
      */
-    public function update(Requests\CustomerRequest $request, Customer $customer)
+    public function update(Requests\CustomerRequest $request, Customer $customer): CustomerResource|JsonResponse
     {
         $this->authorize('update', $customer);
 
@@ -96,7 +96,7 @@ class CustomersController extends Controller
      * @param  Request  $request
      * @return JsonResponse
      */
-    public function delete(DeleteCustomersRequest $request)
+    public function delete(DeleteCustomersRequest $request): JsonResponse
     {
         $this->authorize('delete multiple customers');
 

@@ -18,12 +18,12 @@ class InvoicesController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $this->authorize('viewAny', Invoice::class);
 
         $limit = $request->input('limit', 10);
-        $with = ['customer', 'media', 'currency'];
+        $with = ['customer', 'media', 'currency', 'payments'];
 
         if (in_array($request->input('template_name'), [Invoice::TEMPLATE_LR_RECEIPT, Invoice::TEMPLATE_LORRY_RECEIPT], true)) {
             $with[] = 'fields.customField';
@@ -49,9 +49,9 @@ class InvoicesController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  Request  $request
-     * @return JsonResponse
+     * @return InvoiceResource
      */
-    public function store(Requests\InvoicesRequest $request)
+    public function store(Requests\InvoicesRequest $request): InvoiceResource
     {
         $this->authorize('create', Invoice::class);
 
@@ -69,9 +69,9 @@ class InvoicesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @return JsonResponse
+     * @return InvoiceResource
      */
-    public function show(Request $request, Invoice $invoice)
+    public function show(Request $request, Invoice $invoice): InvoiceResource
     {
         $this->authorize('view', $invoice);
 
@@ -86,9 +86,9 @@ class InvoicesController extends Controller
      * Update the specified resource in storage.
      *
      * @param  Request  $request
-     * @return JsonResponse
+     * @return InvoiceResource|JsonResponse
      */
-    public function update(Requests\InvoicesRequest $request, Invoice $invoice)
+    public function update(Requests\InvoicesRequest $request, Invoice $invoice): InvoiceResource|JsonResponse
     {
         $this->authorize('update', $invoice);
 
@@ -109,7 +109,7 @@ class InvoicesController extends Controller
      * @param  Request  $request
      * @return JsonResponse
      */
-    public function delete(DeleteInvoiceRequest $request)
+    public function delete(DeleteInvoiceRequest $request): JsonResponse
     {
         $this->authorize('delete multiple invoices');
 

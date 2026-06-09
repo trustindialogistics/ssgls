@@ -239,6 +239,14 @@
           />
         </template>
 
+        <!-- Payment Date -->
+        <template #cell-payment_date="{ row }">
+          <span v-if="row.data.formatted_payment_date">
+            {{ row.data.formatted_payment_date }}
+          </span>
+          <span v-else class="text-gray-400">-</span>
+        </template>
+
         <!-- Due Amount + Paid Status  -->
         <template #cell-due_amount="{ row }">
           <div class="flex justify-between">
@@ -368,6 +376,10 @@ const invoiceColumns = computed(() => {
       key: 'amount_paid',
       label: 'Amount Paid',
       tdClass: 'font-medium text-gray-900',
+    },
+    {
+      key: 'payment_date',
+      label: 'Payment Date',
     },
     {
       key: 'due_amount',

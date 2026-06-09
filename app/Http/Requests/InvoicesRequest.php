@@ -153,13 +153,18 @@ class InvoicesRequest extends FormRequest
             }
         }
 
-        $normalizedName = strtolower(preg_replace('/[^a-z0-9]+/i', '', $name));
         $customer = Customer::where('company_id', $companyId)
-            ->get()
-            ->first(function ($c) use ($normalizedName) {
-                return strtolower(preg_replace('/[^a-z0-9]+/i', '', $c->name)) === $normalizedName
-                    || strtolower(preg_replace('/[^a-z0-9]+/i', '', $c->display_name)) === $normalizedName;
-            });
+            ->where(function ($query) use ($name) {
+                $query->where('name', $name)
+                    ->orWhere('display_name', $name);
+            })->first();
+
+        if (! $customer) {
+            $customer = Customer::where('company_id', $companyId)
+                ->where(fn($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($name)])
+                                   ->orWhereRaw('LOWER(display_name) = ?', [strtolower($name)]))
+                ->first();
+        }
 
         if ($customer) {
             return $customer;

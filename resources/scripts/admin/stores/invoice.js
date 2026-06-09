@@ -612,7 +612,12 @@ export const useInvoiceStore = (useWindow = false) => {
           }
 
           this.newInvoice.invoice_date = moment().format(dateFormat)
-          this.newInvoice.due_date = ''
+          if (companyStore.selectedCompanySettings.invoice_set_due_date_automatically === 'YES') {
+            const days = parseInt(companyStore.selectedCompanySettings.invoice_due_date_days, 10) || 0
+            this.newInvoice.due_date = moment().add(days, 'days').format('YYYY-MM-DD')
+          } else {
+            this.newInvoice.due_date = ''
+          }
         } else {
           editActions = [this.fetchInvoice(route.params.id, isLrReceipt ? { template_name: transportTemplateName } : { template_name: 'office_invoice' })]
         }

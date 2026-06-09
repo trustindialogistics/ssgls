@@ -35,29 +35,82 @@ class CustomerStatsController extends Controller
         $isDaily = $request->get('view_type') === 'day';
         $companyId = (int) $request->header('company');
 
+        // 1. Establish date ranges
         if ($isDaily) {
             $startDate = Carbon::now()->startOfMonth()->startOfDay();
             $totalEndDate = Carbon::now()->endOfMonth()->endOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfDay();
+            $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
+            $terms = explode('-', $fiscalYear);
+            $companyStartMonth = intval($terms[0] ?? 1) ?: 1;
+            $hasCustomRange = $request->filled(['from_date', 'to_date']);
 
+            $start = Carbon::now();
+            if ($companyStartMonth <= $start->month) {
+                $startDate->month($companyStartMonth)->startOfMonth();
+            } else {
+                $startDate->subYear()->month($companyStartMonth)->startOfMonth();
+            }
+
+            if ($request->has('previous_year')) {
+                $startDate->subYear()->startOfMonth();
+            }
+
+            if ($hasCustomRange) {
+                $startDate = Carbon::parse($request->from_date)->startOfDay();
+                $totalEndDate = Carbon::parse($request->to_date)->endOfDay();
+            } else {
+                $startTemp = $startDate->copy();
+                $monthCounterTemp = 0;
+                while ($monthCounterTemp < 12) {
+                    $monthCounterTemp++;
+                    $startTemp->addMonth();
+                }
+                $totalEndDate = $startTemp->subMonth()->endOfMonth();
+            }
+        }
+
+        // 2. Pre-fetch all LRs and Expenses in memory
+        $lrReceipts = Invoice::where('company_id', $companyId)
+            ->whereCustomer($customer->id)
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->whereBetween('invoice_date', [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')])
+            ->get();
+
+        $expenses = Expense::whereBetween(
+            'expense_date',
+            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
+        )
+            ->whereCompany()
+            ->whereUser($customer->id)
+            ->get();
+
+        // 3. Process daily/monthly buckets
+        if ($isDaily) {
             $start = $startDate->copy();
 
             while ($start->lte($totalEndDate)) {
-                $bucketStart = $start->copy()->startOfDay();
-                $bucketEnd = $start->copy()->endOfDay();
+                $bucketStartStr = $start->format('Y-m-d');
 
-                $lrReceiptAmounts = $this->getCustomerLrAmountsBetween($bucketStart, $bucketEnd, (int) $customer->id, $companyId);
+                // Filter in memory
+                $bucketLrs = $lrReceipts->filter(function ($lr) use ($bucketStartStr) {
+                    $dateStr = $lr->invoice_date instanceof Carbon ? $lr->invoice_date->format('Y-m-d') : Carbon::parse($lr->invoice_date)->format('Y-m-d');
+                    return $dateStr === $bucketStartStr;
+                });
 
-                $debit = $lrReceiptAmounts['debit'];
-                $credit = $lrReceiptAmounts['credit'];
-                $profit_loss = $lrReceiptAmounts['profit_loss'];
+                $debit = 0;
+                $credit = 0;
+                foreach ($bucketLrs as $lr) {
+                    $debit += $lr->amountDebit;
+                    $credit += $lr->amountCredit;
+                }
+                $profit_loss = $credit - $debit;
 
-                $expense = Expense::whereBetween(
-                    'expense_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereUser($customer->id)
-                    ->sum('base_amount');
+                $expense = $expenses->filter(function ($exp) use ($bucketStartStr) {
+                    $dateStr = $exp->expense_date instanceof Carbon ? $exp->expense_date->format('Y-m-d') : Carbon::parse($exp->expense_date)->format('Y-m-d');
+                    return $dateStr === $bucketStartStr;
+                })->sum('base_amount');
 
                 $invoiceTotals[] = $credit;
                 $expenseTotals[] = $debit;
@@ -69,55 +122,35 @@ class CustomerStatsController extends Controller
             }
         } else {
             $monthCounter = 0;
-            $fiscalYear = CompanySetting::getSetting('fiscal_year', $request->header('company'));
-            $startDate = Carbon::now()->startOfDay();
-            $start = Carbon::now();
-            $end = Carbon::now();
-            $rangeEndDate = null;
-            $terms = explode('-', $fiscalYear);
-            $companyStartMonth = intval($terms[0] ?? 1) ?: 1;
+            $start = $startDate->copy();
+            $end = $startDate->copy()->endOfMonth();
             $hasCustomRange = $request->filled(['from_date', 'to_date']);
 
-            if ($companyStartMonth <= $start->month) {
-                $startDate->month($companyStartMonth)->startOfMonth();
-                $start->month($companyStartMonth)->startOfMonth();
-                $end->month($companyStartMonth)->endOfMonth();
-            } else {
-                $startDate->subYear()->month($companyStartMonth)->startOfMonth();
-                $start->subYear()->month($companyStartMonth)->startOfMonth();
-                $end->subYear()->month($companyStartMonth)->endOfMonth();
-            }
-
-            if ($request->has('previous_year')) {
-                $startDate->subYear()->startOfMonth();
-                $start->subYear()->startOfMonth();
-                $end->subYear()->endOfMonth();
-            }
-
-            if ($hasCustomRange) {
-                $startDate = Carbon::parse($request->from_date)->startOfDay();
-                $rangeEndDate = Carbon::parse($request->to_date)->endOfDay();
-                $start = $startDate->copy()->startOfMonth();
-                $end = $startDate->copy()->endOfMonth();
-            }
-
-            while ($hasCustomRange ? $start->lte($rangeEndDate) : $monthCounter < 12) {
+            while ($hasCustomRange ? $start->lte($totalEndDate) : $monthCounter < 12) {
                 $bucketStart = $hasCustomRange && $start->lt($startDate) ? $startDate->copy() : $start->copy();
-                $bucketEnd = $hasCustomRange && $end->gt($rangeEndDate) ? $rangeEndDate->copy() : $end->copy();
+                $bucketEnd = $hasCustomRange && $end->gt($totalEndDate) ? $totalEndDate->copy() : $end->copy();
 
-                $lrReceiptAmounts = $this->getCustomerLrAmountsBetween($bucketStart, $bucketEnd, (int) $customer->id, $companyId);
+                $bucketStartStr = $bucketStart->format('Y-m-d');
+                $bucketEndStr = $bucketEnd->format('Y-m-d');
 
-                $debit = $lrReceiptAmounts['debit'];
-                $credit = $lrReceiptAmounts['credit'];
-                $profit_loss = $lrReceiptAmounts['profit_loss'];
+                // Filter in memory
+                $bucketLrs = $lrReceipts->filter(function ($lr) use ($bucketStartStr, $bucketEndStr) {
+                    $dateStr = $lr->invoice_date instanceof Carbon ? $lr->invoice_date->format('Y-m-d') : Carbon::parse($lr->invoice_date)->format('Y-m-d');
+                    return $dateStr >= $bucketStartStr && $dateStr <= $bucketEndStr;
+                });
 
-                $expense = Expense::whereBetween(
-                    'expense_date',
-                    [$bucketStart->format('Y-m-d'), $bucketEnd->format('Y-m-d')]
-                )
-                    ->whereCompany()
-                    ->whereUser($customer->id)
-                    ->sum('base_amount');
+                $debit = 0;
+                $credit = 0;
+                foreach ($bucketLrs as $lr) {
+                    $debit += $lr->amountDebit;
+                    $credit += $lr->amountCredit;
+                }
+                $profit_loss = $credit - $debit;
+
+                $expense = $expenses->filter(function ($exp) use ($bucketStartStr, $bucketEndStr) {
+                    $dateStr = $exp->expense_date instanceof Carbon ? $exp->expense_date->format('Y-m-d') : Carbon::parse($exp->expense_date)->format('Y-m-d');
+                    return $dateStr >= $bucketStartStr && $dateStr <= $bucketEndStr;
+                })->sum('base_amount');
 
                 $invoiceTotals[] = $credit;
                 $expenseTotals[] = $debit;
@@ -130,10 +163,9 @@ class CustomerStatsController extends Controller
                 $start->addMonth()->startOfMonth();
                 $end->addMonth()->endOfMonth();
             }
-
-            $totalEndDate = $hasCustomRange ? $rangeEndDate : $start->copy()->subMonth()->endOfMonth();
         }
 
+        // 4. Calculate overall totals using pre-fetched collections
         $salesTotal = Invoice::whereBetween(
             'invoice_date',
             [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
@@ -143,28 +175,15 @@ class CustomerStatsController extends Controller
             ->whereRegularInvoice()
             ->sum('base_total');
 
-        // Consignment Profit/Loss is the sum of profit/loss of all customer's LRs in that date range
-        $chartLrReceipts = Invoice::whereCompany()
-            ->whereCustomer($customer->id)
-            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
-            ->whereBetween('invoice_date', [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')])
-            ->get();
-
         $totalDebit = 0;
         $totalCredit = 0;
-        foreach ($chartLrReceipts as $lr) {
+        foreach ($lrReceipts as $lr) {
             $totalDebit += $lr->amountDebit;
             $totalCredit += $lr->amountCredit;
         }
         $totalReceipts = $totalCredit - $totalDebit;
 
-        $totalExpenses = Expense::whereBetween(
-            'expense_date',
-            [$startDate->format('Y-m-d'), $totalEndDate->format('Y-m-d')]
-        )
-            ->whereCompany()
-            ->whereUser($customer->id)
-            ->sum('base_amount');
+        $totalExpenses = $expenses->sum('base_amount');
 
         $netProfit = (int) $totalReceipts - (int) $totalExpenses;
 

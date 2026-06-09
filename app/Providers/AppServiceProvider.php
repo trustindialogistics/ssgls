@@ -49,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public const CUSTOMER_HOME = '/customer/dashboard';
 
+    private bool $needsBackup = false;
+
     /**
      * Bootstrap any application services.
      */
@@ -78,7 +80,11 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\Event::listen(
                 \Illuminate\Database\Events\TransactionCommitted::class,
                 function () {
-                    $this->backupDatabase();
+                    if ($this->app->runningInConsole()) {
+                        $this->backupDatabase();
+                    } else {
+                        $this->needsBackup = true;
+                    }
                 }
             );
 
@@ -87,8 +93,19 @@ class AppServiceProvider extends ServiceProvider
                 $sql = strtolower($query->sql);
                 if (preg_match('/^\s*(insert|update|delete|replace|alter|drop|create|truncate)\b/i', $sql)) {
                     if (\Illuminate\Support\Facades\DB::transactionLevel() === 0) {
-                        $this->backupDatabase();
+                        if ($this->app->runningInConsole()) {
+                            $this->backupDatabase();
+                        } else {
+                            $this->needsBackup = true;
+                        }
                     }
+                }
+            });
+
+            // Defer backup to the end of the request
+            $this->app->terminating(function () {
+                if ($this->needsBackup) {
+                    $this->backupDatabase();
                 }
             });
         }

@@ -277,13 +277,24 @@ class LrReceiptAutoFillController extends Controller
             return null;
         }
 
-        return Customer::whereCompany()
-            ->with(['billingAddress', 'shippingAddress'])
-            ->get()
-            ->first(function ($customer) use ($normalizedName) {
-                return $this->normalizeName($customer->name) === $normalizedName
-                    || $this->normalizeName($customer->display_name) === $normalizedName;
-            });
+        $customer = Customer::whereCompany()
+            ->where(function ($query) use ($name) {
+                $query->where('name', $name)
+                    ->orWhere('display_name', $name);
+            })->first();
+
+        if (! $customer) {
+            $customer = Customer::whereCompany()
+                ->where(fn($q) => $q->whereRaw('LOWER(name) = ?', [strtolower($name)])
+                                   ->orWhereRaw('LOWER(display_name) = ?', [strtolower($name)]))
+                ->first();
+        }
+
+        if ($customer) {
+            return $customer->load(['billingAddress', 'shippingAddress']);
+        }
+
+        return null;
     }
 
     private function normalizeName(?string $name): string
