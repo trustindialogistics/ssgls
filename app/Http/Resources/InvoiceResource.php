@@ -65,8 +65,8 @@ class InvoiceResource extends JsonResource
             'base_tax' => $this->base_tax,
             'base_due_amount' => $this->base_due_amount,
             'currency_id' => $this->currency_id,
-            'amount_debit' => $this->amountDebit,
-            'amount_credit' => $this->amountCredit,
+            'amount_debit' => $this->amount_debit,
+            'amount_credit' => $this->amount_credit,
             'amount_paid' => $this->amountPaid,
             'lorry_receipt_advance_amount' => $this->template_name === Invoice::TEMPLATE_LORRY_RECEIPT
                 ? $this->lorryReceiptAdvanceAmount * 100
@@ -91,8 +91,8 @@ class InvoiceResource extends JsonResource
             'formatted_payment_date' => $this->relationLoaded('payments') && $this->payments->isNotEmpty()
                 ? $this->payments->sortByDesc('payment_date')->first()->formattedPaymentDate
                 : null,
-            'formatted_amount_debit_date' => $this->formattedAmountDebitDate,
-            'formatted_amount_credit_date' => $this->formattedAmountCreditDate,
+            'formatted_amount_debit_date' => $this->amount_debit_date,
+            'formatted_amount_credit_date' => $this->amount_credit_date,
             'allow_edit' => $this->allow_edit,
             'payment_module_enabled' => $this->payment_module_enabled,
             'sales_tax_type' => $this->sales_tax_type,

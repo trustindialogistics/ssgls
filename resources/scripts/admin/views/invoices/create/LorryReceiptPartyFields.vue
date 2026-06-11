@@ -220,7 +220,7 @@ const fieldMappingsByType = {
     ['Owner Name', 'name'],
     ['Owner Address', 'address'],
     ['Owner Phone No', 'phone'],
-    ['Financer Name', 'financer_name'],
+    ['Owner PAN No', 'financer_name'],
     ['Financer Address', 'financer_address'],
     ['Owner Bank Account No', 'bank_account_no'],
   ],

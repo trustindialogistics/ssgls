@@ -142,8 +142,19 @@ class LorryReceipt extends Model
         return url('/lorry-receipts/pdf/'.$this->unique_hash);
     }
 
+    public static function normalizeReceivedNoBilties(?string $value): string
+    {
+        $value = preg_replace('/[^0-9,]/', '', (string) $value);
+        $value = preg_replace('/,+/', ',', $value);
+        $value = trim($value, ',');
+        return $value;
+    }
+
     public static function createFromPayload(array $payload): self
     {
+        if (isset($payload['received_no_bilties'])) {
+            $payload['received_no_bilties'] = self::normalizeReceivedNoBilties($payload['received_no_bilties']);
+        }
         $payload = self::normalizePaymentPayload($payload);
         $receipt = self::create($payload);
         $receipt->unique_hash = Hashids::connection(self::class)->encode($receipt->id);
@@ -154,6 +165,9 @@ class LorryReceipt extends Model
 
     public function updateFromPayload(array $payload): self
     {
+        if (isset($payload['received_no_bilties'])) {
+            $payload['received_no_bilties'] = self::normalizeReceivedNoBilties($payload['received_no_bilties']);
+        }
         $payload = self::normalizePaymentPayload(array_merge(
             array_intersect_key($this->getAttributes(), array_flip(self::PAYLOAD_FIELDS)),
             $payload
@@ -291,7 +305,7 @@ class LorryReceipt extends Model
             'Owner Name' => 'owner_name',
             'Owner Address' => 'owner_address',
             'Owner Phone No' => 'owner_phone',
-            'Financer Name' => 'financer_name',
+            'Owner PAN No' => 'financer_name',
             'Financer Address' => 'financer_address',
             'Driver Name' => 'driver_name',
             'Driver Address' => 'driver_address',

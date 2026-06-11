@@ -69,7 +69,7 @@
                   type="text"
                 />
               </BaseInputGroup>
-              <BaseInputGroup label="Financer Name">
+              <BaseInputGroup label="Owner PAN No.">
                 <BaseInput
                   v-model="form.financer_name"
                   type="text"

@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent, computed, onMounted } from 'vue'
+import { defineAsyncComponent, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { helpers, requiredIf } from '@vuelidate/validators'
 import useVuelidate from '@vuelidate/core'
@@ -119,4 +119,23 @@ onMounted(() => {
     props.field.value = ''
   }
 })
+
+watch(
+  () => props.field.value,
+  (val) => {
+    if (val) {
+      if (props.field.label === 'Consignment Number') {
+        const normalized = String(val).replace(/[^0-9]/g, '')
+        if (props.field.value !== normalized) {
+          props.field.value = normalized
+        }
+      } else if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties') {
+        const normalized = String(val).replace(/[^0-9,]/g, '').replace(/,+/g, ',')
+        if (props.field.value !== normalized) {
+          props.field.value = normalized
+        }
+      }
+    }
+  }
+)
 </script>
