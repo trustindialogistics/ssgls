@@ -211,7 +211,7 @@
                 @if(count($lrReceipts) > 0)
                     @foreach ($lrReceipts as $lrReceipt)
                         @php
-                            $netVal = $lrReceipt->amountCredit - $lrReceipt->amountDebit;
+                            $netVal = (float) $lrReceipt->amount_credit - (float) $lrReceipt->amount_debit;
                             $netColor = $netVal >= 0 ? '#2ec4b6' : '#e71d36'; // Teal for profit, Red for loss
                         @endphp
                         <tr style="border-bottom: 1px solid #EAF1FB;">
@@ -219,10 +219,10 @@
                                 {{ $lrReceipt->invoice_number }}
                             </td>
                             <td style="padding: 8px 10px; text-align: right; font-size: 11px; color: #595959;">
-                                {!! format_money_pdf($lrReceipt->amountCredit, $currency) !!}
+                                {!! format_money_pdf($lrReceipt->amount_credit, $currency) !!}
                             </td>
                             <td style="padding: 8px 10px; text-align: right; font-size: 11px; color: #595959;">
-                                {!! format_money_pdf($lrReceipt->amountDebit, $currency) !!}
+                                {!! format_money_pdf($lrReceipt->amount_debit, $currency) !!}
                             </td>
                             <td style="padding: 8px 10px; text-align: right; font-size: 11px; font-weight: bold; color: {{ $netColor }};">
                                 {!! format_money_pdf($netVal, $currency) !!}

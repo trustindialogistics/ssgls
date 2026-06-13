@@ -102,8 +102,8 @@ class CustomerStatsController extends Controller
                 $debit = 0;
                 $credit = 0;
                 foreach ($bucketLrs as $lr) {
-                    $debit += $lr->amountDebit;
-                    $credit += $lr->amountCredit;
+                    $debit += (float) $lr->amount_debit;
+                    $credit += (float) $lr->amount_credit;
                 }
                 $profit_loss = $credit - $debit;
 
@@ -142,8 +142,8 @@ class CustomerStatsController extends Controller
                 $debit = 0;
                 $credit = 0;
                 foreach ($bucketLrs as $lr) {
-                    $debit += $lr->amountDebit;
-                    $credit += $lr->amountCredit;
+                    $debit += (float) $lr->amount_debit;
+                    $credit += (float) $lr->amount_credit;
                 }
                 $profit_loss = $credit - $debit;
 
@@ -178,8 +178,8 @@ class CustomerStatsController extends Controller
         $totalDebit = 0;
         $totalCredit = 0;
         foreach ($lrReceipts as $lr) {
-            $totalDebit += $lr->amountDebit;
-            $totalCredit += $lr->amountCredit;
+            $totalDebit += (float) $lr->amount_debit;
+            $totalCredit += (float) $lr->amount_credit;
         }
         $totalReceipts = $totalCredit - $totalDebit;
 
@@ -251,8 +251,8 @@ class CustomerStatsController extends Controller
         $credit = 0;
 
         foreach ($lrReceipts as $lrReceipt) {
-            $debit += $lrReceipt->amountDebit;
-            $credit += $lrReceipt->amountCredit;
+            $debit += (float) $lrReceipt->amount_debit;
+            $credit += (float) $lrReceipt->amount_credit;
         }
 
         return [

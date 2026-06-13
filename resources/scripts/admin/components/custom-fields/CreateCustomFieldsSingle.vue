@@ -11,6 +11,7 @@
       :options="field.options"
       :invalid="v$.value.$error"
       :placeholder="field.placeholder"
+      @input="handleInput"
     />
   </BaseInputGroup>
 </template>
@@ -138,4 +139,28 @@ watch(
     }
   }
 )
+
+function handleInput(event) {
+  if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties') {
+    normalizeBilties(event)
+  } else if (props.field.label === 'Consignment Number') {
+    normalizeConsignment(event)
+  }
+}
+
+function normalizeBilties(event) {
+  let value = event.target.value
+  value = value.replace(/[^0-9,]/g, '')
+  value = value.replace(/,+/g, ',')
+  value = value.replace(/^,|,$/g, '')
+  event.target.value = value
+  props.field.value = value
+}
+
+function normalizeConsignment(event) {
+  let value = event.target.value
+  value = value.replace(/[^0-9]/g, '')
+  event.target.value = value
+  props.field.value = value
+}
 </script>

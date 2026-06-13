@@ -19,6 +19,9 @@ export default {
   setup(props) {
     const badgeColorClasses = computed(() => {
       switch (props.status) {
+        case 'IN_PROGRESS':
+        case 'IN PROGRESS':
+          return 'bg-blue-400/25 px-2  py-1 text-sm  text-blue-900 uppercase font-normal text-center'
         case 'DRAFT':
           return 'bg-yellow-300/25 px-2  py-1 text-sm  text-yellow-800 uppercase font-normal text-center'
         case 'SENT':

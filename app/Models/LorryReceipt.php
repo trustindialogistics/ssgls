@@ -11,6 +11,27 @@ class LorryReceipt extends Model
 {
     protected $guarded = ['id'];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            $model->date_created = now();
+        });
+
+        static::updating(function ($model) {
+            $model->date_modified = now();
+            $dates = $model->modified_dates ?? [];
+            $dates[] = now()->toDateTimeString();
+            $model->modified_dates = $dates;
+        });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'modified_dates' => 'array',
+        ];
+    }
+
     public const PAYLOAD_FIELDS = [
         'company_id',
         'owner_customer_id',

@@ -18,6 +18,9 @@ const props = defineProps({
 
 const labelStatus = computed(() => {
   switch (props.status) {
+    case 'IN_PROGRESS':
+    case 'IN PROGRESS':
+      return 'In Progress'
     case 'DRAFT':
       return t('general.draft')
     case 'SENT':

@@ -502,6 +502,18 @@ async function submitForm() {
     tax: invoiceStore.getTotalTax,
   })
 
+  if (data.customFields) {
+    data.customFields.forEach((field) => {
+      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties') {
+        let val = String(field.value || '')
+        val = val.replace(/[^0-9,]/g, '')
+        val = val.replace(/,+/g, ',')
+        val = val.replace(/^,|,$/g, '')
+        field.value = val
+      }
+    })
+  }
+
   if (data.template_name === 'lorry_receipt') {
     data.items = data.items.map((item) => ({
       ...item,
@@ -510,10 +522,26 @@ async function submitForm() {
     }))
   }
 
-  data.items = data.items.map((item) => ({
-    ...item,
-    custom_fields: item.customFields || [],
-  }))
+  data.items = data.items.map((item) => {
+    let customFields = item.customFields || []
+    customFields.forEach((field) => {
+      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties') {
+        let val = String(field.value || '')
+        val = val.replace(/[^0-9,]/g, '')
+        val = val.replace(/,+/g, ',')
+        val = val.replace(/^,|,$/g, '')
+        field.value = val
+      } else if (field.label === 'Consignment Number') {
+        let val = String(field.value || '')
+        val = val.replace(/[^0-9]/g, '')
+        field.value = val
+      }
+    })
+    return {
+      ...item,
+      custom_fields: customFields,
+    }
+  })
 
   if (data.discount_per_item === 'YES') {
     data.items.forEach((item, index) => {

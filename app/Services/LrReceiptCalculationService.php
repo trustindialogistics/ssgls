@@ -6,22 +6,23 @@ use App\Models\Invoice;
 use App\Models\LorryReceipt;
 use App\Models\InvoiceItem;
 use App\Models\CompanySetting;
+use App\Models\Payment;
 use Carbon\Carbon;
 
 class LrReceiptCalculationService
 {
     /**
-     * Recalculate financial columns for a single LR Receipt Record.
+     * Calculate values for a single LR Receipt Record.
      */
-    public function recalculate(Invoice $lrReceiptRecord): void
+    public function calculateValues(Invoice $lrReceiptRecord): ?array
     {
         if ($lrReceiptRecord->template_name !== Invoice::TEMPLATE_LR_RECEIPT) {
-            return;
+            return null;
         }
 
         $docketNumber = trim($lrReceiptRecord->invoice_number);
         if ($docketNumber === '') {
-            return;
+            return null;
         }
 
         $companyId = $lrReceiptRecord->company_id;
@@ -48,30 +49,66 @@ class LrReceiptCalculationService
 
         // Golden Rule: Both conditions must be met, else everything is 0/null
         if ($matchedLorryReceipts->isEmpty() || !$hasOfficeInvoice) {
-            $lrReceiptRecord->update([
+            return [
                 'amount_debit' => 0.00,
                 'amount_credit' => 0.00,
                 'amount_debit_date' => null,
                 'amount_credit_date' => null,
                 'lorry_receipt_id' => null,
-            ]);
-            return;
+            ];
         }
 
-        // Calculate values
         $amountCredit = $this->calculateAmountCredit($docketNumber, $companyId);
         $amountDebit = $this->calculateAmountDebit($docketNumber, $companyId, $matchedLorryReceipts);
         $debitDate = $this->calculateDebitDate($docketNumber, $companyId, $matchedLorryReceipts);
         $creditDate = $this->calculateCreditDate($docketNumber, $companyId);
         $lorryReceiptId = $matchedLorryReceipts->first()->id;
 
-        $lrReceiptRecord->update([
+        return [
             'amount_debit' => $amountDebit,
             'amount_credit' => $amountCredit,
             'amount_debit_date' => $debitDate,
             'amount_credit_date' => $creditDate,
             'lorry_receipt_id' => $lorryReceiptId,
-        ]);
+        ];
+    }
+
+    /**
+     * Recalculate financial columns for a single LR Receipt Record.
+     */
+    public function recalculate(Invoice $lrReceiptRecord): void
+    {
+        $values = $this->calculateValues($lrReceiptRecord);
+        if ($values !== null) {
+            $lrReceiptRecord->update($values);
+
+            // Recalculate parent Lorry Receipt status
+            $companyId = $lrReceiptRecord->company_id;
+            $docketNumber = trim($lrReceiptRecord->invoice_number);
+
+            $matchedLorryReceipts = LorryReceipt::query()
+                ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+                ->where(function ($q) use ($docketNumber) {
+                    $q->where('received_no_bilties', 'like', $docketNumber)
+                      ->orWhere('received_no_bilties', 'like', $docketNumber . ',%')
+                      ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber)
+                      ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber . ',%');
+                })
+                ->get();
+
+            foreach ($matchedLorryReceipts as $lr) {
+                $lorryInvoice = Invoice::where('company_id', $lr->company_id)
+                    ->where('template_name', Invoice::TEMPLATE_LORRY_RECEIPT)
+                    ->where(function ($q) use ($lr) {
+                        $q->where('invoice_number', $lr->challan_no)
+                          ->orWhere('invoice_number', $lr->contract_no);
+                    })
+                    ->first();
+                if ($lorryInvoice) {
+                    $lorryInvoice->updateLorryReceiptStatus();
+                }
+            }
+        }
     }
 
     /**
@@ -91,8 +128,53 @@ class LrReceiptCalculationService
             ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->get();
 
+        $updates = [];
         foreach ($records as $record) {
-            $this->recalculate($record);
+            $values = $this->calculateValues($record);
+            if ($values !== null) {
+                $updates[] = array_merge(['id' => $record->id], $values);
+            }
+        }
+
+        if (!empty($updates)) {
+            Invoice::upsert(
+                $updates,
+                ['id'],
+                ['amount_debit', 'amount_credit', 'amount_debit_date', 'amount_credit_date', 'lorry_receipt_id']
+            );
+
+            // Update status of all affected lorry receipts
+            $matchedLorryReceipts = LorryReceipt::query()
+                ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+                ->where(function ($q) use ($docketNumbers) {
+                    foreach ($docketNumbers as $index => $docketNumber) {
+                        if ($index === 0) {
+                            $q->where('received_no_bilties', 'like', $docketNumber)
+                              ->orWhere('received_no_bilties', 'like', $docketNumber . ',%')
+                              ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber)
+                              ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber . ',%');
+                        } else {
+                            $q->orWhere('received_no_bilties', 'like', $docketNumber)
+                              ->orWhere('received_no_bilties', 'like', $docketNumber . ',%')
+                              ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber)
+                              ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber . ',%');
+                        }
+                    }
+                })
+                ->get();
+
+            foreach ($matchedLorryReceipts as $lr) {
+                $lorryInvoice = Invoice::where('company_id', $lr->company_id)
+                    ->where('template_name', Invoice::TEMPLATE_LORRY_RECEIPT)
+                    ->where(function ($q) use ($lr) {
+                        $q->where('invoice_number', $lr->challan_no)
+                          ->orWhere('invoice_number', $lr->contract_no);
+                    })
+                    ->first();
+                if ($lorryInvoice) {
+                    $lorryInvoice->updateLorryReceiptStatus();
+                }
+            }
         }
     }
 
@@ -129,11 +211,9 @@ class LrReceiptCalculationService
      */
     public function calculateDebitShareForLorryReceipt(LorryReceipt $lorryReceipt, string $docketNumber, ?int $companyId): float
     {
-        $invoiceModel = new Invoice();
-        
-        $hasFinal = $invoiceModel->lorryReceiptHasFinalPaymentOperation($lorryReceipt);
-        $netAmountPayable = $hasFinal ? $invoiceModel->numericTransportAmount($lorryReceipt->net_amount_payable) : 0;
-        $totalDebit = $invoiceModel->numericTransportAmount($lorryReceipt->advance_amount) + $netAmountPayable;
+        $hasFinal = Invoice::lorryReceiptHasFinalPaymentOperation($lorryReceipt);
+        $netAmountPayable = $hasFinal ? Invoice::numericTransportAmount($lorryReceipt->net_amount_payable) : 0;
+        $totalDebit = Invoice::numericTransportAmount($lorryReceipt->advance_amount) + $netAmountPayable;
 
         $dockets = array_map('trim', explode(',', $lorryReceipt->received_no_bilties));
         $dockets = array_unique(array_filter($dockets));
@@ -193,14 +273,13 @@ class LrReceiptCalculationService
     {
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $companyId);
         $dates = [];
-        $invoiceModel = new Invoice();
 
         foreach ($matchedLorryReceipts as $lorryReceipt) {
-            if ($invoiceModel->numericTransportAmount($lorryReceipt->advance_amount) > 0 && $lorryReceipt->advance_on) {
+            if (Invoice::numericTransportAmount($lorryReceipt->advance_amount) > 0 && $lorryReceipt->advance_on) {
                 $dates[] = Carbon::parse($lorryReceipt->advance_on)->translatedFormat($dateFormat);
             }
 
-            if ($invoiceModel->lorryReceiptHasFinalPaymentOperation($lorryReceipt) && $lorryReceipt->final_balance_on) {
+            if (Invoice::lorryReceiptHasFinalPaymentOperation($lorryReceipt) && $lorryReceipt->final_balance_on) {
                 $dates[] = Carbon::parse($lorryReceipt->final_balance_on)->translatedFormat($dateFormat);
             }
         }
@@ -217,30 +296,29 @@ class LrReceiptCalculationService
      */
     public function calculateCreditDate(string $docketNumber, ?int $companyId): ?string
     {
-        $matchingInvoices = Invoice::query()
-            ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE)
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
-            ->whereHas('items', function ($q) use ($docketNumber) {
-                $q->where('consignment_number', $docketNumber);
-            })
-            ->with('payments')
-            ->get();
-
-        $dates = [];
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $companyId);
 
-        foreach ($matchingInvoices as $matchingInvoice) {
-            foreach ($matchingInvoice->payments as $payment) {
-                if ($payment->payment_date) {
-                    $dates[] = Carbon::parse($payment->payment_date)->translatedFormat($dateFormat);
-                }
-            }
-        }
+        $paymentDates = Payment::query()
+            ->whereHas('invoice', function ($q) use ($docketNumber, $companyId) {
+                $q->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE)
+                  ->when($companyId, fn($q2) => $q2->where('company_id', $companyId))
+                  ->whereHas('items', function ($q3) use ($docketNumber) {
+                      $q3->where('consignment_number', $docketNumber);
+                  });
+            })
+            ->whereNotNull('payment_date')
+            ->pluck('payment_date');
 
-        if (empty($dates)) {
+        if ($paymentDates->isEmpty()) {
             return null;
         }
 
-        return implode(', ', array_unique($dates));
+        $dates = $paymentDates
+            ->map(fn($date) => Carbon::parse($date)->translatedFormat($dateFormat))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return implode(', ', $dates);
     }
 }

@@ -283,15 +283,6 @@ const lorryFieldSections = computed(() => {
     return !assignedLabels.has(field.field.label) && !hiddenLorryFieldLabels.includes(field.field.label)
   })
 
-  if (otherFields.length) {
-    sections.push({
-      key: 'Other',
-      title: 'Other Details',
-      description: 'Additional fields not assigned to a receipt section.',
-      fields: otherFields,
-    })
-  }
-
   return sections
 })
 

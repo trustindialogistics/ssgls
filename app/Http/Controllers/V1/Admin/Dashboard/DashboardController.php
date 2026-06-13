@@ -229,8 +229,8 @@ class DashboardController extends Controller
         $credit = 0;
 
         foreach ($lrReceipts as $lrReceipt) {
-            $debit += $lrReceipt->amountDebit;
-            $credit += $lrReceipt->amountCredit;
+            $debit += (float) $lrReceipt->amount_debit;
+            $credit += (float) $lrReceipt->amount_credit;
         }
 
         return [

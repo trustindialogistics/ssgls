@@ -68,10 +68,10 @@ const canShowSendButton = computed(() => {
     return true
   }
 
-  return isTransportReceiptView.value && ['SENT', 'VIEWED'].includes(invoiceData.value.status)
+  return isTransportReceiptView.value && ['SENT', 'VIEWED', 'COMPLETED'].includes(invoiceData.value.status)
 })
 const sendButtonLabel = computed(() => {
-  const action = ['SENT', 'VIEWED'].includes(invoiceData.value?.status) ? 'Resend' : 'Send'
+  const action = ['SENT', 'VIEWED', 'COMPLETED'].includes(invoiceData.value?.status) ? 'Resend' : 'Send'
 
   return isLorryReceiptView.value ? `${action} Lorry Receipt` : isLrReceiptView.value ? `${action} LR Receipt` : t('invoices.send_invoice')
 })

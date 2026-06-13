@@ -39,7 +39,7 @@ class ProfitLossReportController extends Controller
 
         $totalIncome = 0;
         foreach ($lrReceipts as $lrReceipt) {
-            $totalIncome += ($lrReceipt->amountCredit - $lrReceipt->amountDebit);
+            $totalIncome += ((float) $lrReceipt->amount_credit - (float) $lrReceipt->amount_debit);
         }
 
         $netProfit = $totalIncome;

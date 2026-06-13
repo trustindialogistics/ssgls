@@ -93,11 +93,29 @@ class Invoice extends Model implements HasMedia
             'discount' => 'float',
             'discount_val' => 'integer',
             'exchange_rate' => 'float',
+            'modified_dates' => 'array',
         ];
     }
 
     protected static function booted()
     {
+        static::creating(function ($model) {
+            $model->date_created = now();
+        });
+
+        static::updating(function ($model) {
+            $model->date_modified = now();
+            $dates = $model->modified_dates ?? [];
+            $dates[] = now()->toDateTimeString();
+            $model->modified_dates = $dates;
+        });
+
+        static::saving(function ($model) {
+            if ($model->template_name === self::TEMPLATE_LORRY_RECEIPT) {
+                $model->determineLorryReceiptStatus();
+            }
+        });
+
         static::deleting(function (Invoice $invoice) {
             if ($invoice->template_name === self::TEMPLATE_LORRY_RECEIPT && ! empty($invoice->invoice_number)) {
                 LorryReceipt::query()
@@ -192,7 +210,7 @@ class Invoice extends Model implements HasMedia
         $lorryReceipt = $this->matchingLorryReceipt();
 
         if ($lorryReceipt) {
-            return $this->numericTransportAmount($lorryReceipt->advance_amount);
+            return self::numericTransportAmount($lorryReceipt->advance_amount);
         }
 
         return $this->customFieldAmount(['Advance Paid Rs', 'Advance Amount']) ?? 0;
@@ -207,8 +225,8 @@ class Invoice extends Model implements HasMedia
         $lorryReceipt = $this->matchingLorryReceipt();
 
         if ($lorryReceipt) {
-            if ($this->lorryReceiptHasFinalPaymentOperation($lorryReceipt)) {
-                return $this->numericTransportAmount($lorryReceipt->net_amount_payable);
+            if (self::lorryReceiptHasFinalPaymentOperation($lorryReceipt)) {
+                return self::numericTransportAmount($lorryReceipt->net_amount_payable);
             }
 
             return $this->lorryReceiptSectionCBalance($lorryReceipt);
@@ -838,6 +856,10 @@ class Invoice extends Model implements HasMedia
      */
     public function getInvoiceStatusByAmount($amount)
     {
+        if ($this->template_name === self::TEMPLATE_LORRY_RECEIPT) {
+            return [];
+        }
+
         if ($amount < 0) {
             return [];
         }
@@ -1160,27 +1182,27 @@ class Invoice extends Model implements HasMedia
 
     private function lorryReceiptSectionCBalance(LorryReceipt $lorryReceipt): int|float|null
     {
-        $balanceAmount = $this->numericTransportAmount($lorryReceipt->balance_amount);
+        $balanceAmount = self::numericTransportAmount($lorryReceipt->balance_amount);
 
         if ($balanceAmount > 0) {
             return $balanceAmount;
         }
 
-        $grossHireAmount = $this->numericTransportAmount($lorryReceipt->gross_hire_amount);
+        $grossHireAmount = self::numericTransportAmount($lorryReceipt->gross_hire_amount);
 
         if ($grossHireAmount <= 0) {
-            $grossHireAmount = $this->numericTransportAmount($lorryReceipt->lorry_hire_amount)
-                + $this->numericTransportAmount($lorryReceipt->other_charges_amount);
+            $grossHireAmount = self::numericTransportAmount($lorryReceipt->lorry_hire_amount)
+                + self::numericTransportAmount($lorryReceipt->other_charges_amount);
         }
 
         if ($grossHireAmount <= 0) {
             return null;
         }
 
-        return $grossHireAmount - $this->numericTransportAmount($lorryReceipt->advance_amount);
+        return $grossHireAmount - self::numericTransportAmount($lorryReceipt->advance_amount);
     }
 
-    public function lorryReceiptHasFinalPaymentOperation(LorryReceipt $lorryReceipt): bool
+    public static function lorryReceiptHasFinalPaymentOperation(LorryReceipt $lorryReceipt): bool
     {
         return collect([
             $lorryReceipt->detention_amount,
@@ -1188,7 +1210,26 @@ class Invoice extends Model implements HasMedia
             $lorryReceipt->final_other_amount,
             $lorryReceipt->less_advance_other_branch_amount,
             $lorryReceipt->less_deduction_claims_amount,
-        ])->contains(fn ($amount): bool => $this->nullableTransportAmount($amount) !== null);
+            $lorryReceipt->final_paid_to,
+            $lorryReceipt->final_balance_paid_at,
+            $lorryReceipt->final_balance_code,
+            $lorryReceipt->final_balance_on,
+            $lorryReceipt->net_amount_payable,
+            $lorryReceipt->final_cash_cheque_no,
+            $lorryReceipt->final_cash_cheque_on,
+            $lorryReceipt->final_bank,
+            $lorryReceipt->final_rupees_only,
+            $lorryReceipt->final_passed_by,
+            $lorryReceipt->final_certified_by,
+            $lorryReceipt->final_prepared_by,
+            $lorryReceipt->final_payment_received_by,
+        ])->contains(function ($value): bool {
+            if ($value === null) {
+                return false;
+            }
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' && $trimmed !== '0' && $trimmed !== '0.00';
+        });
     }
 
     private function customFieldsHaveFinalPaymentOperation(): bool
@@ -1199,7 +1240,57 @@ class Invoice extends Model implements HasMedia
             $this->customFieldAmount(['Other Rs', 'Final Other Amount']),
             $this->customFieldAmount(['Less Adv. at other branch', 'Less Advance Other Branch Amount']),
             $this->customFieldAmount(['Less Deduction for Claims', 'Less Deduction Claims Amount']),
-        ])->contains(fn ($amount): bool => $amount !== null);
+            $this->customFieldAmount(['Net Amount Payable']),
+            $this->customFieldValue(['Final Paid To']),
+            $this->customFieldValue(['Final Balance Amount Paid at', 'Final Balance Code']),
+            $this->customFieldValue(['Final Balance Date']),
+            $this->customFieldValue(['Cash/Cheque No.', 'Final Cash Cheque No']),
+            $this->customFieldValue(['Final Bank']),
+            $this->customFieldValue(['Final Rupees Only']),
+            $this->customFieldValue(['Final Passed By']),
+            $this->customFieldValue(['Final Certified By']),
+            $this->customFieldValue(['Final Prepared By']),
+            $this->customFieldValue(['Final Payment Received By']),
+        ])->contains(function ($value): bool {
+            if ($value === null) {
+                return false;
+            }
+            $trimmed = trim((string) $value);
+            return $trimmed !== '' && $trimmed !== '0' && $trimmed !== '0.00';
+        });
+    }
+
+    /**
+     * @param  array<int, string>  $labels
+     */
+    private function customFieldValue(array $labels): ?string
+    {
+        if (! $this->relationLoaded('fields')) {
+            return null;
+        }
+
+        $normalizedLabels = collect($labels)
+            ->map(fn (string $label): string => $this->normalizeTransportLabel($label))
+            ->all();
+
+        foreach ($this->fields as $field) {
+            $customField = $field->customField;
+
+            if (! $customField) {
+                continue;
+            }
+
+            $matches = in_array($this->normalizeTransportLabel($customField->label), $normalizedLabels, true)
+                || in_array($this->normalizeTransportLabel($customField->name), $normalizedLabels, true);
+
+            if (! $matches) {
+                continue;
+            }
+
+            return $field->defaultAnswer;
+        }
+
+        return null;
     }
 
     private function customFieldFinalNetAmountPayable(): int|float|null
@@ -1347,7 +1438,7 @@ class Invoice extends Model implements HasMedia
         return $invoice?->id;
     }
 
-    public function numericTransportAmount(mixed $amount): int|float
+    public static function numericTransportAmount(mixed $amount): int|float
     {
         if ($amount === null || $amount === '') {
             return 0;
@@ -1362,5 +1453,78 @@ class Invoice extends Model implements HasMedia
         $numericAmount = (float) $number;
 
         return (float) (int) $numericAmount === $numericAmount ? (int) $numericAmount : $numericAmount;
+    }
+
+    public function determineLorryReceiptStatus(): string
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
+            return $this->status;
+        }
+
+        $lorryReceipt = $this->matchingLorryReceipt();
+        if (!$lorryReceipt) {
+            return $this->status;
+        }
+
+        // 1. Get all dockets (LR numbers) inside this Lorry Receipt
+        $dockets = array_map('trim', explode(',', $lorryReceipt->received_no_bilties));
+        $dockets = array_unique(array_filter($dockets));
+
+        // 2. Check if Profit & Loss is calculated for EACH LR docket
+        $isCompleted = false;
+        if (!empty($dockets)) {
+            $lrReceipts = self::where('company_id', $this->company_id)
+                ->where('template_name', self::TEMPLATE_LR_RECEIPT)
+                ->whereIn('invoice_number', $dockets)
+                ->get();
+
+            $allCalculated = true;
+            foreach ($dockets as $docket) {
+                $match = $lrReceipts->firstWhere('invoice_number', $docket);
+                if (!$match || (int) $match->lorry_receipt_id !== (int) $lorryReceipt->id) {
+                    $allCalculated = false;
+                    break;
+                }
+            }
+            if ($allCalculated) {
+                $isCompleted = true;
+            }
+        }
+
+        // 3. Determine status
+        if ($isCompleted) {
+            $status = self::STATUS_COMPLETED;
+        } else {
+            // Check if Section E is filled
+            $hasFinal = self::lorryReceiptHasFinalPaymentOperation($lorryReceipt);
+            if ($hasFinal) {
+                $status = 'PAID';
+            } else {
+                // Check if Section C advance paid value is there (advance_amount > 0)
+                $advanceAmount = self::numericTransportAmount($lorryReceipt->advance_amount);
+                if ($advanceAmount > 0) {
+                    $status = 'IN PROGRESS';
+                } else {
+                    $status = self::STATUS_DRAFT;
+                }
+            }
+        }
+
+        $this->status = $status;
+        return $status;
+    }
+
+    public function updateLorryReceiptStatus(): void
+    {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
+            return;
+        }
+
+        $oldStatus = $this->status;
+        $newStatus = $this->determineLorryReceiptStatus();
+
+        if ($oldStatus !== $newStatus) {
+            $this->saveQuietly();
+        }
     }
 }

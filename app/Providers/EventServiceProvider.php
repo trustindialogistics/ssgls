@@ -15,11 +15,23 @@ class EventServiceProvider extends ServiceProvider
         'eloquent.saved: App\Models\LorryReceipt' => [
             \App\Listeners\RecalculateOnLorryReceiptSaved::class,
         ],
+        'eloquent.deleted: App\Models\LorryReceipt' => [
+            \App\Listeners\RecalculateOnLorryReceiptDeleted::class,
+        ],
         'eloquent.saved: App\Models\Invoice' => [
             \App\Listeners\RecalculateOnOfficeInvoiceSaved::class,
         ],
+        'eloquent.created: App\Models\Invoice' => [
+            \App\Listeners\RecalculateOnLrReceiptCreated::class,
+        ],
+        'eloquent.deleted: App\Models\Invoice' => [
+            \App\Listeners\RecalculateOnLrReceiptDeleted::class,
+        ],
         'eloquent.created: App\Models\Payment' => [
             \App\Listeners\RecalculateOnPaymentCreated::class,
+        ],
+        'eloquent.deleted: App\Models\InvoiceItem' => [
+            \App\Listeners\RecalculateOnInvoiceItemDeleted::class,
         ],
     ];
 

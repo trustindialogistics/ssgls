@@ -94,14 +94,12 @@ class LrReceiptLookupController extends Controller
             return null;
         }
 
-        $normalizedPartyName = $this->normalizeLabel($partyName);
-
         return Customer::whereCompany()
-            ->get()
-            ->first(function (Customer $customer) use ($normalizedPartyName) {
-                return $this->normalizeLabel($customer->name) === $normalizedPartyName
-                    || $this->normalizeLabel($customer->company_name) === $normalizedPartyName;
-            });
+            ->where(function ($q) use ($partyName) {
+                $q->where('name', 'LIKE', '%' . $partyName . '%')
+                  ->orWhere('company_name', 'LIKE', '%' . $partyName . '%');
+            })
+            ->first();
     }
 
     private function normalizeLabel(?string $label): string

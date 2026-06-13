@@ -6,16 +6,8 @@ use App\Models\Payment;
 use App\Models\Invoice;
 use App\Services\LrReceiptCalculationService;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-
-class RecalculateOnPaymentCreated implements ShouldQueue
+class RecalculateOnPaymentDeleted
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
     /**
      * Create the event listener.
      */
