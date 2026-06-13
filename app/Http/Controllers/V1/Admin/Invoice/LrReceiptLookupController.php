@@ -94,14 +94,30 @@ class LrReceiptLookupController extends Controller
             return null;
         }
 
-        $normalizedPartyName = $this->normalizeLabel($partyName);
-
-        return Customer::whereCompany()
-            ->where(function ($q) use ($normalizedPartyName) {
-                $q->whereRaw('LOWER(REPLACE(REPLACE(REPLACE(name, " ", ""), "-", ""), ".", "")) = ?', [$normalizedPartyName])
-                  ->orWhereRaw('LOWER(REPLACE(REPLACE(REPLACE(company_name, " ", ""), "-", ""), ".", "")) = ?', [$normalizedPartyName]);
-            })
+        // Try exact match first (fast, uses index)
+        $customer = Customer::whereCompany()
+            ->where('name', $partyName)
             ->first();
+
+        if ($customer) {
+            return $customer;
+        }
+
+        // Try case-insensitive match on name
+        $customer = Customer::whereCompany()
+            ->whereRaw('LOWER(name) = ?', [strtolower($partyName)])
+            ->first();
+
+        if ($customer) {
+            return $customer;
+        }
+
+        // Try company_name
+        $customer = Customer::whereCompany()
+            ->whereRaw('LOWER(company_name) = ?', [strtolower($partyName)])
+            ->first();
+
+        return $customer;
     }
 
     private function normalizeLabel(?string $label): string

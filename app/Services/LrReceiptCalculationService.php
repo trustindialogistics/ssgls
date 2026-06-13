@@ -92,29 +92,37 @@ class LrReceiptCalculationService
         ];
     }
 
-    /**
-     * Recalculate financial columns for a single LR Receipt Record.
-     */
     public function recalculate(Invoice $lrReceiptRecord): void
     {
-        $values = $this->calculateValues($lrReceiptRecord);
+        if ($lrReceiptRecord->template_name !== Invoice::TEMPLATE_LR_RECEIPT) {
+            return;
+        }
+
+        $docketNumber = trim($lrReceiptRecord->invoice_number);
+        if ($docketNumber === '') {
+            return;
+        }
+
+        $companyId = $lrReceiptRecord->company_id;
+
+        // Query LorryReceipts ONCE
+        $matchedLorryReceipts = LorryReceipt::query()
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->where(function ($q) use ($docketNumber) {
+                $q->where('received_no_bilties', 'like', $docketNumber)
+                  ->orWhere('received_no_bilties', 'like', $docketNumber . ',%')
+                  ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber)
+                  ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber . ',%');
+            })
+            ->get();
+
+        // Use already-loaded LorryReceipts (no second query)
+        $values = $this->calculateValuesWithLorryReceipts($lrReceiptRecord, $matchedLorryReceipts);
+
         if ($values !== null) {
             $lrReceiptRecord->update($values);
 
-            // Recalculate parent Lorry Receipt status
-            $companyId = $lrReceiptRecord->company_id;
-            $docketNumber = trim($lrReceiptRecord->invoice_number);
-
-            $matchedLorryReceipts = LorryReceipt::query()
-                ->when($companyId, fn($q) => $q->where('company_id', $companyId))
-                ->where(function ($q) use ($docketNumber) {
-                    $q->where('received_no_bilties', 'like', $docketNumber)
-                      ->orWhere('received_no_bilties', 'like', $docketNumber . ',%')
-                      ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber)
-                      ->orWhere('received_no_bilties', 'like', '%,' . $docketNumber . ',%');
-                })
-                ->get();
-
+            // Reuse already-loaded $matchedLorryReceipts for status update
             foreach ($matchedLorryReceipts as $lr) {
                 $lorryInvoice = Invoice::where('company_id', $lr->company_id)
                     ->where('template_name', Invoice::TEMPLATE_LORRY_RECEIPT)

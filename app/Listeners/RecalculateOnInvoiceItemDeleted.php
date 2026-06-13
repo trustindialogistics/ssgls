@@ -21,6 +21,7 @@ class RecalculateOnInvoiceItemDeleted implements ShouldQueue
     public function handle(InvoiceItem $item): void
     {
         $consignmentNumber = $item->consignment_number;
+        $item->loadMissing('invoice');
         $invoice = $item->invoice;
 
         if (!$consignmentNumber || !$invoice || $invoice->template_name !== Invoice::TEMPLATE_OFFICE_INVOICE) {
