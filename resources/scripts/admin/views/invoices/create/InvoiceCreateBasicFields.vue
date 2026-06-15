@@ -6,12 +6,12 @@
       :content-loading="isLoading"
       type="invoice"
       :label="isTransportReceiptTemplate ? customerLabel : ''"
-      :class="isTransportReceiptTemplate ? 'order-2 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
+      :class="isTransportReceiptTemplate ? 'order-1 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
     />
 
     <div
       v-if="isLrReceiptTemplate"
-      class="order-1 col-span-12 lg:col-span-4 pr-0"
+      class="order-2 col-span-12 lg:col-span-4 pr-0"
     >
       <BaseContentPlaceholders v-if="isLoading">
         <BaseContentPlaceholdersBox
@@ -22,33 +22,27 @@
       </BaseContentPlaceholders>
       <div v-else>
         <div
-          v-if="selectedConsignor"
+          v-if="selectedConsignee"
           class="flex flex-col p-4 bg-white border border-gray-200 border-solid min-h-[170px] rounded-md"
         >
           <div class="flex relative justify-between gap-3 mb-2">
             <div class="flex-1 flex items-center gap-2">
               <BaseText
-                :text="selectedConsignor.name || selectedConsignor.display_name"
+                :text="selectedConsignee.name || selectedConsignee.display_name"
                 class="text-base font-medium text-left text-gray-900"
               />
-              <span
-                v-if="selectedConsignor.is_temp"
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800"
-              >
-                New Customer (Auto Fill)
-              </span>
             </div>
             <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
               <a
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
-                @click.stop="editConsignor"
+                @click.stop="editConsignee"
               >
                 <BaseIcon name="PencilIcon" class="text-gray-500 h-4 w-4 mr-1" />
                 {{ $t('general.edit') }}
               </a>
               <a
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
-                @click="resetConsignor"
+                @click="resetConsignee"
               >
                 <BaseIcon name="XCircleIcon" class="text-gray-500 h-4 w-4 mr-1" />
                 {{ $t('general.deselect') }}
@@ -56,28 +50,14 @@
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mt-2">
-            <div v-if="selectedConsignor.billing" class="flex flex-col">
+            <div v-if="selectedConsignee.billing" class="flex flex-col">
               <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
                 Bill To
               </label>
               <div class="flex flex-col flex-1 p-0 text-left">
                 <label
-                  v-for="(line, index) in formatAddressLines(selectedConsignor.billing)"
+                  v-for="(line, index) in formatAddressLines(selectedConsignee.billing)"
                   :key="`billing-${index}-${line}`"
-                  class="relative w-11/12 text-sm truncate"
-                >
-                  {{ line }}
-                </label>
-              </div>
-            </div>
-            <div v-if="selectedConsignor.shipping && !isLrReceiptTemplate" class="flex flex-col">
-              <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
-                Ship To
-              </label>
-              <div class="flex flex-col flex-1 p-0 text-left">
-                <label
-                  v-for="(line, index) in formatAddressLines(selectedConsignor.shipping)"
-                  :key="`shipping-${index}-${line}`"
                   class="relative w-11/12 text-sm truncate"
                 >
                   {{ line }}
@@ -93,7 +73,7 @@
               'focus:ring-2 focus:ring-primary-400': !open,
             }"
             class="w-full outline-hidden rounded-md"
-            @click="ensureConsignorsLoaded"
+            @click="ensureConsigneesLoaded"
           >
             <div class="relative flex justify-center px-0 p-0 py-16 bg-white border border-gray-200 border-solid rounded-md min-h-[170px]">
               <BaseIcon
@@ -101,7 +81,7 @@
                 class="flex justify-center !w-10 !h-10 p-2 mr-5 text-sm text-white bg-gray-200 rounded-full font-base"
               />
               <div class="mt-1">
-                <label class="text-lg font-medium text-gray-900">Consignor</label>
+                <label class="text-lg font-medium text-gray-900">Consignee</label>
               </div>
             </div>
           </PopoverButton>
@@ -123,12 +103,12 @@
               >
                 <div class="relative">
                   <BaseInput
-                    v-model="consignorSearch"
+                    v-model="consigneeSearch"
                     container-class="m-4"
                     :placeholder="$t('general.search')"
                     type="text"
                     icon="search"
-                    @update:modelValue="debounceSearchConsignors"
+                    @update:modelValue="debounceSearchConsignees"
                   />
 
                   <ul class="max-h-80 flex flex-col overflow-auto list border-t border-gray-200">
@@ -136,7 +116,7 @@
                       v-for="customer in customerStore.customers"
                       :key="customer.id"
                       class="flex px-6 py-2 border-b border-gray-200 border-solid cursor-pointer hover:cursor-pointer hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100"
-                      @click="selectConsignor(customer, close)"
+                      @click="selectConsignee(customer, close)"
                     >
                       <div class="flex items-center justify-center h-10 w-10 mr-4 rounded-full bg-gray-100 uppercase text-primary-500">
                         {{ (customer.name || customer.display_name || 'C').charAt(0) }}
@@ -274,8 +254,8 @@ const customerStore = useCustomerStore()
 const modalStore = useModalStore()
 const globalStore = useGlobalStore()
 const router = useRouter()
-const selectedConsignor = ref(null)
-const consignorSearch = ref('')
+const selectedConsignee = ref(null)
+const consigneeSearch = ref('')
 const isInitialized = ref(false)
 
 const enableTime = computed(() => {
@@ -298,12 +278,10 @@ const isLorryReceiptTemplate = computed(() => {
 const isTransportReceiptTemplate = computed(() => {
   return isLrReceiptTemplate.value || isLorryReceiptTemplate.value
 })
+
 const customerLabel = computed(() => {
   if (isLorryReceiptTemplate.value) {
     return 'Party'
-  }
-  if (isLrReceiptTemplate.value) {
-    return 'Consignee'
   }
   return 'Consignor'
 })
@@ -312,8 +290,8 @@ const gstTaxThroughField = computed(() => {
   return getInvoiceField('GST Tax Through')
 })
 
-const debounceSearchConsignors = useDebounceFn(() => {
-  fetchConsignors(consignorSearch.value)
+const debounceSearchConsignees = useDebounceFn(() => {
+  fetchConsignees(consigneeSearch.value)
 }, 500)
 
 function getInvoiceField(label) {
@@ -404,30 +382,35 @@ async function syncLorryPartyPaymentFields(customer) {
   }
 }
 
-async function selectConsignor(customer, close) {
+async function selectConsignee(customer, close) {
   const response = await customerStore.fetchCustomer(customer.id)
-  selectedConsignor.value = response.data.data
-  syncConsignorFields(selectedConsignor.value)
+  selectedConsignee.value = response.data.data
+  invoiceStore.newInvoice.consigneeCustomer = selectedConsignee.value
+  invoiceStore.newInvoice.consignee_customer_id = selectedConsignee.value.id
+  syncConsigneeFields(selectedConsignee.value)
   close()
-  consignorSearch.value = ''
+  consigneeSearch.value = ''
 }
 
-function resetConsignor() {
-  selectedConsignor.value = null
-  syncConsignorFields(null)
+function resetConsignee() {
+  selectedConsignee.value = null
+  invoiceStore.newInvoice.consigneeCustomer = null
+  invoiceStore.newInvoice.consignee_customer_id = null
+  syncConsigneeFields(null)
 }
 
-function fetchConsignors(search = '') {
+function fetchConsignees(search = '') {
   customerStore.fetchCustomers({
     display_name: search,
+    type: 'CONSIGNEE',
     page: 1,
   })
 }
 
-function ensureConsignorsLoaded() {
-  if (!customerStore.customers.length || customerStore.loadedType !== 'CUSTOMER') {
+function ensureConsigneesLoaded() {
+  if (!customerStore.customers.length || customerStore.loadedType !== 'CONSIGNEE') {
     customerStore.customers = []
-    fetchConsignors()
+    fetchConsignees()
   }
 }
 
@@ -436,6 +419,8 @@ function openCustomerModal(close) {
   globalStore.fetchCurrencies()
   globalStore.fetchCountries()
 
+  customerStore.tempRole = 'consignee'
+
   modalStore.openModal({
     title: 'Add Customer',
     componentName: 'CustomerModal',
@@ -443,28 +428,15 @@ function openCustomerModal(close) {
   })
 }
 
-async function editConsignor() {
-  if (selectedConsignor.value?.is_temp) {
-    customerStore.currentCustomer = JSON.parse(JSON.stringify(selectedConsignor.value))
-    if (!customerStore.currentCustomer.currency_id && companyStore.selectedCompanyCurrency) {
-      customerStore.currentCustomer.currency_id = companyStore.selectedCompanyCurrency.id
-    }
-    customerStore.tempRole = 'consignor'
-    customerStore.isEdit = true
-    modalStore.openModal({
-      title: 'Edit Customer',
-      componentName: 'CustomerModal',
-      size: 'lg',
-    })
+async function editConsignee() {
+  if (!selectedConsignee.value?.id) {
     return
   }
 
-  if (!selectedConsignor.value?.id) {
-    return
-  }
+  await customerStore.fetchCustomer(selectedConsignee.value.id)
 
-  await customerStore.fetchCustomer(selectedConsignor.value.id)
-
+  customerStore.tempRole = 'consignee'
+  customerStore.isEdit = true
   modalStore.openModal({
     title: 'Edit Customer',
     componentName: 'CustomerModal',
@@ -479,8 +451,8 @@ watch(
       return
     }
 
-    if (isLrReceiptTemplate.value) {
-      syncConsigneeFields(customer)
+    if (isLrReceiptTemplate.value && customer) {
+      syncConsignorFields(customer)
     }
 
     if (isLorryReceiptTemplate.value && customer) {
@@ -498,8 +470,8 @@ watch(
     }
 
     if (isLrReceiptTemplate.value) {
-      syncConsigneeFields(invoiceStore.newInvoice.customer)
-      syncConsignorFields(selectedConsignor.value)
+      syncConsignorFields(invoiceStore.newInvoice.customer)
+      syncConsigneeFields(selectedConsignee.value)
     }
 
     if (isLorryReceiptTemplate.value && invoiceStore.newInvoice.customer) {
@@ -513,42 +485,46 @@ watch(
   isLrReceiptTemplate,
   (isLr) => {
     if (!isLr) {
-      selectedConsignor.value = null
+      selectedConsignee.value = null
+      invoiceStore.newInvoice.consigneeCustomer = null
+      invoiceStore.newInvoice.consignee_customer_id = null
     }
   },
   { immediate: true }
 )
 
 watch(
-  () => invoiceStore.newInvoice.consignor,
-  (newConsignor) => {
+  () => invoiceStore.newInvoice.consigneeCustomer,
+  (newConsignee) => {
     if (isLrReceiptTemplate.value) {
-      selectedConsignor.value = newConsignor
-      syncConsignorFields(newConsignor)
+      selectedConsignee.value = newConsignee
+      if (newConsignee) {
+        syncConsigneeFields(newConsignee)
+      }
     }
   }
 )
 
-async function initializeConsignorFromCustomFields() {
+async function initializeConsigneeFromCustomFields() {
   if (!isLrReceiptTemplate.value) {
     isInitialized.value = true
     return
   }
 
-  if (invoiceStore.newInvoice.consignor) {
-    selectedConsignor.value = invoiceStore.newInvoice.consignor
+  if (invoiceStore.newInvoice.consigneeCustomer) {
+    selectedConsignee.value = invoiceStore.newInvoice.consigneeCustomer
     isInitialized.value = true
     return
   }
 
-  const consignorField = getInvoiceField('Consignor')
-  if (!consignorField || !consignorField.value) {
+  const consigneeField = getInvoiceField('Consignee')
+  if (!consigneeField || !consigneeField.value) {
     isInitialized.value = true
     return
   }
 
   // Extract the first line of the custom field value (which is the customer name)
-  const lines = consignorField.value.split('\n')
+  const lines = consigneeField.value.split('\n')
   const name = lines[0]?.trim()
 
   if (!name) {
@@ -559,6 +535,7 @@ async function initializeConsignorFromCustomFields() {
   try {
     const response = await customerStore.fetchCustomers({
       display_name: name,
+      type: 'CONSIGNEE',
       page: 1,
     })
 
@@ -568,10 +545,12 @@ async function initializeConsignorFromCustomFields() {
 
     if (customer) {
       const fullCustomerRes = await customerStore.fetchCustomer(customer.id)
-      selectedConsignor.value = fullCustomerRes.data.data
+      selectedConsignee.value = fullCustomerRes.data.data
+      invoiceStore.newInvoice.consigneeCustomer = selectedConsignee.value
+      invoiceStore.newInvoice.consignee_customer_id = selectedConsignee.value.id
     }
   } catch (error) {
-    console.error('Failed to initialize consignor customer from custom fields', error)
+    console.error('Failed to initialize consignee customer from custom fields', error)
   } finally {
     isInitialized.value = true
   }
@@ -582,11 +561,11 @@ watch(
   async (loading) => {
     if (!loading && isLrReceiptTemplate.value) {
       if (props.isEdit) {
-        await initializeConsignorFromCustomFields()
+        await initializeConsigneeFromCustomFields()
       } else {
-        if (invoiceStore.newInvoice.consignor) {
-          selectedConsignor.value = invoiceStore.newInvoice.consignor
-          syncConsignorFields(selectedConsignor.value)
+        if (invoiceStore.newInvoice.consigneeCustomer) {
+          selectedConsignee.value = invoiceStore.newInvoice.consigneeCustomer
+          syncConsigneeFields(selectedConsignee.value)
         }
         isInitialized.value = true
       }

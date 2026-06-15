@@ -9,6 +9,13 @@ use Illuminate\Validation\Rule;
 
 class CustomerRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->is('*consignees*')) {
+            $this->merge(['type' => \App\Models\Customer::TYPE_CONSIGNEE]);
+        }
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -25,6 +32,16 @@ class CustomerRequest extends FormRequest
         $rules = [
             'name' => [
                 'required',
+            ],
+            'type' => [
+                'nullable',
+                Rule::in([
+                    \App\Models\Customer::TYPE_CUSTOMER,
+                    \App\Models\Customer::TYPE_CONSIGNEE,
+                    \App\Models\Customer::TYPE_OWNER,
+                    \App\Models\Customer::TYPE_DRIVER,
+                    \App\Models\Customer::TYPE_BROKER,
+                ]),
             ],
             'email' => [
                 'email',
@@ -136,6 +153,7 @@ class CustomerRequest extends FormRequest
                 'phone',
                 'prefix',
                 'tax_id',
+                'type',
                 'company_name',
                 'contact_name',
                 'website',

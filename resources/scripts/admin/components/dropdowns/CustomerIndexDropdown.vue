@@ -1,7 +1,7 @@
 <template>
   <BaseDropdown :content-loading="customerStore.isFetchingViewData">
     <template #activator>
-      <BaseButton v-if="route.name === 'customers.view'" variant="primary">
+      <BaseButton v-if="isViewPage" variant="primary">
         <BaseIcon name="EllipsisHorizontalIcon" class="h-5 text-white" />
       </BaseButton>
       <BaseIcon v-else name="EllipsisHorizontalIcon" class="h-5 text-gray-500" />
@@ -10,7 +10,7 @@
     <!-- Edit Customer  -->
     <router-link
       v-if="userStore.hasAbilities(abilities.EDIT_CUSTOMER)"
-      :to="`/admin/customers/${row.id}/edit`"
+      :to="editLink"
     >
       <BaseDropdownItem>
         <BaseIcon
@@ -24,10 +24,10 @@
     <!-- View Customer -->
     <router-link
       v-if="
-        route.name !== 'customers.view' &&
+        !isViewPage &&
         userStore.hasAbilities(abilities.VIEW_CUSTOMER)
       "
-      :to="`customers/${row.id}/view`"
+      :to="viewLink"
     >
       <BaseDropdownItem>
         <BaseIcon
@@ -60,7 +60,7 @@ import { useModalStore } from '@/scripts/stores/modal'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/scripts/admin/stores/user'
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 import abilities from '@/scripts/admin/stub/abilities'
 
 const props = defineProps({
@@ -87,6 +87,11 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const utils = inject('utils')
+
+const isConsignee = computed(() => route.name?.startsWith('consignees'))
+const editLink = computed(() => isConsignee.value ? `/admin/consignees/${props.row.id}/edit` : `/admin/customers/${props.row.id}/edit`)
+const viewLink = computed(() => isConsignee.value ? `/admin/consignees/${props.row.id}/view` : `/admin/customers/${props.row.id}/view`)
+const isViewPage = computed(() => ['customers.view', 'consignees.view'].includes(route.name))
 
 function removeCustomer(id) {
   dialogStore

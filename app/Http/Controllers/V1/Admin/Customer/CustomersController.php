@@ -22,6 +22,10 @@ class CustomersController extends Controller
     {
         $this->authorize('viewAny', Customer::class);
 
+        if ($request->is('*consignees*')) {
+            $request->merge(['type' => 'CONSIGNEE']);
+        }
+
         $limit = $request->has('limit') ? $request->limit : 10;
 
         $customers = Customer::with(['creator', 'billingAddress'])
@@ -139,7 +143,8 @@ class CustomersController extends Controller
             $abbrev = substr($cityName, 0, 3);
         }
 
-        $count = Customer::whereCompany()->count();
+        $type = $request->is('*consignees*') ? Customer::TYPE_CONSIGNEE : Customer::TYPE_CUSTOMER;
+        $count = Customer::whereCompany()->where('type', $type)->count();
         $sequence = 101 + $count;
 
         $suggestedCode = $sequence . $abbrev;

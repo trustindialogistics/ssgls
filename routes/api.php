@@ -54,6 +54,7 @@ use App\Http\Controllers\V1\Admin\Invoice\SendInvoicePreviewController;
 use App\Http\Controllers\V1\Admin\Invoice\UploadInvoicePodController;
 use App\Http\Controllers\V1\Admin\Item\ItemsController;
 use App\Http\Controllers\V1\Admin\Item\UnitsController;
+use App\Http\Controllers\V1\Admin\LorryPartyProfile\LorryPartyAutoFillController;
 use App\Http\Controllers\V1\Admin\LorryPartyProfile\LorryPartyProfilesController;
 use App\Http\Controllers\V1\Admin\Mobile\AuthController;
 use App\Http\Controllers\V1\Admin\Modules\ApiTokenController;
@@ -257,6 +258,19 @@ Route::prefix('/v1')->group(function () {
 
             Route::resource('customers', CustomersController::class);
 
+            // Consignees
+            // ----------------------------------
+
+            Route::post('/consignees/delete', [CustomersController::class, 'delete']);
+
+            Route::get('/consignees/suggest-code', [CustomersController::class, 'suggestCode']);
+
+            Route::get('consignees/{customer}/stats', CustomerStatsController::class);
+
+            Route::resource('consignees', CustomersController::class)->parameters([
+                'consignees' => 'customer',
+            ]);
+
             // Items
             // ----------------------------------
 
@@ -291,6 +305,7 @@ Route::prefix('/v1')->group(function () {
 
             Route::apiResource('invoices', InvoicesController::class);
 
+            Route::post('/lorry-party-profiles/auto-fill', LorryPartyAutoFillController::class);
             Route::apiResource('lorry-party-profiles', LorryPartyProfilesController::class);
 
             // Recurring Invoice

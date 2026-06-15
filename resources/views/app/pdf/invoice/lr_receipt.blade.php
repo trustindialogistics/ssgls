@@ -18,7 +18,7 @@
         body {
             color: #111;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.2px;
+            font-size: 11.2px;
             margin: 0;
         }
 
@@ -35,9 +35,12 @@
         }
 
         .wrapper {
-            border: 2px solid #000;
             page-break-inside: avoid;
             width: 100%;
+        }
+
+        .wrapper > table {
+            border: 2px solid #000;
         }
 
         .no-border {
@@ -45,7 +48,7 @@
         }
 
         .jurisdiction {
-            font-size: 7px;
+            font-size: 10px;
             left: 190px;
             line-height: 9px;
             position: absolute;
@@ -83,7 +86,7 @@
 
         .brand-mark {
             color: #27324a;
-            font-size: 48px;
+            font-size: 51px;
             font-weight: bold;
             letter-spacing: -5px;
             line-height: 42px;
@@ -93,7 +96,7 @@
 
         .brand-small {
             display: block;
-            font-size: 6px;
+            font-size: 9px;
             letter-spacing: 0;
             line-height: 7px;
             margin-top: 2px;
@@ -102,27 +105,27 @@
         .company-name {
             color: #111;
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 28px;
+            font-size: 31px;
             font-weight: bold;
             line-height: 28px;
             margin-top: 3px;
         }
 
         .company-tagline {
-            font-size: 10.5px;
+            font-size: 13.5px;
             font-weight: bold;
             line-height: 11px;
         }
 
         .company-address {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 8px;
+            font-size: 11px;
             line-height: 9.2px;
             margin-top: 3px;
         }
 
         .header-contact {
-            font-size: 13px;
+            font-size: 16px;
             line-height: 14px;
             position: absolute;
             right: 7px;
@@ -172,8 +175,8 @@
         }
 
         .party-lines {
-            border-bottom: 1.5px solid #000;
-            font-size: 8.5px;
+            border-bottom: 1px solid #ddd;
+            font-size: 11.5px;
             height: 23px;
             line-height: 21px;
             margin-top: 0;
@@ -198,19 +201,19 @@
         }
 
         .docket-no {
-            font-size: 8px;
+            font-size: 11px;
             font-weight: bold;
             letter-spacing: 0;
             text-align: left;
         }
 
         .owner-risk {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
         }
 
         .tax-line {
-            font-size: 10.5px;
+            font-size: 13.5px;
             font-weight: bold;
             line-height: 13px;
             overflow-wrap: anywhere;
@@ -221,7 +224,7 @@
         }
 
         .goods td {
-            font-size: 8.8px;
+            font-size: 11.8px;
             height: 20px;
             line-height: 11px;
         }
@@ -231,7 +234,7 @@
         }
 
         .delivery-cell {
-            font-size: 9px;
+            font-size: 12px;
             line-height: 12px;
         }
 
@@ -254,7 +257,7 @@
         }
 
         .charges th {
-            font-size: 8px;
+            font-size: 11px;
             font-weight: bold;
             height: 25px;
             line-height: 10px;
@@ -268,7 +271,7 @@
         }
 
         .mode {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: bold;
             line-height: 12px;
             text-align: center;
@@ -286,7 +289,7 @@
         }
 
         .copy-label-box {
-            font-size: 12px;
+            font-size: 15px;
             height: 88px;
             line-height: 16px;
             padding: 8px 0 0 112px;
@@ -316,7 +319,7 @@
 
         .agreement {
             border-top: 1.5px solid #000;
-            font-size: 9.4px;
+            font-size: 12.4px;
             font-weight: bold;
             height: 36px;
             line-height: 11px;
@@ -331,7 +334,7 @@
         }
 
         .gst-payable {
-            font-size: 10px;
+            font-size: 13px;
             font-weight: bold;
             height: 39px;
             line-height: 12px;
@@ -343,7 +346,7 @@
         .for-company {
             border-bottom: 0 !important;
             border-top: 1.5px solid #000 !important;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
             height: 49px;
             line-height: 18px;
@@ -492,6 +495,10 @@
     $mobile = $companyPhone ?: ($invoiceField(['mobile', 'phone']) ?: '');
     $email = $invoiceField(['email']) ?: ($companyEmail ?: '');
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $companyAddress);
+    if ($companyName) {
+        $cleanNamePattern = '/^\s*(?:<[^>]+>)*\s*' . preg_quote($companyName, '/') . '\s*(?:<\/[^>]+>)*\s*(?:<br\s*\/?>)?/i';
+        $displayCompanyAddress = preg_replace($cleanNamePattern, '', $displayCompanyAddress);
+    }
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     if ($companyPhone) {
@@ -532,25 +539,17 @@
 
         return '<span class="mode-struck">'.e($label).'</span>';
     };
-    $gstPayableBy = $invoiceField(['gst_tax_payable_by']) ?: 'Consignor / Consignee';
-    $consigneeName = $invoiceField(['consignee']);
-    $consigneePhone = $invoice->customer->phone ?: $invoiceField(['consignee_phone_no']);
-    $consigneeGstin = $invoice->customer->tax_id ?: $invoiceField(['consignee_gst_no']);
-    $consignorName = $invoiceField(['consignor']);
-    $consignorPhone = $invoiceField(['consignor_phone_no']);
-    $consignorGstin = $invoiceField(['consignor_gst_no']);
-    $docketNumber = $invoice->invoice_number;
-    $descriptionOfGoods = trim((string) $itemField(['description_of_goods']));
-    $noOfArticles = trim((string) $itemField(['no_of_articles']));
-
-    if (preg_match('/^LR Receipt\s+\d+$/i', $descriptionOfGoods)) {
-        $descriptionOfGoods = '';
-    }
-
-    if ($noOfArticles === '1' && $descriptionOfGoods === '') {
-        $noOfArticles = '';
-    }
-    $signaturePath = base_path('resources/static/img/PDF/authorized_signature.jpeg');
+    $formatAddress = function ($customer) {
+        if (!$customer) return '';
+        $billing = $customer->billingAddress;
+        if (!$billing) return '';
+        $lines = [
+            $billing->address_street_1,
+            $billing->address_street_2,
+            implode(', ', array_filter([$billing->city, $billing->state])) . ($billing->zip ? ' ' . $billing->zip : '')
+        ];
+        return implode("\n", array_filter(array_map('trim', $lines)));
+    };
 
     $parseParty = function ($partyText) {
         $lines = collect(explode("\n", (string) $partyText))
@@ -567,8 +566,39 @@
         ];
     };
 
-    $consignorData = $parseParty($consignorName);
-    $consigneeData = $parseParty($consigneeName);
+    $gstPayableBy = $invoiceField(['gst_tax_payable_by']) ?: 'Consignor / Consignee';
+
+    $consignorName = $invoice->customer ? $invoice->customer->name : $parseParty($invoiceField(['consignor']))['name'];
+    $consignorAddress = $invoice->customer ? $formatAddress($invoice->customer) : $parseParty($invoiceField(['consignor']))['address'];
+    $consignorPhone = ($invoice->customer && $invoice->customer->phone) ? $invoice->customer->phone : $invoiceField(['consignor_phone_no']);
+    $consignorGstin = ($invoice->customer && $invoice->customer->tax_id) ? $invoice->customer->tax_id : $invoiceField(['consignor_gst_no']);
+
+    $consigneeName = $invoice->consigneeCustomer ? $invoice->consigneeCustomer->name : $parseParty($invoiceField(['consignee']))['name'];
+    $consigneeAddress = $invoice->consigneeCustomer ? $formatAddress($invoice->consigneeCustomer) : $parseParty($invoiceField(['consignee']))['address'];
+    $consigneePhone = ($invoice->consigneeCustomer && $invoice->consigneeCustomer->phone) ? $invoice->consigneeCustomer->phone : $invoiceField(['consignee_phone_no']);
+    $consigneeGstin = ($invoice->consigneeCustomer && $invoice->consigneeCustomer->tax_id) ? $invoice->consigneeCustomer->tax_id : $invoiceField(['consignee_gst_no']);
+
+    $docketNumber = $invoice->invoice_number;
+    $descriptionOfGoods = trim((string) $itemField(['description_of_goods']));
+    $noOfArticles = trim((string) $itemField(['no_of_articles']));
+
+    if (preg_match('/^LR Receipt\s+\d+$/i', $descriptionOfGoods)) {
+        $descriptionOfGoods = '';
+    }
+
+    if ($noOfArticles === '1' && $descriptionOfGoods === '') {
+        $noOfArticles = '';
+    }
+    $signaturePath = base_path('resources/static/img/PDF/authorized_signature.jpeg');
+
+    $consignorData = [
+        'name' => $consignorName,
+        'address' => $consignorAddress,
+    ];
+    $consigneeData = [
+        'name' => $consigneeName,
+        'address' => $consigneeAddress,
+    ];
 
     $isMulti = request()->has('multi') || request()->query('copy') === 'multi';
 
@@ -641,13 +671,13 @@
                     <table class="party-table">
                         <tr>
                             <td class="party-cell">
-                                <span class="label">Consignor</span> <span style="font-weight: bold; font-size: 8.5px; padding-left: 5px;">{{ $consignorData['name'] }}</span>
+                                <span class="label">Consignor</span> <span style="font-weight: bold; font-size: 11.5px; padding-left: 5px;">{{ $consignorData['name'] }}</span>
                                 <div class="party-lines party-details">{!! nl2br(e($consignorData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
-                                <span class="label">Consignee</span> <span style="font-weight: bold; font-size: 8.5px; padding-left: 5px;">{{ $consigneeData['name'] }}</span>
+                                <span class="label">Consignee</span> <span style="font-weight: bold; font-size: 11.5px; padding-left: 5px;">{{ $consigneeData['name'] }}</span>
                                 <div class="party-lines party-details">{!! nl2br(e($consigneeData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
@@ -726,7 +756,7 @@
                                 if (! $hasActiveCopy) {
                                     return '';
                                 }
-                                return $isCopy($name) ? 'font-weight: bold; text-decoration: underline;' : 'color: #777; font-size: 8px;';
+                                return $isCopy($name) ? 'font-weight: bold; text-decoration: underline;' : 'color: #777; font-size: 11px;';
                             };
                         @endphp
                         <span style="{{ $styleLine('consignee') }}">ORIGINAL WHITE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: CONSIGNEE COPY</span><br>

@@ -19,6 +19,12 @@ const CustomerIndex = () => import('@/scripts/admin/views/customers/Index.vue')
 const CustomerCreate = () =>
   import('@/scripts/admin/views/customers/Create.vue')
 const CustomerView = () => import('@/scripts/admin/views/customers/View.vue')
+
+// Consignees
+const ConsigneeIndex = () => import('@/scripts/admin/views/consignees/Index.vue')
+const ConsigneeCreate = () =>
+  import('@/scripts/admin/views/consignees/Create.vue')
+const ConsigneeView = () => import('@/scripts/admin/views/consignees/View.vue')
 const LorryPartyProfileIndex = () =>
   import('@/scripts/admin/views/lorry-party-profiles/Index.vue')
 const LorryPartyProfileCreate = () =>
@@ -202,6 +208,31 @@ export default [
         name: 'customers.view',
         meta: { ability: abilities.VIEW_CUSTOMER },
         component: CustomerView,
+      },
+
+      // Consignees
+      {
+        path: 'consignees',
+        meta: { ability: abilities.VIEW_CUSTOMER },
+        component: ConsigneeIndex,
+      },
+      {
+        path: 'consignees/create',
+        name: 'consignees.create',
+        meta: { ability: abilities.CREATE_CUSTOMER },
+        component: ConsigneeCreate,
+      },
+      {
+        path: 'consignees/:id/edit',
+        name: 'consignees.edit',
+        meta: { ability: abilities.EDIT_CUSTOMER },
+        component: ConsigneeCreate,
+      },
+      {
+        path: 'consignees/:id/view',
+        name: 'consignees.view',
+        meta: { ability: abilities.VIEW_CUSTOMER },
+        component: ConsigneeView,
       },
       {
         path: 'owner-portal',

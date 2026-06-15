@@ -6,8 +6,8 @@
           <BaseBreadcrumbItem :title="$t('general.home')" to="dashboard" />
 
           <BaseBreadcrumbItem
-            :title="$t('customers.customer', 2)"
-            to="/admin/customers"
+            title="Consignee"
+            to="/admin/consignees"
           />
 
           <BaseBreadcrumb-item :title="pageTitle" to="#" active />
@@ -57,19 +57,6 @@
               />
             </BaseInputGroup>
 
-            <!-- Hidden per simplified customer entry request.
-            <BaseInputGroup
-              :label="$t('customers.primary_contact_name')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseInput
-                v-model.trim="customerStore.currentCustomer.contact_name"
-                :content-loading="isFetchingInitialData"
-                type="text"
-              />
-            </BaseInputGroup>
-            -->
-
             <BaseInputGroup
               :error="
                 v$.currentCustomer.email.$error &&
@@ -113,51 +100,6 @@
                 </BaseButton>
               </div>
             </BaseInputGroup>
-
-            <!-- Hidden per simplified customer entry request.
-            <BaseInputGroup
-              :label="$t('customers.primary_currency')"
-              :content-loading="isFetchingInitialData"
-              :error="
-                v$.currentCustomer.currency_id.$error &&
-                v$.currentCustomer.currency_id.$errors[0].$message
-              "
-              required
-            >
-              <BaseMultiselect
-                v-model="customerStore.currentCustomer.currency_id"
-                value-prop="id"
-                label="name"
-                track-by="name"
-                :content-loading="isFetchingInitialData"
-                :options="globalStore.currencies"
-                searchable
-                :can-deselect="false"
-                :placeholder="$t('customers.select_currency')"
-                :invalid="v$.currentCustomer.currency_id.$error"
-                class="w-full"
-              >
-              </BaseMultiselect>
-            </BaseInputGroup>
-            -->
-
-            <!-- Hidden per simplified customer entry request.
-            <BaseInputGroup
-              :error="
-                v$.currentCustomer.website.$error &&
-                v$.currentCustomer.website.$errors[0].$message
-              "
-              :label="$t('customers.website')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseInput
-                v-model="customerStore.currentCustomer.website"
-                :content-loading="isFetchingInitialData"
-                type="url"
-                @input="v$.currentCustomer.website.$touch()"
-              />
-            </BaseInputGroup>
-            -->
 
             <BaseInputGroup
               label="Customer Code"
@@ -316,40 +258,6 @@
               />
             </BaseInputGroup>
 
-            <!-- Hidden per simplified customer entry request.
-            <BaseInputGroup
-              :label="$t('customers.country')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseMultiselect
-                v-model="customerStore.currentCustomer.billing.country_id"
-                value-prop="id"
-                label="name"
-                track-by="name"
-                resolve-on-load
-                searchable
-                :content-loading="isFetchingInitialData"
-                :options="globalStore.countries"
-                :placeholder="$t('general.select_country')"
-                class="w-full"
-              />
-            </BaseInputGroup>
-            -->
-
-            <!-- Hidden per simplified customer entry request.
-            <BaseInputGroup
-              :label="$t('customers.state')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseInput
-                v-model="customerStore.currentCustomer.billing.state"
-                :content-loading="isFetchingInitialData"
-                name="billing.state"
-                type="text"
-              />
-            </BaseInputGroup>
-            -->
-
             <BaseInputGroup
               :content-loading="isFetchingInitialData"
               :label="$t('customers.city')"
@@ -399,196 +307,8 @@
                 @input="v$.currentCustomer.billing.address_street_2.$touch()"
               />
             </BaseInputGroup>
-
-            <!-- Hidden per simplified customer entry request. Billing phone is copied from Basic Info phone on submit.
-            <div class="space-y-6">
-              <BaseInputGroup
-                :content-loading="isFetchingInitialData"
-                :label="$t('customers.phone')"
-                class="text-left"
-              >
-                <BaseInput
-                  v-model.trim="customerStore.currentCustomer.billing.phone"
-                  :content-loading="isFetchingInitialData"
-                  type="text"
-                  name="phone"
-                />
-              </BaseInputGroup>
-
-              <BaseInputGroup
-                :label="$t('customers.zip_code')"
-                :content-loading="isFetchingInitialData"
-                class="mt-2 text-left"
-              >
-                <BaseInput
-                  v-model.trim="customerStore.currentCustomer.billing.zip"
-                  :content-loading="isFetchingInitialData"
-                  type="text"
-                  name="zip"
-                />
-              </BaseInputGroup>
-            </div>
-            -->
           </BaseInputGrid>
         </div>
-
-        <BaseDivider class="mb-5 md:mb-8" />
-
-        <!-- Hidden per simplified customer entry request. Billing Address Copy Button.
-        <div
-          class="flex items-center justify-start mb-6 md:justify-end md:mb-0"
-        >
-          <div class="p-1">
-            <BaseButton
-              type="button"
-              :content-loading="isFetchingInitialData"
-              size="sm"
-              variant="primary-outline"
-              @click="customerStore.copyAddress(true)"
-            >
-              <template #left="slotProps">
-                <BaseIcon
-                  name="DocumentDuplicateIcon"
-                  :class="slotProps.class"
-                />
-              </template>
-              {{ $t('customers.copy_billing_address') }}
-            </BaseButton>
-          </div>
-        </div>
-        -->
-
-        <!-- Hidden per simplified customer entry request. Shipping Address.
-        <div
-          v-if="customerStore.currentCustomer.shipping"
-          class="grid grid-cols-5 gap-4 mb-8"
-        >
-          <h6 class="col-span-5 text-lg font-semibold text-left lg:col-span-1">
-            {{ $t('customers.shipping_address') }}
-          </h6>
-
-          <BaseInputGrid class="col-span-5 lg:col-span-4">
-            <BaseInputGroup
-              :content-loading="isFetchingInitialData"
-              :label="$t('customers.name')"
-            >
-              <BaseInput
-                v-model.trim="customerStore.currentCustomer.shipping.name"
-                :content-loading="isFetchingInitialData"
-                type="text"
-                name="address_name"
-              />
-            </BaseInputGroup>
-
-            <BaseInputGroup
-              :label="$t('customers.country')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseMultiselect
-                v-model="customerStore.currentCustomer.shipping.country_id"
-                value-prop="id"
-                label="name"
-                track-by="name"
-                resolve-on-load
-                searchable
-                :content-loading="isFetchingInitialData"
-                :options="globalStore.countries"
-                :placeholder="$t('general.select_country')"
-                class="w-full"
-              />
-            </BaseInputGroup>
-
-            <BaseInputGroup
-              :label="$t('customers.state')"
-              :content-loading="isFetchingInitialData"
-            >
-              <BaseInput
-                v-model="customerStore.currentCustomer.shipping.state"
-                :content-loading="isFetchingInitialData"
-                name="shipping.state"
-                type="text"
-              />
-            </BaseInputGroup>
-
-            <BaseInputGroup
-              :content-loading="isFetchingInitialData"
-              :label="$t('customers.city')"
-            >
-              <BaseInput
-                v-model="customerStore.currentCustomer.shipping.city"
-                :content-loading="isFetchingInitialData"
-                name="shipping.city"
-                type="text"
-              />
-            </BaseInputGroup>
-
-            <BaseInputGroup
-              :label="$t('customers.address')"
-              :content-loading="isFetchingInitialData"
-              :error="
-                (v$.currentCustomer.shipping.address_street_1.$error &&
-                  v$.currentCustomer.shipping.address_street_1.$errors[0]
-                    .$message) ||
-                (v$.currentCustomer.shipping.address_street_2.$error &&
-                  v$.currentCustomer.shipping.address_street_2.$errors[0]
-                    .$message)
-              "
-            >
-              <BaseTextarea
-                v-model.trim="
-                  customerStore.currentCustomer.shipping.address_street_1
-                "
-                :content-loading="isFetchingInitialData"
-                type="text"
-                :placeholder="$t('general.street_1')"
-                name="shipping_street1"
-                @input="v$.currentCustomer.shipping.address_street_1.$touch()"
-              />
-
-              <BaseTextarea
-                v-model.trim="
-                  customerStore.currentCustomer.shipping.address_street_2
-                "
-                :content-loading="isFetchingInitialData"
-                type="text"
-                :placeholder="$t('general.street_2')"
-                name="shipping_street2"
-                class="mt-3"
-                :container-class="`mt-3`"
-                @input="v$.currentCustomer.shipping.address_street_2.$touch()"
-              />
-            </BaseInputGroup>
-
-            <div class="space-y-6">
-              <BaseInputGroup
-                :content-loading="isFetchingInitialData"
-                :label="$t('customers.phone')"
-                class="text-left"
-              >
-                <BaseInput
-                  v-model.trim="customerStore.currentCustomer.shipping.phone"
-                  :content-loading="isFetchingInitialData"
-                  type="text"
-                  name="phone"
-                />
-              </BaseInputGroup>
-
-              <BaseInputGroup
-                :label="$t('customers.zip_code')"
-                :content-loading="isFetchingInitialData"
-                class="mt-2 text-left"
-              >
-                <BaseInput
-                  v-model.trim="customerStore.currentCustomer.shipping.zip"
-                  :content-loading="isFetchingInitialData"
-                  type="text"
-                  name="zip"
-                />
-              </BaseInputGroup>
-            </div>
-          </BaseInputGrid>
-        </div>
-        -->
 
         <BaseDivider
           v-if="customFieldStore.customFields.length > 0"
@@ -691,7 +411,8 @@ async function onCodeClick() {
   const city = customerStore.currentCustomer.billing?.city
   if (city && !customerStore.currentCustomer.prefix) {
     try {
-      const response = await http.get(`/api/v1/customers/suggest-code?city=${city}`)
+      const endpoint = isConsignee.value ? '/api/v1/consignees/suggest-code' : '/api/v1/customers/suggest-code'
+      const response = await http.get(`${endpoint}?city=${city}`)
       if (response.data && response.data.code) {
         customerStore.currentCustomer.prefix = response.data.code
       }
@@ -734,12 +455,6 @@ const rules = computed(() => {
           minLength(3)
         ),
       },
-      /*
-      Hidden per simplified customer entry request.
-      currency_id: {
-        required: helpers.withMessage(t('validation.required'), required),
-      },
-      */
 
       email: {
         required: helpers.withMessage(

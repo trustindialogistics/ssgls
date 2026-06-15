@@ -1,11 +1,11 @@
 <template>
   <BasePage>
     <!-- Page Header Section -->
-    <BasePageHeader title="Consignor">
+    <BasePageHeader title="Consignee">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="$t('general.home')" to="dashboard" />
         <BaseBreadcrumbItem
-          title="Consignor"
+          title="Consignee"
           to="#"
           active
         />
@@ -31,12 +31,12 @@
 
           <BaseButton
             v-if="userStore.hasAbilities(abilities.CREATE_CUSTOMER)"
-            @click="$router.push('customers/create')"
+            @click="$router.push('consignees/create')"
           >
             <template #left="slotProps">
               <BaseIcon name="PlusIcon" :class="slotProps.class" />
             </template>
-            New Consignor
+            New Consignee
           </BaseButton>
         </div>
       </template>
@@ -82,8 +82,8 @@
 
     <BaseEmptyPlaceholder
       v-show="showEmptyScreen"
-      title="No consignors yet!"
-      description="This section will contain the list of consignors."
+      title="No consignees yet!"
+      description="This section will contain the list of consignees."
     >
       <AstronautIcon class="mt-5 mb-4" />
 
@@ -91,12 +91,12 @@
         <BaseButton
           v-if="userStore.hasAbilities(abilities.CREATE_CUSTOMER)"
           variant="primary-outline"
-          @click="$router.push('/admin/customers/create')"
+          @click="$router.push('/admin/consignees/create')"
         >
           <template #left="slotProps">
             <BaseIcon name="PlusIcon" :class="slotProps.class" />
           </template>
-          Add New Consignor
+          Add New Consignee
         </BaseButton>
       </template>
     </BaseEmptyPlaceholder>
@@ -158,7 +158,7 @@
         </template>
 
         <template #cell-name="{ row }">
-          <router-link :to="{ path: `customers/${row.data.id}/view` }">
+          <router-link :to="{ path: `consignees/${row.data.id}/view` }">
             <BaseText
               :text="row.data.name"
               tag="span"
@@ -318,6 +318,7 @@ async function fetchData({ page, filter, sort }) {
     prefix: filters.prefix,
     orderByField: sort.fieldName || 'created_at',
     orderBy: sort.order || 'desc',
+    type: 'CONSIGNEE',
     page,
   }
 

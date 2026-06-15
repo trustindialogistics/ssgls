@@ -167,19 +167,69 @@ class LrReceiptAutoFillController extends Controller
 
             // Perform lookups for Consignor and Consignee
             $consignorData = null;
-            if (! empty($data['consignor_name'])) {
-                $consignor = $this->findCustomer($data['consignor_name'], $data['consignor_gstin'] ?? null);
-                $consignorData = $consignor
-                    ? (new CustomerResource($consignor))->toArray(request())
-                    : $this->buildVirtualCustomer($data['consignor_name'], $data['consignor_phone'] ?? null, $data['consignor_gstin'] ?? null, $data['consignor_address'] ?? null, $data['consignor_city'] ?? null);
+            if (!empty($data['consignor_name'])) {
+                $consignor = $this->findCustomer($data['consignor_name'], $data['consignor_gstin'] ?? null, Customer::TYPE_CUSTOMER);
+                if (!$consignor) {
+                    $city = trim((string) ($data['consignor_city'] ?? ''));
+                    $abbrev = $this->generateAbbreviation($city);
+                    $count = Customer::whereCompany()->where('type', Customer::TYPE_CUSTOMER)->count();
+                    $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
+
+                    $consignor = Customer::create([
+                        'name' => $data['consignor_name'],
+                        'phone' => $data['consignor_phone'] ?? null,
+                        'tax_id' => $data['consignor_gstin'] ?? null,
+                        'type' => Customer::TYPE_CUSTOMER,
+                        'prefix' => $prefix,
+                        'company_id' => request()->header('company'),
+                    ]);
+
+                    if (!empty($data['consignor_address'])) {
+                        [$street1, $street2] = $this->splitAddress($data['consignor_address']);
+                        $consignor->billingAddress()->create([
+                            'name' => $data['consignor_name'],
+                            'address_street_1' => $street1,
+                            'address_street_2' => $street2,
+                            'city' => $data['consignor_city'] ?? null,
+                            'country_id' => 1,
+                            'type' => 'billing',
+                        ]);
+                    }
+                }
+                $consignorData = (new CustomerResource($consignor->load(['billingAddress', 'shippingAddress'])))->toArray(request());
             }
 
             $consigneeData = null;
-            if (! empty($data['consignee_name'])) {
-                $consignee = $this->findCustomer($data['consignee_name'], $data['consignee_gstin'] ?? null);
-                $consigneeData = $consignee
-                    ? (new CustomerResource($consignee))->toArray(request())
-                    : $this->buildVirtualCustomer($data['consignee_name'], $data['consignee_phone'] ?? null, $data['consignee_gstin'] ?? null, $data['consignee_address'] ?? null, $data['consignee_city'] ?? null);
+            if (!empty($data['consignee_name'])) {
+                $consignee = $this->findCustomer($data['consignee_name'], $data['consignee_gstin'] ?? null, Customer::TYPE_CONSIGNEE);
+                if (!$consignee) {
+                    $city = trim((string) ($data['consignee_city'] ?? ''));
+                    $abbrev = $this->generateAbbreviation($city);
+                    $count = Customer::whereCompany()->where('type', Customer::TYPE_CONSIGNEE)->count();
+                    $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
+
+                    $consignee = Customer::create([
+                        'name' => $data['consignee_name'],
+                        'phone' => $data['consignee_phone'] ?? null,
+                        'tax_id' => $data['consignee_gstin'] ?? null,
+                        'type' => Customer::TYPE_CONSIGNEE,
+                        'prefix' => $prefix,
+                        'company_id' => request()->header('company'),
+                    ]);
+
+                    if (!empty($data['consignee_address'])) {
+                        [$street1, $street2] = $this->splitAddress($data['consignee_address']);
+                        $consignee->billingAddress()->create([
+                            'name' => $data['consignee_name'],
+                            'address_street_1' => $street1,
+                            'address_street_2' => $street2,
+                            'city' => $data['consignee_city'] ?? null,
+                            'country_id' => 1,
+                            'type' => 'billing',
+                        ]);
+                    }
+                }
+                $consigneeData = (new CustomerResource($consignee->load(['billingAddress', 'shippingAddress'])))->toArray(request());
             }
 
             // Map payment mode to uppercase matched option
@@ -259,11 +309,12 @@ class LrReceiptAutoFillController extends Controller
         }
     }
 
-    private function findCustomer(string $name, ?string $gstin): ?Customer
+    private function findCustomer(string $name, ?string $gstin, string $type = 'CUSTOMER'): ?Customer
     {
         $gstin = trim((string) $gstin);
         if ($gstin !== '') {
             $customer = Customer::whereCompany()
+                ->where('type', $type)
                 ->where('tax_id', $gstin)
                 ->with(['billingAddress', 'shippingAddress'])
                 ->first();
@@ -278,10 +329,12 @@ class LrReceiptAutoFillController extends Controller
         }
 
         $customer = Customer::whereCompany()
+            ->where('type', $type)
             ->where('name', $name)->first();
 
         if (! $customer) {
             $customer = Customer::whereCompany()
+                ->where('type', $type)
                 ->whereRaw('LOWER(name) = ?', [strtolower($name)])
                 ->first();
         }
@@ -356,61 +409,5 @@ class LrReceiptAutoFillController extends Controller
         } else {
             return substr($cityName, 0, 3);
         }
-    }
-
-    private function buildVirtualCustomer(string $name, ?string $phone, ?string $gstin, ?string $addressBlock, ?string $city = null): array
-    {
-        [$street1, $street2] = $this->splitAddress((string) $addressBlock);
-
-        $city = trim((string) $city);
-        $abbrev = $this->generateAbbreviation($city);
-
-        $count = Customer::whereCompany()->count();
-        $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
-
-        $address = [
-            'id' => null,
-            'name' => $name,
-            'address_street_1' => $street1,
-            'address_street_2' => $street2,
-            'city' => $city,
-            'state' => '',
-            'zip' => '',
-            'country_id' => 1,
-            'phone' => $phone,
-            'fax' => null,
-            'type' => 'billing',
-            'user_id' => null,
-            'company_id' => null,
-            'customer_id' => null,
-        ];
-
-        return [
-            'id' => null,
-            'name' => $name,
-            'email' => null,
-            'phone' => $phone,
-            'contact_name' => null,
-            'company_name' => $name,
-            'website' => null,
-            'enable_portal' => false,
-            'password_added' => false,
-            'currency_id' => null,
-            'company_id' => null,
-            'facebook_id' => null,
-            'google_id' => null,
-            'github_id' => null,
-            'created_at' => null,
-            'formatted_created_at' => null,
-            'updated_at' => null,
-            'avatar' => null,
-            'due_amount' => 0,
-            'base_due_amount' => 0,
-            'prefix' => $prefix,
-            'tax_id' => $gstin,
-            'billing' => $address,
-            'shipping' => array_merge($address, ['type' => 'shipping']),
-            'is_temp' => true,
-        ];
     }
 }

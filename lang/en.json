@@ -2,6 +2,8 @@
   "navigation": {
     "dashboard": "Dashboard",
     "customers": "Customers",
+    "consignor": "Consignor",
+    "consignee": "Consignee",
     "owner-portal": "Owner List",
     "driver-portal": "Driver List",
     "broker-portal": "Broker List",

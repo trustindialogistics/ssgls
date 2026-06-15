@@ -55,6 +55,7 @@ class InvoiceResource extends JsonResource
             'unique_hash' => $this->unique_hash,
             'template_name' => $this->template_name,
             'customer_id' => $this->customer_id,
+            'consignee_customer_id' => $this->consignee_customer_id,
             'recurring_invoice_id' => $this->recurring_invoice_id,
             'sequence_number' => $this->sequence_number,
             'exchange_rate' => $this->exchange_rate,
@@ -103,6 +104,9 @@ class InvoiceResource extends JsonResource
             }),
             'customer' => $this->when($this->relationLoaded('customer') && $this->customer, function () {
                 return new CustomerResource($this->customer);
+            }),
+            'consignee_customer' => $this->when($this->relationLoaded('consigneeCustomer') && $this->consigneeCustomer, function () {
+                return new CustomerResource($this->consigneeCustomer);
             }),
             'consignor' => $this->when($this->template_name === Invoice::TEMPLATE_LR_RECEIPT && $this->relationLoaded('fields'), function () {
                 return $this->getConsignorCustomer();

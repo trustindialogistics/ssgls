@@ -498,6 +498,22 @@ export const useInvoiceStore = (useWindow = false) => {
         })
       },
 
+      selectConsignee(id) {
+        return new Promise((resolve, reject) => {
+          http
+            .get(`/api/v1/customers/${id}`)
+            .then((response) => {
+              this.newInvoice.consigneeCustomer = response.data.data
+              this.newInvoice.consignee_customer_id = response.data.data.id
+              resolve(response)
+            })
+            .catch((err) => {
+              handleError(err)
+              reject(err)
+            })
+        })
+      },
+
       fetchInvoiceTemplates(params) {
         return new Promise((resolve, reject) => {
           http

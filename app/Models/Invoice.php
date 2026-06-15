@@ -169,6 +169,11 @@ class Invoice extends Model implements HasMedia
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function consigneeCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'consignee_customer_id');
+    }
+
     public function recurringInvoice(): BelongsTo
     {
         return $this->belongsTo(RecurringInvoice::class);
@@ -420,7 +425,10 @@ class Invoice extends Model implements HasMedia
 
     public function scopeWhereCustomer($query, $customer_id)
     {
-        $query->where('invoices.customer_id', $customer_id);
+        $query->where(function ($q) use ($customer_id) {
+            $q->where('invoices.customer_id', $customer_id)
+              ->orWhere('invoices.consignee_customer_id', $customer_id);
+        });
     }
 
     public function scopePaginateData($query, $limit)

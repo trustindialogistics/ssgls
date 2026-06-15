@@ -18,7 +18,7 @@
         body {
             color: #111;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 8.8px;
+            font-size: 11.8px;
             margin: 0;
         }
 
@@ -39,12 +39,15 @@
         }
 
         .invoice-shell {
-            border: 2px solid #000;
             width: 100%;
         }
 
+        .invoice-shell > .master {
+            border: 2px solid #000;
+        }
+
         .jurisdiction {
-            font-size: 7.5px;
+            font-size: 10.5px;
             line-height: 9px;
             margin-bottom: 2px;
             text-align: center;
@@ -98,7 +101,7 @@
 
         .brand-fallback {
             color: #111;
-            font-size: 31px;
+            font-size: 34px;
             font-weight: bold;
             line-height: 27px;
             padding-top: 8px;
@@ -106,7 +109,7 @@
 
         .brand-fallback span {
             display: block;
-            font-size: 8px;
+            font-size: 11px;
             letter-spacing: 0;
             line-height: 9px;
         }
@@ -118,27 +121,27 @@
 
         .company-name {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 24px;
+            font-size: 27px;
             font-weight: bold;
             line-height: 24px;
             margin-top: 1px;
         }
 
         .company-tagline {
-            font-size: 11.5px;
+            font-size: 14.5px;
             font-weight: bold;
             line-height: 12px;
         }
 
         .company-address {
-            font-size: 8.4px;
+            font-size: 11.4px;
             line-height: 9.8px;
             margin-top: 4px;
             text-align: left;
         }
 
         .contact-cell {
-            font-size: 9px;
+            font-size: 12px;
             line-height: 11px;
             text-align: right;
             white-space: nowrap;
@@ -155,7 +158,7 @@
         }
 
         .branch-label {
-            font-size: 10px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -174,7 +177,7 @@
         }
 
         .tax-box div {
-            font-size: 10.5px;
+            font-size: 13.5px;
             font-weight: bold;
             line-height: 13px;
             overflow-wrap: anywhere;
@@ -199,7 +202,7 @@
             border-left: 0;
             border-right: 0;
             border-top: 0;
-            font-size: 10px;
+            font-size: 13px;
             height: 16px;
             padding: 2px 8px;
         }
@@ -223,7 +226,7 @@
         .party-gstin {
             border-top: 1px solid #111;
             bottom: 0;
-            font-size: 8px;
+            font-size: 11px;
             height: 18px;
             line-height: 16px;
             overflow: hidden;
@@ -236,7 +239,7 @@
         }
 
         .bill-details td {
-            font-size: 8.8px;
+            font-size: 11.8px;
             height: 15px;
             padding: 2px 6px;
             vertical-align: middle;
@@ -244,7 +247,7 @@
 
         .payment-table th,
         .payment-table td {
-            font-size: 7.6px;
+            font-size: 10.6px;
             height: 14px;
             padding: 1px 2px;
             text-align: center;
@@ -252,14 +255,14 @@
         }
 
         .basis-row {
-            font-size: 8.8px;
+            font-size: 11.8px;
             height: 23px;
             line-height: 11px;
             padding: 2px 6px !important;
         }
 
         .items th {
-            font-size: 7.8px;
+            font-size: 10.8px;
             font-weight: bold;
             height: 16px;
             line-height: 8.8px;
@@ -273,7 +276,7 @@
         }
 
         .items td {
-            font-size: 8.8px;
+            font-size: 11.8px;
             height: 19px;
             padding: 2px 3px;
             text-align: center;
@@ -281,20 +284,20 @@
         }
 
         .words-row td {
-            font-size: 9px;
+            font-size: 12px;
             height: 22px;
             padding: 4px 6px;
             vertical-align: middle;
         }
 
         .grand-label {
-            font-size: 9px;
+            font-size: 12px;
             font-weight: bold;
             text-align: center;
         }
 
         .footer td {
-            font-size: 9px;
+            font-size: 12px;
             padding: 3px 6px;
         }
 
@@ -307,12 +310,12 @@
         }
 
         .terms {
-            font-size: 10px !important;
+            font-size: 13px !important;
             line-height: 13px;
         }
 
         .prepared {
-            font-size: 8.2px;
+            font-size: 11.2px;
             vertical-align: bottom !important;
         }
 
@@ -329,7 +332,7 @@
 
         .for-company {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 12px;
+            font-size: 15px;
             font-weight: bold;
             line-height: 14px;
             text-align: center;
@@ -337,7 +340,7 @@
 
         .signature {
             bottom: 2px;
-            font-size: 12px;
+            font-size: 15px;
             left: 72px;
             line-height: 14px;
             position: absolute;
@@ -541,6 +544,10 @@
     $mobile = $invoiceField(['mobile', 'phone']) ?: ($companyPhone ?: '');
     $email = $invoiceField(['email']) ?: ($companyEmail ?: '');
     $displayCompanyAddress = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', (string) $company_address);
+    if ($companyName) {
+        $cleanNamePattern = '/^\s*(?:<[^>]+>)*\s*' . preg_quote($companyName, '/') . '\s*(?:<\/[^>]+>)*\s*(?:<br\s*\/?>)?/i';
+        $displayCompanyAddress = preg_replace($cleanNamePattern, '', $displayCompanyAddress);
+    }
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*E-?mail\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     $displayCompanyAddress = preg_replace('/(?:<br\s*\/?>|\s)*Mob(?:ile)?\.?\s*:?\s*[^<\r\n]+/i', '', $displayCompanyAddress);
     if ($companyPhone) {

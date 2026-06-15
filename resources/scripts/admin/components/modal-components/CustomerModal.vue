@@ -472,6 +472,12 @@ async function setInitialData() {
   if (!customerStore.isEdit) {
     customerStore.currentCustomer.currency_id =
       companyStore.selectedCompanyCurrency.id
+
+    if (customerStore.tempRole === 'consignee') {
+      customerStore.currentCustomer.type = 'CONSIGNEE'
+    } else {
+      customerStore.currentCustomer.type = 'CUSTOMER'
+    }
   }
 }
 
@@ -524,7 +530,11 @@ async function submitCustomerData() {
       isLoading.value = false
       // Automatically create newly created customer
       if (route.name === 'invoices.create' || route.name === 'invoices.edit') {
-        invoiceStore.selectCustomer(response.data.data.id)
+        if (customerStore.tempRole === 'consignee') {
+          invoiceStore.selectConsignee(response.data.data.id)
+        } else {
+          invoiceStore.selectCustomer(response.data.data.id)
+        }
       }
       if (
         route.name === 'estimates.create' ||

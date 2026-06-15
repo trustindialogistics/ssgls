@@ -36,19 +36,20 @@ class InvoicesRequest extends FormRequest
 
         $consigneeName = $this->extractNameFromAddressBlock($consigneeNameAddress);
 
-        if (! empty($consigneeName)) {
+        if (empty($this->input('consignee_customer_id')) && ! empty($consigneeName)) {
             $customer = $this->findOrCreateCustomer(
                 $consigneeName,
                 $consigneePhone,
                 $consigneeGstin,
                 $consigneeNameAddress,
                 $consigneeCity,
-                $consigneePrefix
+                $consigneePrefix,
+                Customer::TYPE_CONSIGNEE
             );
 
             if ($customer) {
                 $this->merge([
-                    'customer_id' => $customer->id,
+                    'consignee_customer_id' => $customer->id,
                 ]);
             }
         }
@@ -62,15 +63,22 @@ class InvoicesRequest extends FormRequest
 
         $consignorName = $this->extractNameFromAddressBlock($consignorNameAddress);
 
-        if (! empty($consignorName)) {
-            $this->findOrCreateCustomer(
+        if (empty($this->input('customer_id')) && ! empty($consignorName)) {
+            $customer = $this->findOrCreateCustomer(
                 $consignorName,
                 $consignorPhone,
                 $consignorGstin,
                 $consignorNameAddress,
                 $consignorCity,
-                $consignorPrefix
+                $consignorPrefix,
+                Customer::TYPE_CUSTOMER
             );
+
+            if ($customer) {
+                $this->merge([
+                    'customer_id' => $customer->id,
+                ]);
+            }
         }
     }
 
@@ -136,7 +144,8 @@ class InvoicesRequest extends FormRequest
         ?string $gstin,
         ?string $addressBlock,
         ?string $city = null,
-        ?string $prefix = null
+        ?string $prefix = null,
+        string $type = 'CUSTOMER'
     ): ?Customer {
         $companyId = (int) $this->header('company');
         if (! $companyId) {
@@ -146,6 +155,7 @@ class InvoicesRequest extends FormRequest
         $gstin = trim((string) $gstin);
         if ($gstin !== '') {
             $customer = Customer::where('company_id', $companyId)
+                ->where('type', $type)
                 ->where('tax_id', $gstin)
                 ->first();
             if ($customer) {
@@ -154,10 +164,12 @@ class InvoicesRequest extends FormRequest
         }
 
         $customer = Customer::where('company_id', $companyId)
+            ->where('type', $type)
             ->where('name', $name)->first();
 
         if (! $customer) {
             $customer = Customer::where('company_id', $companyId)
+                ->where('type', $type)
                 ->whereRaw('LOWER(name) = ?', [strtolower($name)])
                 ->first();
         }
@@ -173,6 +185,13 @@ class InvoicesRequest extends FormRequest
 
         [$street1, $street2] = $this->splitAddress($actualAddressBlock);
 
+        // Generate prefix if empty
+        if (empty($prefix)) {
+            $abbrev = $this->generateAbbreviation($city);
+            $count = Customer::where('company_id', $companyId)->where('type', $type)->count();
+            $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
+        }
+
         // Create new customer
         $newCustomer = Customer::create([
             'company_id' => $companyId,
@@ -180,6 +199,7 @@ class InvoicesRequest extends FormRequest
             'phone' => $phone,
             'tax_id' => $gstin,
             'prefix' => $prefix,
+            'type' => $type,
         ]);
 
         $newCustomer->addresses()->create([
@@ -209,8 +229,35 @@ class InvoicesRequest extends FormRequest
         return $newCustomer;
     }
 
+    private function generateAbbreviation(?string $city): string
+    {
+        if (empty($city)) {
+            return '';
+        }
+        $cityName = trim(strtoupper($city));
+
+        $dictionary = [
+            'UMBERGAON' => 'UMB',
+            'UMBARGAON' => 'UMB',
+            'VAPI' => 'VAPI',
+            'SURAT' => 'SURAT',
+            'MUMBAI' => 'MUM',
+            'DAMAN' => 'DAM',
+            'SILVASSA' => 'SIL',
+            'AHMEDABAD' => 'AMD',
+        ];
+
+        if (isset($dictionary[$cityName])) {
+            return $dictionary[$cityName];
+        } elseif (strlen($cityName) <= 4) {
+            return $cityName;
+        } else {
+            return substr($cityName, 0, 3);
+        }
+    }
+
     /**
-     * Get the validation rules that apply to the request.s
+     * Get the validation rules that apply to the request.
      */
     public function rules(): array
     {
@@ -223,6 +270,9 @@ class InvoicesRequest extends FormRequest
             ],
             'customer_id' => [
                 'required',
+            ],
+            'consignee_customer_id' => [
+                'nullable',
             ],
             'invoice_number' => [
                 'required',
