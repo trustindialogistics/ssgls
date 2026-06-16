@@ -152,7 +152,6 @@ function normalizeBilties(event) {
   let value = event.target.value
   value = value.replace(/[^0-9,]/g, '')
   value = value.replace(/,+/g, ',')
-  value = value.replace(/^,|,$/g, '')
   event.target.value = value
   props.field.value = value
 }

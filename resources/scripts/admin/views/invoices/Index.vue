@@ -167,7 +167,7 @@
           </BaseDropdownItem>
 
           <BaseDropdownItem @click="downloadBulkInvoices">
-            <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+            <BaseIcon name="ArrowDownTrayIcon" class="mr-3 text-gray-600" />
             {{ $t('general.download_invoice') }}
           </BaseDropdownItem>
         </BaseDropdown>
@@ -543,7 +543,7 @@ async function removeMultipleInvoices() {
 }
 
 async function downloadBulkInvoices() {
-  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  const ids = invoiceStore.selectedInvoices
   try {
     const response = await http.post('/api/v1/invoices/bulk-pdf', { ids }, {
       responseType: 'blob',

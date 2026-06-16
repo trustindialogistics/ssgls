@@ -168,7 +168,7 @@
 
           <template v-if="!isLorryReceiptRoute">
             <BaseDropdownItem @click="downloadBulkLrReceipts">
-              <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+              <BaseIcon name="ArrowDownTrayIcon" class="mr-3 text-gray-600" />
               {{ $t('general.download_lr') }}
             </BaseDropdownItem>
 
@@ -179,7 +179,7 @@
           </template>
 
           <BaseDropdownItem v-if="isLorryReceiptRoute" @click="downloadBulkLorryReceipts">
-            <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+            <BaseIcon name="ArrowDownTrayIcon" class="mr-3 text-gray-600" />
             {{ $t('general.download_lorry_receipt') }}
           </BaseDropdownItem>
         </BaseDropdown>
@@ -625,7 +625,7 @@ async function removeMultipleInvoices() {
 }
 
 async function downloadBulkLrReceipts() {
-  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  const ids = invoiceStore.selectedInvoices
   try {
     const response = await http.post('/api/v1/invoices/bulk-pdf', {
       ids,
@@ -644,7 +644,7 @@ async function downloadBulkLrReceipts() {
 }
 
 async function downloadBulkLrReceiptsMultiCopy() {
-  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  const ids = invoiceStore.selectedInvoices
   try {
     const response = await http.post('/api/v1/invoices/bulk-pdf', {
       ids,
@@ -663,7 +663,7 @@ async function downloadBulkLrReceiptsMultiCopy() {
 }
 
 async function downloadBulkLorryReceipts() {
-  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  const ids = invoiceStore.selectedInvoices
   try {
     const response = await http.post('/api/v1/invoices/bulk-pdf', { ids }, {
       responseType: 'blob',

@@ -11,7 +11,7 @@
           download
         >
           <template #left="slotProps">
-            <BaseIcon name="DownloadIcon" :class="slotProps.class" />
+            <BaseIcon name="ArrowDownTrayIcon" :class="slotProps.class" />
             {{ $t('invoices.download') }}
           </template>
         </BaseButton>

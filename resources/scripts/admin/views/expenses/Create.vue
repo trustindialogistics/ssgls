@@ -29,7 +29,7 @@
             class="mr-2"
           >
             <template #left="slotProps">
-              <BaseIcon name="DownloadIcon" :class="slotProps.class" />
+              <BaseIcon name="ArrowDownTrayIcon" :class="slotProps.class" />
             </template>
             {{ $t('expenses.download_receipt') }}
           </BaseButton>
