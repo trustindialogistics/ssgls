@@ -184,11 +184,11 @@ class LrReceiptCalculationService
         }
 
         if (!empty($updates)) {
-            Invoice::upsert(
-                $updates,
-                ['id'],
-                ['amount_debit', 'amount_credit', 'amount_debit_date', 'amount_credit_date', 'lorry_receipt_id']
-            );
+            foreach ($updates as $update) {
+                $id = $update['id'];
+                unset($update['id']);
+                Invoice::where('id', $id)->update($update);
+            }
 
             // Status update uses $allLorryReceipts already loaded
             foreach ($allLorryReceipts as $lr) {

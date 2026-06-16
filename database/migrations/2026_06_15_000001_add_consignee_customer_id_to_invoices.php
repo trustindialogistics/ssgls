@@ -15,6 +15,7 @@ return new class extends Migration
                     ->references('id')
                     ->on('customers')
                     ->nullOnDelete();
+                $table->index('consignee_customer_id');
             }
         });
     }

@@ -1146,13 +1146,23 @@ class Invoice extends Model implements HasMedia
         return $parts[0].','.base64_encode(substr($decoded, $pdfOffset));
     }
 
+    private ?LorryReceipt $cachedLorryReceipt = null;
+
+    private bool $lorryReceiptLoaded = false;
+
     private function matchingLorryReceipt(): ?LorryReceipt
     {
+        if ($this->lorryReceiptLoaded) {
+            return $this->cachedLorryReceipt;
+        }
+
+        $this->lorryReceiptLoaded = true;
+
         if (empty($this->invoice_number)) {
             return null;
         }
 
-        return LorryReceipt::query()
+        $this->cachedLorryReceipt = LorryReceipt::query()
             ->when($this->company_id, fn ($query, $companyId) => $query->where('company_id', $companyId))
             ->where(function ($query) {
                 $query->where('challan_no', $this->invoice_number)
@@ -1160,6 +1170,8 @@ class Invoice extends Model implements HasMedia
             })
             ->latest()
             ->first();
+
+        return $this->cachedLorryReceipt;
     }
 
     public function getFormattedAdvanceOnAttribute(): ?string

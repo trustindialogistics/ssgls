@@ -165,6 +165,23 @@
             <BaseIcon name="TrashIcon" class="mr-3 text-gray-600" />
             {{ $t('general.delete') }}
           </BaseDropdownItem>
+
+          <template v-if="!isLorryReceiptRoute">
+            <BaseDropdownItem @click="downloadBulkLrReceipts">
+              <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+              {{ $t('general.download_lr') }}
+            </BaseDropdownItem>
+
+            <BaseDropdownItem @click="downloadBulkLrReceiptsMultiCopy">
+              <BaseIcon name="DocumentDuplicateIcon" class="mr-3 text-gray-600" />
+              {{ $t('general.download_multi_lr') }}
+            </BaseDropdownItem>
+          </template>
+
+          <BaseDropdownItem v-if="isLorryReceiptRoute" @click="downloadBulkLorryReceipts">
+            <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+            {{ $t('general.download_lorry_receipt') }}
+          </BaseDropdownItem>
         </BaseDropdown>
       </div>
 
@@ -286,6 +303,7 @@ import abilities from '@/scripts/admin/stub/abilities'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import { useDialogStore } from '@/scripts/stores/dialog'
+import http from '@/scripts/http'
 
 import MoonwalkerIcon from '@/scripts/components/icons/empty/MoonwalkerIcon.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
@@ -604,6 +622,62 @@ async function removeMultipleInvoices() {
         })
       }
     })
+}
+
+async function downloadBulkLrReceipts() {
+  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  try {
+    const response = await http.post('/api/v1/invoices/bulk-pdf', {
+      ids,
+      copy_type: 'consignee',
+    }, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'lr-receipts.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download LR receipts', error)
+  }
+}
+
+async function downloadBulkLrReceiptsMultiCopy() {
+  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  try {
+    const response = await http.post('/api/v1/invoices/bulk-pdf', {
+      ids,
+      multi_copy: true,
+    }, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'lr-receipts-multi-copy.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download multi-copy LR receipts', error)
+  }
+}
+
+async function downloadBulkLorryReceipts() {
+  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  try {
+    const response = await http.post('/api/v1/invoices/bulk-pdf', { ids }, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'lorry-receipts.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download lorry receipts', error)
+  }
 }
 
 function toggleFilter() {

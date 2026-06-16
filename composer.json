@@ -14,6 +14,7 @@
         "gotenberg/gotenberg-php": "^2.8",
         "guzzlehttp/guzzle": "^7.9",
         "hashids/hashids": "^5.0",
+        "iio/libmergepdf": "*",
         "invoiceshelf/modules": "^1.0.0",
         "laravel/framework": "^13.0",
         "laravel/helpers": "^1.7",

@@ -165,6 +165,11 @@
             <BaseIcon name="TrashIcon" class="mr-3 text-gray-600" />
             {{ $t('general.delete') }}
           </BaseDropdownItem>
+
+          <BaseDropdownItem @click="downloadBulkInvoices">
+            <BaseIcon name="DownloadIcon" class="mr-3 text-gray-600" />
+            {{ $t('general.download_invoice') }}
+          </BaseDropdownItem>
         </BaseDropdown>
       </div>
 
@@ -291,6 +296,7 @@ import { useDialogStore } from '@/scripts/stores/dialog'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import abilities from '@/scripts/admin/stub/abilities'
 import { debouncedWatch } from '@vueuse/core'
+import http from '@/scripts/http'
 
 import MoonwalkerIcon from '@/scripts/components/icons/empty/MoonwalkerIcon.vue'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
@@ -534,6 +540,24 @@ async function removeMultipleInvoices() {
         })
       }
     })
+}
+
+async function downloadBulkInvoices() {
+  const ids = invoiceStore.selectedInvoices.map(inv => inv.id)
+  try {
+    const response = await http.post('/api/v1/invoices/bulk-pdf', { ids }, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'invoices.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download invoices', error)
+  }
 }
 
 function toggleFilter() {
