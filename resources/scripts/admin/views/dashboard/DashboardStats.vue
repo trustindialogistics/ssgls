@@ -37,15 +37,15 @@
       {{ dashboardStore.stats.totalInvoiceCount }}
     </DashboardStatsItem>
 
-    <!-- Estimates -->
+    <!-- LR Receipts -->
     <DashboardStatsItem
-      v-if="userStore.hasAbilities(abilities.VIEW_ESTIMATE)"
-      :icon-component="EstimateIcon"
+      v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
+      :icon-component="InvoiceIcon"
       :loading="!dashboardStore.isDashboardDataLoaded"
-      route="/admin/estimates"
-      :label="(dashboardStore.stats.totalEstimateCount <= 1 ? $t( 'dashboard.cards.estimates', 1) : $t('dashboard.cards.estimates', 2))"
+      route="/admin/lr-receipts"
+      :label="(dashboardStore.stats.totalLrReceiptCount <= 1 ? $t('dashboard.cards.lr_receipts', 1) : $t('dashboard.cards.lr_receipts', 2))"
     >
-      {{ dashboardStore.stats.totalEstimateCount }}
+      {{ dashboardStore.stats.totalLrReceiptCount }}
     </DashboardStatsItem>
   </div>
 </template>
@@ -54,7 +54,7 @@
 import DollarIcon from '@/scripts/components/icons/dashboard/DollarIcon.vue'
 import CustomerIcon from '@/scripts/components/icons/dashboard/CustomerIcon.vue'
 import InvoiceIcon from '@/scripts/components/icons/dashboard/InvoiceIcon.vue'
-import EstimateIcon from '@/scripts/components/icons/dashboard/EstimateIcon.vue'
+
 import abilities from '@/scripts/admin/stub/abilities'
 import DashboardStatsItem from './DashboardStatsItem.vue'
 

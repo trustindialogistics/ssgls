@@ -327,12 +327,12 @@ class LorryReceipt extends Model
             'Owner Address' => 'owner_address',
             'Owner Phone No' => 'owner_phone',
             'Owner PAN No' => 'financer_name',
-            'Financer Address' => 'financer_address',
             'Driver Name' => 'driver_name',
             'Driver Address' => 'driver_address',
             'Driver Place' => 'driver_address',
             'Driver Licence No' => 'driver_licence_no',
             'Driver Licence Date' => 'driver_licence_date',
+            'Issued Dt.' => 'driver_licence_date',
             'Driver Licence Issued By' => 'driver_licence_issued_by',
             'Driver RTO' => 'driver_rto_address',
             'Driver Valid Up To' => 'driver_valid_up_to',
@@ -340,8 +340,6 @@ class LorryReceipt extends Model
             'Broker Address' => 'broker_address',
             'Broker Pan No' => 'advice_no',
             'Advice Date' => 'advice_date',
-            'Destination Broker Name' => 'destination_broker_name',
-            'Destination Broker Address' => 'destination_broker_address',
             'Broker Phone No' => 'broker_phone',
             'Owner Bank Account No' => 'owner_bank_account_no',
             'Driver Bank Account No' => 'driver_bank_account_no',
@@ -384,6 +382,7 @@ class LorryReceipt extends Model
             'Final Prepared By' => 'final_prepared_by',
             'Final Payment Received By' => 'final_payment_received_by',
             'Received No Of Bilties' => 'received_no_bilties',
+            'Docket No' => 'received_no_bilties',
         ];
         $fields = collect($fieldMap)->map(function ($attribute, $label) use ($receipt) {
             return (object) [

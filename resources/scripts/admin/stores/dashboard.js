@@ -13,7 +13,7 @@ export const useDashboardStore = (useWindow = false) => {
         totalAmountDue: 0,
         totalCustomerCount: 0,
         totalInvoiceCount: 0,
-        totalEstimateCount: 0,
+        totalLrReceiptCount: 0,
       },
 
       chartData: {
@@ -32,7 +32,7 @@ export const useDashboardStore = (useWindow = false) => {
       totalNetIncome: null,
 
       recentDueInvoices: [],
-      recentEstimates: [],
+      recentLrReceipts: [],
 
       isDashboardDataLoaded: false,
     }),
@@ -47,7 +47,7 @@ export const useDashboardStore = (useWindow = false) => {
               this.stats.totalAmountDue = response.data.total_amount_due
               this.stats.totalCustomerCount = response.data.total_customer_count
               this.stats.totalInvoiceCount = response.data.total_invoice_count
-              this.stats.totalEstimateCount = response.data.total_estimate_count
+              this.stats.totalLrReceiptCount = response.data.total_lr_receipt_count
 
               // Dashboard Chart
               if (this.chartData && response.data.chart_data) {
@@ -74,7 +74,7 @@ export const useDashboardStore = (useWindow = false) => {
 
               // Dashboard Table Data
               this.recentDueInvoices = response.data.recent_due_invoices
-              this.recentEstimates = response.data.recent_estimates
+              this.recentLrReceipts = response.data.recent_lr_receipts
 
               this.isDashboardDataLoaded = true
 

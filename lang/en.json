@@ -141,6 +141,7 @@
       "customers": "Customer | Customers",
       "invoices": "Invoice | Invoices",
       "estimates": "Quotation | Quotations",
+      "lr_receipts": "LR Receipt | LR Receipts",
       "payments": "Payment | Payments"
     },
     "chart_info": {
@@ -166,6 +167,14 @@
       "date": "Date",
       "customer": "Customer",
       "amount_due": "Amount Due",
+      "actions": "Actions",
+      "view_all": "View All"
+    },
+    "recent_lr_receipt_card": {
+      "title": "Recent LR Receipts",
+      "date": "Date",
+      "customer": "Customer",
+      "profit_loss": "Profit/Loss",
       "actions": "Actions",
       "view_all": "View All"
     }

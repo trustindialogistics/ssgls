@@ -64,14 +64,10 @@ const canShowSendButton = computed(() => {
     return false
   }
 
-  if (invoiceData.value.status === 'DRAFT') {
-    return true
-  }
-
-  return isTransportReceiptView.value && ['SENT', 'VIEWED', 'COMPLETED'].includes(invoiceData.value.status)
+  return true
 })
 const sendButtonLabel = computed(() => {
-  const action = ['SENT', 'VIEWED', 'COMPLETED'].includes(invoiceData.value?.status) ? 'Resend' : 'Send'
+  const action = ['SENT', 'VIEWED', 'COMPLETED', 'PAID', 'OVERDUE'].includes(invoiceData.value?.status) ? 'Resend' : 'Send'
 
   return isLorryReceiptView.value ? `${action} Lorry Receipt` : isLrReceiptView.value ? `${action} LR Receipt` : t('invoices.send_invoice')
 })
@@ -299,7 +295,7 @@ onSearched = debounce(onSearched, 500)
         <div class="text-sm mr-3">
           <BaseButton
             v-if="
-              invoiceData.status === 'DRAFT' &&
+              ['DRAFT', 'PAID'].includes(invoiceData.status) &&
               userStore.hasAbilities(abilities.EDIT_INVOICE)
             "
             :disabled="isMarkAsSent"

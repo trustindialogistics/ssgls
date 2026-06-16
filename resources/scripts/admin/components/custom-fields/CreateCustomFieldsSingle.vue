@@ -130,7 +130,7 @@ watch(
         if (props.field.value !== normalized) {
           props.field.value = normalized
         }
-      } else if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties') {
+      } else if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties' || props.field.label === 'Docket No') {
         const normalized = String(val).replace(/[^0-9,]/g, '').replace(/,+/g, ',')
         if (props.field.value !== normalized) {
           props.field.value = normalized
@@ -141,7 +141,7 @@ watch(
 )
 
 function handleInput(event) {
-  if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties') {
+  if (props.field.label === 'Received No Of Bilties' || props.field.label === 'Received No. of Bilties' || props.field.label === 'Docket No') {
     normalizeBilties(event)
   } else if (props.field.label === 'Consignment Number') {
     normalizeConsignment(event)

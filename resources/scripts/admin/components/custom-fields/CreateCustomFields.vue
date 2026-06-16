@@ -6,6 +6,21 @@
   >
     <div v-if="isLorryReceiptTemplate" class="space-y-6">
       <section
+        v-if="docketNoFieldEntry"
+        class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg"
+      >
+        <BaseInputGrid :layout="gridLayout" class="p-4">
+          <SingleField
+            :custom-field-scope="customFieldScope"
+            :store="store"
+            :store-prop="storeProp"
+            :index="docketNoFieldEntry.index"
+            :field="docketNoFieldEntry.field"
+          />
+        </BaseInputGrid>
+      </section>
+
+      <section
         v-for="section in lorryFieldSections"
         :key="section.key"
         class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg"
@@ -149,7 +164,6 @@ const lorryVehicleAutofillLabels = [
   'Owner Address',
   'Owner Phone No',
   'Owner PAN No',
-  'Financer Address',
   'Paid To',
   'Final Paid To',
 ]
@@ -209,7 +223,6 @@ const lorryFieldSectionDefinitions = [
       'Final Balance Date',
       'Cash/Cheque No.',
       'Final Bank',
-      'Received No Of Bilties',
     ],
   },
   {
@@ -221,18 +234,15 @@ const lorryFieldSectionDefinitions = [
       'Owner Phone No',
       'Owner Bank Account No',
       'Owner PAN No',
-      'Financer Address',
       'Driver Address',
       'Driver Licence No',
-      'Driver Licence Date',
+      'Issued Dt.',
       'Driver Licence Issued By',
       'Driver RTO',
       'Driver Valid Up To',
       'Driver Bank Account No',
       'Broker Address',
       'Broker Pan No',
-      'Destination Broker Name',
-      'Destination Broker Address',
       'Broker Phone No',
       'Broker Bank Account No',
     ],
@@ -248,6 +258,12 @@ const customFieldsWithIndex = computed(() => {
     field,
     index,
   }))
+})
+
+const docketNoFieldEntry = computed(() => {
+  return customFieldsWithIndex.value.find((entry) => {
+    return entry.field.label === 'Docket No' || entry.field.label === 'Received No Of Bilties' || entry.field.label === 'Received No. of Bilties'
+  })
 })
 
 const lorryFieldSections = computed(() => {

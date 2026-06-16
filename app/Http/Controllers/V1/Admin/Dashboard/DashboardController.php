@@ -183,7 +183,9 @@ class DashboardController extends Controller
         $total_invoice_count = Invoice::whereCompany()
             ->whereRegularInvoice()
             ->count();
-        $total_estimate_count = Estimate::whereCompany()->count();
+        $total_lr_receipt_count = Invoice::whereCompany()
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->count();
         $total_amount_due = Invoice::whereCompany()
             ->whereRegularInvoice()
             ->sum('base_due_amount');
@@ -195,16 +197,21 @@ class DashboardController extends Controller
             ->take(5)
             ->latest()
             ->get();
-        $recent_estimates = Estimate::with('customer')->whereCompany()->take(5)->latest()->get();
+        $recent_lr_receipts = Invoice::with('customer')
+            ->whereCompany()
+            ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
+            ->take(5)
+            ->latest()
+            ->get();
 
         return response()->json([
             'total_amount_due' => $total_amount_due,
             'total_customer_count' => $total_customer_count,
             'total_invoice_count' => $total_invoice_count,
-            'total_estimate_count' => $total_estimate_count,
+            'total_lr_receipt_count' => $total_lr_receipt_count,
 
             'recent_due_invoices' => BouncerFacade::can('view-invoice', Invoice::class) ? $recent_due_invoices : [],
-            'recent_estimates' => BouncerFacade::can('view-estimate', Estimate::class) ? $recent_estimates : [],
+            'recent_lr_receipts' => BouncerFacade::can('view-invoice', Invoice::class) ? $recent_lr_receipts : [],
 
             'chart_data' => $chart_data,
 

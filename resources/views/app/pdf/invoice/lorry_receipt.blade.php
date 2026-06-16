@@ -240,7 +240,9 @@
         @page { margin: 0; size: 612pt 1008pt; }
         * { box-sizing: border-box; }
         body { color: #222; font-family: Arial, Helvetica, sans-serif; margin: 0; }
-        .sheet { border: 1.35pt solid #222; height: 887pt; left: 43pt; position: absolute; top: 106pt; width: 520pt; }
+        .sheet { border: 1.35pt solid #222; height: 887pt; left: 43pt; position: absolute; top: 30pt; width: 520pt; }
+        .section-b-content .t { font-size: 6.8pt; }
+        .section-b-content .line { font-size: 7.4pt; }
         .a { position: absolute; }
         .box { border: .75pt solid #222; position: absolute; }
         .section-box { border: 1.15pt solid #222; position: absolute; }
@@ -279,7 +281,7 @@
 <body>
 <div class="sheet">
     <div class="a c" style="left:12pt; top:9pt; width:93pt;">@if($logo && file_exists($logo))<img class="logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}">@else<div class="brand">{{ $companyInitials }}</div>@endif</div>
-    <div class="a c" style="left:124pt; top:2pt; width:286pt;">
+    <div class="a c" style="left:124pt; top:1pt; width:286pt;">
         <div class="brand">{{ $companyName }}</div>
         <div class="sub">{{ $companyTagline }}</div>
         <div class="small" style="width:285pt;">{!! $displayCompanyAddress !!}</div>
@@ -287,21 +289,21 @@
     <div class="t r" style="left:410pt; top:10pt; width:105pt;">@if($companyPhone)Mob. {{ $companyPhone }}@endif @if($companyEmail)<br>E-mail : {{ $companyEmail }}@endif</div>
 
     <div class="box" style="left:284pt; top:55pt; width:236pt; height:102pt;"></div>
-    <div class="v" style="left:349pt; top:55pt; height:102pt;"></div><div class="v" style="left:396pt; top:55pt; height:102pt;"></div><div class="v" style="left:458pt; top:55pt; height:102pt;"></div>
-    <div class="h" style="left:284pt; top:88pt; width:236pt;"></div><div class="h" style="left:284pt; top:123pt; width:236pt;"></div><div class="h" style="left:458pt; top:72pt; width:62pt;"></div><div class="h" style="left:458pt; top:107pt; width:62pt;"></div>
-    <div class="t c" style="left:289pt; top:60pt; width:55pt;">Challan No.</div>
-    <div class="t c" style="left:352pt; top:58pt; width:39pt; line-height:7.2pt;">No. Of<br>Pages</div>
-    <div class="t c" style="left:402pt; top:60pt; width:48pt;">No. Pkgs.</div>
-    <div class="t c" style="left:462pt; top:58pt; width:54pt;">Actual Wt.</div>
-    <div class="t c" style="left:462pt; top:91pt; width:54pt;">Charge Wt.</div>
+    <div class="v" style="left:339pt; top:55pt; height:102pt;"></div><div class="v" style="left:374pt; top:55pt; height:102pt;"></div><div class="v" style="left:430pt; top:55pt; height:102pt;"></div>
+    <div class="h" style="left:284pt; top:88pt; width:236pt;"></div><div class="h" style="left:284pt; top:123pt; width:146pt;"></div><div class="h" style="left:430pt; top:72pt; width:90pt;"></div><div class="h" style="left:430pt; top:107pt; width:90pt;"></div>
+    <div class="t c" style="left:284pt; top:60pt; width:55pt;">Challan No.</div>
+    <div class="t c" style="left:339pt; top:58pt; width:35pt; line-height:7.2pt;">No. Of<br>Pages</div>
+    <div class="t c" style="left:374pt; top:60pt; width:56pt;">No. Pkgs.</div>
+    <div class="t c" style="left:430pt; top:58pt; width:90pt;">Actual Wt.</div>
+    <div class="t c" style="left:430pt; top:91pt; width:90pt;">Charge Wt.</div>
 
-    <div class="t c b" style="left:286pt; top:98pt; width:61pt; font-size:10.5pt;">{{ $invoice->invoice_number }}</div>
-    <div class="t c b" style="left:351pt; top:98pt; width:43pt; font-size:10.5pt;">{{ $v('No Of Pages') }}</div>
-    <div class="t c b" style="left:398pt; top:98pt; width:58pt; font-size:10.5pt;">{{ $v('No Of Packages') }}</div>
-    <div class="t c b" style="left:459pt; top:75pt; width:60pt; font-size:9pt;">{{ $v('Actual Weight') }}</div>
-    <div class="t c b" style="left:459pt; top:110pt; width:60pt; font-size:9pt;">{{ $v('Charge Weight') }}</div>
+    <div class="t c b" style="left:284pt; top:98pt; width:55pt; font-size:10.5pt;">{{ $invoice->invoice_number }}</div>
+    <div class="t c b" style="left:339pt; top:98pt; width:35pt; font-size:10.5pt;">{{ $v('No Of Pages') }}</div>
+    <div class="t c b" style="left:374pt; top:98pt; width:56pt; font-size:10.5pt;">{{ $v('No Of Packages') }}</div>
+    <div class="t c b" style="left:430pt; top:75pt; width:90pt; font-size:9pt;">{{ $v('Actual Weight') }}</div>
+    <div class="t c b" style="left:430pt; top:110pt; width:90pt; font-size:9pt;">{{ $v('Charge Weight') }}</div>
 
-    <div class="t c" style="left:302pt; top:124pt; width:45pt;">Lorry No.<br><span class="b">{{ $v('Lorry No') }}</span></div><div class="t c" style="left:354pt; top:124pt; width:37pt;">Rate<br><span class="b">{{ $v('Rate') }}</span></div><div class="t c" style="left:464pt; top:124pt; width:48pt;">Dist. Kms.<br><span class="b">{{ $v('Distance Kms') }}</span></div>
+    <div class="t c" style="left:284pt; top:124pt; width:55pt;">Lorry No.<br><span class="b">{{ $v('Lorry No') }}</span></div><div class="t c" style="left:339pt; top:124pt; width:35pt;">Rate<br><span class="b">{{ $v('Rate') }}</span></div><div class="t c" style="left:374pt; top:124pt; width:56pt;">Dist. Kms.<br><span class="b">{{ $v('Distance Kms') }}</span></div>
 
     <div class="t b" style="left:5pt; top:98pt;">Lorry Hire Contract No.</div><div class="line" style="left:105pt; top:97pt; width:172pt;">{{ $v('Lorry Hire Contract No') }}</div>
     <div class="box" style="left:42pt; top:111pt; width:235pt; height:44pt;"></div><div class="v" style="left:162pt; top:111pt; height:44pt;"></div><div class="h" style="left:42pt; top:133pt; width:235pt;"></div>
@@ -318,11 +320,19 @@
     <div class="t" style="left:6pt; top:278pt;">Insurance Certificate No.</div><div class="line" style="left:94pt; top:277pt; width:229pt;"></div><div class="t" style="left:325pt; top:278pt;">Valid upto</div><div class="line" style="left:368pt; top:277pt; width:105pt;"></div><div class="t" style="left:474pt; top:278pt;">20</div><div class="line" style="left:487pt; top:277pt; width:29pt;"></div>
     <div class="top" style="top:287pt;"></div>
 
-    <div class="section-outline" style="left:0; top:287pt; width:520pt; height:130pt;"></div><div class="v" style="left:172pt; top:287pt; height:130pt;"></div><div class="v" style="left:344pt; top:287pt; height:130pt;"></div>
-    <div class="section-box" style="left:0; top:287pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:291pt;">B</div><div class="title" style="left:30pt; top:292pt;">OWNER</div><div class="box" style="left:72pt; top:287pt; width:99pt; height:16pt;"></div><div class="t" style="left:75pt; top:291pt;">Code</div><div class="title" style="left:178pt; top:292pt;">DRIVER</div><div class="title" style="left:351pt; top:292pt;">BROKER</div><div class="box" style="left:410pt; top:287pt; width:110pt; height:16pt;"></div>
-    <div class="t" style="left:6pt; top:310pt;">Name</div><div class="line" style="left:28pt; top:309pt; width:139pt; {{ $getFontForWidth($v('Owner Name'), 139) }}">{{ $v('Owner Name') }}</div><div class="t" style="left:6pt; top:325pt;">Full Address</div><div class="line" style="left:57pt; top:324pt; width:110pt;">{{ $addressLine('Owner Address', [23, 34, 34], 0) }}</div><div class="line" style="left:6pt; top:339pt; width:161pt;">{{ $addressLine('Owner Address', [23, 34, 34], 1) }}</div><div class="line" style="left:6pt; top:354pt; width:161pt;">{{ $addressLine('Owner Address', [23, 34, 34], 2) }}</div><div class="t" style="left:6pt; top:369pt;">Phone No.</div><div class="line" style="left:43pt; top:368pt; width:124pt;">{{ $v('Owner Phone No') }}</div><div class="t" style="left:6pt; top:384pt;">Owner PAN No .</div><div class="line" style="left:68pt; top:383pt; width:99pt;">{{ $v(['Owner PAN No', 'Financer Name']) }}</div><div class="t" style="left:6pt; top:399pt;">Address</div><div class="line" style="left:37pt; top:398pt; width:130pt;">{{ $v('Financer Address') }}</div>
-    <div class="t" style="left:178pt; top:310pt;">Name</div><div class="line" style="left:201pt; top:309pt; width:137pt; {{ $getFontForWidth($v('Driver Name'), 137) }}">{{ $v('Driver Name') }}</div><div class="t" style="left:178pt; top:325pt;">Full Address</div><div class="line" style="left:229pt; top:324pt; width:109pt;">{{ $addressLine('Driver Address', [23, 34], 0) }}</div><div class="line" style="left:178pt; top:339pt; width:161pt;">{{ $addressLine('Driver Address', [23, 34], 1) }}</div><div class="t" style="left:178pt; top:354pt;">Name of Place</div><div class="line" style="left:236pt; top:353pt; width:102pt;">{{ $v('Driver Place') }}</div><div class="t" style="left:178pt; top:369pt;">Licence No.</div><div class="line" style="left:224pt; top:368pt; width:114pt;">{{ $v('Driver Licence No') }}</div><div class="t" style="left:178pt; top:384pt;">Dt.</div><div class="line" style="left:191pt; top:383pt; width:58pt;">{{ $v('Driver Licence Date') }}</div><div class="t" style="left:252pt; top:384pt;">Issued</div><div class="line" style="left:285pt; top:383pt; width:53pt;">{{ $v('Driver Licence Issued By') }}</div><div class="line" style="left:178pt; top:397pt; width:138pt;">{{ $v('Driver RTO') }}</div><div class="t" style="left:319pt; top:398pt;">RTO</div><div class="t" style="left:178pt; top:407pt;">Valid up Dt.</div><div class="line" style="left:229pt; top:406pt; width:109pt;">{{ $v('Driver Valid Up To') }}</div>
-    <div class="line" style="left:350pt; top:309pt; width:160pt; {{ $getFontForWidth($v('Broker Name'), 160) }}">{{ $v('Broker Name') }}</div><div class="t" style="left:350pt; top:325pt;">Name & Add</div><div class="line" style="left:399pt; top:324pt; width:111pt;">{{ $addressLine('Broker Address', [23, 34], 0) }}</div><div class="line" style="left:350pt; top:339pt; width:160pt;">{{ $addressLine('Broker Address', [23, 34], 1) }}</div><div class="t" style="left:350pt; top:354pt;">Broker Pan No.</div><div class="line" style="left:414pt; top:353pt; width:96pt;">{{ $v('Broker Pan No') }}</div><div class="line" style="left:350pt; top:368pt; width:160pt;">&nbsp;</div><div class="t" style="left:350pt; top:384pt;">Desti. Broker Name</div><div class="line" style="left:424pt; top:383pt; width:86pt;">{{ $v('Destination Broker Name') }}</div><div class="t" style="left:350pt; top:399pt;">Add</div><div class="line" style="left:367pt; top:398pt; width:143pt;">{{ $v('Destination Broker Address') }}</div><div class="t" style="left:350pt; top:407pt;">Phone No.</div><div class="line" style="left:389pt; top:406pt; width:121pt;">{{ $v('Broker Phone No') }}</div>
+    <div class="section-outline" style="left:0; top:287pt; width:520pt; height:130pt;"></div><div class="v" style="left:172pt; top:287pt; height:130pt;"></div><div class="v" style="left:374pt; top:287pt; height:130pt;"></div>
+    <div class="section-box" style="left:0; top:287pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:291pt;">B</div><div class="title" style="left:30pt; top:292pt;">OWNER</div><div class="box" style="left:72pt; top:287pt; width:99pt; height:16pt;"></div><div class="t" style="left:75pt; top:291pt;">Code</div><div class="title" style="left:178pt; top:292pt;">DRIVER</div><div class="title" style="left:380pt; top:292pt;">BROKER</div><div class="box" style="left:435pt; top:287pt; width:85pt; height:16pt;"></div>
+    <div class="section-b-content">
+        <div class="t" style="left:6pt; top:310pt;">Name</div><div class="line" style="left:28pt; top:309pt; width:139pt; {{ $getFontForWidth($v('Owner Name'), 139, 7.4) }}">{{ $v('Owner Name') }}</div><div class="t" style="left:6pt; top:325pt;">Full Address</div><div class="line" style="left:57pt; top:324pt; width:110pt;">{{ $addressLine('Owner Address', [23, 34, 34], 0) }}</div><div class="line" style="left:6pt; top:339pt; width:161pt;">{{ $addressLine('Owner Address', [23, 34, 34], 1) }}</div><div class="line" style="left:6pt; top:354pt; width:161pt;">{{ $addressLine('Owner Address', [23, 34, 34], 2) }}</div><div class="t" style="left:6pt; top:369pt;">Phone No.</div><div class="line" style="left:43pt; top:368pt; width:124pt;">{{ $v('Owner Phone No') }}</div><div class="t" style="left:6pt; top:384pt;">Owner PAN No .</div><div class="line" style="left:68pt; top:383pt; width:99pt;">{{ $v(['Owner PAN No', 'Financer Name']) }}</div>
+        <div class="t" style="left:178pt; top:310pt;">Name</div><div class="line" style="left:201pt; top:309pt; width:167pt; {{ $getFontForWidth($v('Driver Name'), 167, 7.4) }}">{{ $v('Driver Name') }}</div><div class="t" style="left:178pt; top:325pt;">Full Address</div><div class="line" style="left:229pt; top:324pt; width:139pt;">{{ $addressLine('Driver Address', [23, 34], 0) }}</div><div class="line" style="left:178pt; top:339pt; width:190pt;">{{ $addressLine('Driver Address', [23, 34], 1) }}</div><div class="t" style="left:178pt; top:354pt;">Name of Place</div><div class="line" style="left:236pt; top:353pt; width:132pt;">{{ $v('Driver Place') }}</div><div class="t" style="left:178pt; top:369pt;">Licence No.</div><div class="line" style="left:224pt; top:368pt; width:144pt;">{{ $v('Driver Licence No') }}</div><div class="t" style="left:178pt; top:384pt;">Issued Dt.</div><div class="line" style="left:223pt; top:383pt; width:45pt;">{{ $v(['Driver Licence Date', 'Issued Dt.']) }}</div><div class="t" style="left:270pt; top:384pt;">Valid Dt.</div><div class="line" style="left:306pt; top:383pt; width:62pt;">{{ $v('Driver Valid Up To') }}</div><div class="t" style="left:178pt; top:399pt;">RTO</div><div class="line" style="left:198pt; top:398pt; width:170pt;">{{ $v('Driver RTO') }}</div>
+        <div class="t" style="left:380pt; top:310pt;">Name</div><div class="line" style="left:405pt; top:309pt; width:109pt;">{{ $splitLines($v('Broker Name'), [26, 32])[0] ?? '' }}</div>
+        <div class="line" style="left:380pt; top:324pt; width:134pt;">{{ $splitLines($v('Broker Name'), [26, 32])[1] ?? '' }}</div>
+        <div class="t" style="left:380pt; top:339pt;">Full Address</div><div class="line" style="left:431pt; top:339pt; width:83pt;">{{ $addressLine('Broker Address', [18, 30, 30], 0) }}</div>
+        <div class="line" style="left:380pt; top:354pt; width:134pt;">{{ $addressLine('Broker Address', [18, 30, 30], 1) }}</div>
+        <div class="line" style="left:380pt; top:369pt; width:134pt;">{{ $addressLine('Broker Address', [18, 30, 30], 2) }}</div>
+        <div class="t" style="left:380pt; top:384pt;">Broker Pan No.</div><div class="line" style="left:439pt; top:384pt; width:75pt;">{{ $v('Broker Pan No') }}</div>
+        <div class="t" style="left:380pt; top:399pt;">Phone No.</div><div class="line" style="left:421pt; top:398pt; width:93pt;">{{ $v('Broker Phone No') }}</div>
+    </div>
     <div class="top" style="top:417pt;"></div>
 
     <div class="section-outline" style="left:0; top:417pt; width:520pt; height:141pt;"></div><div class="section-box" style="left:0; top:417pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:420pt;">C</div><div class="section-box" style="left:18pt; top:417pt; width:502pt; height:16pt;"></div><div class="title c" style="left:180pt; top:421pt; width:150pt;">HIRE PARTICULARS</div><div class="v" style="left:430pt; top:417pt; height:141pt;"></div><div class="h" style="left:430pt; top:448pt; width:90pt;"></div><div class="h" style="left:430pt; top:464pt; width:90pt;"></div><div class="h" style="left:430pt; top:480pt; width:90pt;"></div><div class="h" style="left:430pt; top:496pt; width:90pt;"></div><div class="h" style="left:430pt; top:512pt; width:90pt;"></div>

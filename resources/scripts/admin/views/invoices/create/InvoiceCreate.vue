@@ -504,7 +504,7 @@ async function submitForm() {
 
   if (data.customFields) {
     data.customFields.forEach((field) => {
-      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties') {
+      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties' || field.label === 'Docket No') {
         let val = String(field.value || '')
         val = val.replace(/[^0-9,]/g, '')
         val = val.replace(/,+/g, ',')
@@ -525,7 +525,7 @@ async function submitForm() {
   data.items = data.items.map((item) => {
     let customFields = item.customFields || []
     customFields.forEach((field) => {
-      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties') {
+      if (field.label === 'Received No Of Bilties' || field.label === 'Received No. of Bilties' || field.label === 'Docket No') {
         let val = String(field.value || '')
         val = val.replace(/[^0-9,]/g, '')
         val = val.replace(/,+/g, ',')

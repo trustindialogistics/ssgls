@@ -51,51 +51,51 @@
         </BaseTable>
       </div>
 
-      <!-- Recent Estimates -->
+      <!-- Recent LR Receipts -->
       <div
-        v-if="userStore.hasAbilities(abilities.VIEW_ESTIMATE)"
-        class="recent-estimates"
+        v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
+        class="recent-lr-receipts"
       >
         <div class="relative z-10 flex items-center justify-between mb-3">
           <h6 class="mb-0 text-xl font-semibold leading-normal">
-            {{ $t('dashboard.recent_estimate_card.title') }}
+            {{ $t('dashboard.recent_lr_receipt_card.title') }}
           </h6>
 
           <BaseButton
             variant="primary-outline"
             size="sm"
-            @click="$router.push('/admin/estimates')"
+            @click="$router.push('/admin/lr-receipts')"
           >
-            {{ $t('dashboard.recent_estimate_card.view_all') }}
+            {{ $t('dashboard.recent_lr_receipt_card.view_all') }}
           </BaseButton>
         </div>
 
         <BaseTable
-          :data="dashboardStore.recentEstimates"
-          :columns="recentEstimateColumns"
+          :data="dashboardStore.recentLrReceipts"
+          :columns="recentLrReceiptColumns"
           :loading="!dashboardStore.isDashboardDataLoaded"
         >
           <template #cell-user="{ row }">
             <router-link
-              :to="{ path: `estimates/${row.data.id}/view` }"
+              :to="{ path: `lr-receipts/${row.data.id}/view` }"
               class="font-medium text-primary-500"
             >
               {{ row.data.customer.name }}
             </router-link>
           </template>
 
-          <template #cell-total="{ row }">
+          <template #cell-profit_loss="{ row }">
             <BaseFormatMoney
-              :amount="row.data.total"
-              :currency="row.data.customer.currency"
+              :amount="parseFloat(row.data.amount_credit || 0) - parseFloat(row.data.amount_debit || 0)"
+              :currency="row.data.customer ? row.data.customer.currency : null"
             />
           </template>
 
           <template
-            v-if="hasAtleastOneEstimateAbility()"
+            v-if="hasAtleastOneInvoiceAbility()"
             #cell-actions="{ row }"
           >
-            <EstimateDropdown :row="row.data" :table="estimateTableComponent" />
+            <InvoiceDropdown :row="row.data" :table="invoiceTableComponent" />
           </template>
         </BaseTable>
       </div>
@@ -110,7 +110,6 @@ import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import abilities from '@/scripts/admin/stub/abilities'
 import InvoiceDropdown from '@/scripts/admin/components/dropdowns/InvoiceIndexDropdown.vue'
-import EstimateDropdown from '@/scripts/admin/components/dropdowns/EstimateIndexDropdown.vue'
 
 const dashboardStore = useDashboardStore()
 
@@ -118,7 +117,6 @@ const { t } = useI18n()
 const userStore = useUserStore()
 
 const invoiceTableComponent = ref(null)
-const estimateTableComponent = ref(null)
 
 const dueInvoiceColumns = computed(() => {
   return [
@@ -143,19 +141,19 @@ const dueInvoiceColumns = computed(() => {
   ]
 })
 
-const recentEstimateColumns = computed(() => {
+const recentLrReceiptColumns = computed(() => {
   return [
     {
-      key: 'formattedEstimateDate',
-      label: t('dashboard.recent_estimate_card.date'),
+      key: 'formattedInvoiceDate',
+      label: t('dashboard.recent_lr_receipt_card.date'),
     },
     {
       key: 'user',
-      label: t('dashboard.recent_estimate_card.customer'),
+      label: t('dashboard.recent_lr_receipt_card.customer'),
     },
     {
-      key: 'total',
-      label: t('dashboard.recent_estimate_card.amount_due'),
+      key: 'profit_loss',
+      label: t('dashboard.recent_lr_receipt_card.profit_loss'),
     },
     {
       key: 'actions',
