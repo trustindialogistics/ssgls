@@ -142,6 +142,7 @@
       "invoices": "Invoice | Invoices",
       "estimates": "Quotation | Quotations",
       "lr_receipts": "LR Receipt | LR Receipts",
+      "lorry_receipts": "Lorry Receipt | Lorry Receipts",
       "payments": "Payment | Payments"
     },
     "chart_info": {

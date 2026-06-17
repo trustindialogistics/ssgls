@@ -14,6 +14,7 @@ export const useDashboardStore = (useWindow = false) => {
         totalCustomerCount: 0,
         totalInvoiceCount: 0,
         totalLrReceiptCount: 0,
+        totalLorryReceiptCount: 0,
       },
 
       chartData: {
@@ -48,6 +49,7 @@ export const useDashboardStore = (useWindow = false) => {
               this.stats.totalCustomerCount = response.data.total_customer_count
               this.stats.totalInvoiceCount = response.data.total_invoice_count
               this.stats.totalLrReceiptCount = response.data.total_lr_receipt_count
+              this.stats.totalLorryReceiptCount = response.data.total_lorry_receipt_count
 
               // Dashboard Chart
               if (this.chartData && response.data.chart_data) {

@@ -34,6 +34,7 @@
   </div>
 
   <BasePage class="relative invoice-create-page">
+    <ScrollToTopButton />
     <form @submit.prevent="submitForm">
       <BasePageHeader :title="pageTitle">
         <BaseBreadcrumb>
@@ -251,6 +252,7 @@ import TaxTypeModal from '@/scripts/admin/components/modal-components/TaxTypeMod
 import ItemModal from '@/scripts/admin/components/modal-components/ItemModal.vue'
 import SalesTax from '@/scripts/admin/components/estimate-invoice-common/SalesTax.vue'
 import BaseFileUploader from '@/scripts/components/base/BaseFileUploader.vue'
+import ScrollToTopButton from '@/scripts/admin/components/ScrollToTopButton.vue'
 
 const invoiceStore = useInvoiceStore()
 const companyStore = useCompanyStore()

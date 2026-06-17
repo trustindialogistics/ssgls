@@ -86,11 +86,7 @@
                 label="Driver Bank Account No."
                 :content-loading="isLoadingExisting"
               />
-              <ProfileField
-                v-model="form.place"
-                label="Name of Place"
-                :content-loading="isLoadingExisting"
-              />
+
               <ProfileField
                 v-model="form.licence_no"
                 label="Licence No."

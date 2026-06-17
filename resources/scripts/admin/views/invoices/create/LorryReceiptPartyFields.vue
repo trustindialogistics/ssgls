@@ -226,7 +226,6 @@ const fieldMappingsByType = {
   DRIVER: [
     ['Driver Name', 'name'],
     ['Driver Address', 'address'],
-    ['Driver Place', 'address'],
     ['Driver Licence No', 'licence_no'],
     ['Issued Dt.', 'licence_date'],
     ['Driver Licence Issued By', 'licence_issued_by'],

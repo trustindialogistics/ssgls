@@ -119,12 +119,6 @@
                   type="text"
                 />
               </BaseInputGroup>
-              <BaseInputGroup label="Name of Place">
-                <BaseInput
-                  v-model="form.place"
-                  type="text"
-                />
-              </BaseInputGroup>
               <BaseInputGroup label="Licence No.">
                 <BaseInput
                   v-model="form.licence_no"

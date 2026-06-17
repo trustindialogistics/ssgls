@@ -186,6 +186,9 @@ class DashboardController extends Controller
         $total_lr_receipt_count = Invoice::whereCompany()
             ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
             ->count();
+        $total_lorry_receipt_count = Invoice::whereCompany()
+            ->where('template_name', Invoice::TEMPLATE_LORRY_RECEIPT)
+            ->count();
         $total_amount_due = Invoice::whereCompany()
             ->whereRegularInvoice()
             ->sum('base_due_amount');
@@ -209,6 +212,7 @@ class DashboardController extends Controller
             'total_customer_count' => $total_customer_count,
             'total_invoice_count' => $total_invoice_count,
             'total_lr_receipt_count' => $total_lr_receipt_count,
+            'total_lorry_receipt_count' => $total_lorry_receipt_count,
 
             'recent_due_invoices' => BouncerFacade::can('view-invoice', Invoice::class) ? $recent_due_invoices : [],
             'recent_lr_receipts' => BouncerFacade::can('view-invoice', Invoice::class) ? $recent_lr_receipts : [],

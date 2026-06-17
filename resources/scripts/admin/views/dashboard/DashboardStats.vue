@@ -1,5 +1,5 @@
 <template>
-  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-9 xl:gap-8">
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-11 xl:gap-8">
     <!-- Amount Due -->
     <DashboardStatsItem
       v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
@@ -46,6 +46,17 @@
       :label="(dashboardStore.stats.totalLrReceiptCount <= 1 ? $t('dashboard.cards.lr_receipts', 1) : $t('dashboard.cards.lr_receipts', 2))"
     >
       {{ dashboardStore.stats.totalLrReceiptCount }}
+    </DashboardStatsItem>
+
+    <!-- Lorry Receipts -->
+    <DashboardStatsItem
+      v-if="userStore.hasAbilities(abilities.VIEW_INVOICE)"
+      :icon-component="InvoiceIcon"
+      :loading="!dashboardStore.isDashboardDataLoaded"
+      route="/admin/lorry-receipts"
+      :label="(dashboardStore.stats.totalLorryReceiptCount <= 1 ? $t('dashboard.cards.lorry_receipts', 1) : $t('dashboard.cards.lorry_receipts', 2))"
+    >
+      {{ dashboardStore.stats.totalLorryReceiptCount }}
     </DashboardStatsItem>
   </div>
 </template>
