@@ -102,10 +102,6 @@ globalStore.downloadReport = downloadReport
 
 const dateRange = reactive([
   {
-    label: t('dateRange.today'),
-    key: 'Today',
-  },
-  {
     label: t('dateRange.this_week'),
     key: 'This Week',
   },
@@ -114,43 +110,19 @@ const dateRange = reactive([
     key: 'This Month',
   },
   {
-    label: t('dateRange.this_quarter'),
-    key: 'This Quarter',
-  },
-  {
     label: t('dateRange.this_year'),
     key: 'This Year',
   },
-  {
-    label: t('dateRange.previous_week'),
-    key: 'Previous Week',
-  },
-  {
-    label: t('dateRange.previous_month'),
-    key: 'Previous Month',
-  },
-  {
-    label: t('dateRange.previous_quarter'),
-    key: 'Previous Quarter',
-  },
-  {
-    label: t('dateRange.previous_year'),
-    key: 'Previous Year',
-  },
-  {
-    label: t('dateRange.custom'),
-    key: 'Custom',
-  },
 ])
 
-const selectedRange = ref(dateRange[2])
+const selectedRange = ref(dateRange[1])
 let range = ref(new Date())
 let url = ref(null)
 let siteURL = ref(null)
 
 const formData = reactive({
-  from_date: moment().startOf('month').toString(),
-  to_date: moment().endOf('month').toString(),
+  from_date: moment().startOf('month').format('YYYY-MM-DD').toString(),
+  to_date: moment().endOf('month').format('YYYY-MM-DD').toString(),
 })
 
 const getReportUrl = computed(() => {

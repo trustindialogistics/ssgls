@@ -28,7 +28,14 @@ class PaymentResource extends JsonResource
             'company_id' => $this->company_id,
             'payment_method_id' => $this->payment_method_id,
             'creator_id' => $this->creator_id,
+            'updated_by' => $this->updated_by,
             'customer_id' => $this->customer_id,
+            'creator' => $this->whenLoaded('creator', function () {
+                return new UserResource($this->creator);
+            }),
+            'updatedBy' => $this->whenLoaded('updatedBy', function () {
+                return new UserResource($this->updatedBy);
+            }),
             'exchange_rate' => $this->exchange_rate,
             'base_amount' => $this->base_amount,
             'currency_id' => $this->currency_id,

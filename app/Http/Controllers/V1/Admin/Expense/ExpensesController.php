@@ -23,7 +23,7 @@ class ExpensesController extends Controller
 
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $expenses = Expense::with(['category', 'creator', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media'])
+        $expenses = Expense::with(['category', 'creator', 'updatedBy', 'fields.customField', 'customer', 'paymentMethod', 'currency', 'media'])
             ->whereCompany()
             ->leftJoin('customers', 'customers.id', '=', 'expenses.customer_id')
             ->join('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')

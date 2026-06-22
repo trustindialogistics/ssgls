@@ -63,6 +63,12 @@ class Payment extends Model implements HasMedia
         static::updated(function ($payment) {
             GeneratePaymentPdfJob::dispatch($payment, true);
         });
+
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
     }
 
     public function setSettingsAttribute($value)
@@ -119,6 +125,11 @@ class Payment extends Model implements HasMedia
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function currency(): BelongsTo

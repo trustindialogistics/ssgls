@@ -14,10 +14,16 @@ class LorryReceipt extends Model
     protected static function booted()
     {
         static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->creator_id = auth()->id();
+            }
             $model->date_created = now();
         });
 
         static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
             $model->date_modified = now();
             $dates = $model->modified_dates ?? [];
             $dates[] = now()->toDateTimeString();
@@ -141,6 +147,16 @@ class LorryReceipt extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function ownerCustomer(): BelongsTo

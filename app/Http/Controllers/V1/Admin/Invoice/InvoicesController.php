@@ -23,7 +23,7 @@ class InvoicesController extends Controller
         $this->authorize('viewAny', Invoice::class);
 
         $limit = $request->input('limit', 10);
-        $with = ['customer', 'media', 'currency', 'payments'];
+        $with = ['customer', 'media', 'currency', 'payments', 'creator', 'updatedBy'];
 
         if (in_array($request->input('template_name'), [Invoice::TEMPLATE_LR_RECEIPT, Invoice::TEMPLATE_LORRY_RECEIPT], true)) {
             $with[] = 'fields.customField';

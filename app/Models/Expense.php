@@ -74,6 +74,20 @@ class Expense extends Model implements HasMedia
         return $this->belongsTo(User::class, 'creator_id');
     }
 
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    protected static function booted()
+    {
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
+    }
+
     public function getFormattedExpenseDateAttribute($value)
     {
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);

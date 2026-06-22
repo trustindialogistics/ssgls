@@ -39,17 +39,17 @@
       </div>
 
       <BaseInputGroup
-        :label="$t('reports.sales.report_type')"
-        class="col-span-12 md:col-span-8"
+        label="Customer Name"
+        class="col-span-12 md:col-span-8 my-6"
       >
-        <BaseMultiselect
-          v-model="selectedType"
-          :options="reportTypes"
-          :placeholder="$t('reports.sales.report_type')"
-          class="mt-1"
-          @update:modelValue="getInitialReport"
+        <BaseCustomerSelectInput
+          v-model="formData.customer_id"
+          type="CUSTOMER,CONSIGNEE"
+          placeholder="Search by customer name"
         />
       </BaseInputGroup>
+
+      <!-- Report Type dropdown removed - Only "By Customer" report is available -->
 
       <BaseButton
         variant="primary-outline"
@@ -106,6 +106,7 @@ import moment from 'moment'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useI18n } from 'vue-i18n'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
+import BaseCustomerSelectInput from '@/scripts/components/base/BaseCustomerSelectInput.vue'
 
 const { t } = useI18n()
 const globalStore = useGlobalStore()
@@ -113,10 +114,6 @@ const globalStore = useGlobalStore()
 globalStore.downloadReport = downloadReport
 
 const dateRange = reactive([
-  {
-    label: t('dateRange.today'),
-    key: 'Today',
-  },
   {
     label: t('dateRange.this_week'),
     key: 'This Week',
@@ -126,46 +123,13 @@ const dateRange = reactive([
     key: 'This Month',
   },
   {
-    label: t('dateRange.this_quarter'),
-    key: 'This Quarter',
-  },
-  {
     label: t('dateRange.this_year'),
     key: 'This Year',
   },
-  {
-    label: t('dateRange.previous_week'),
-    key: 'Previous Week',
-  },
-  {
-    label: t('dateRange.previous_month'),
-    key: 'Previous Month',
-  },
-  {
-    label: t('dateRange.previous_quarter'),
-    key: 'Previous Quarter',
-  },
-  {
-    label: t('dateRange.previous_year'),
-    key: 'Previous Year',
-  },
-  {
-    label: t('dateRange.custom'),
-    key: 'Custom',
-  },
 ])
 
-const selectedRange = ref(dateRange[2])
-const reportTypes = ref([
-  {
-    label: t('reports.sales.sort.by_customer'),
-    value: 'By Customer'
-  },
-  {
-    label: t('reports.sales.sort.by_item'),
-    value: 'By Item'
-  }
-])
+const selectedRange = ref(dateRange[1])
+// Only "By Customer" report is available - "By Item" has been removed
 const selectedType = ref('By Customer')
 let range = ref(new Date())
 let url = ref(null)
@@ -175,6 +139,7 @@ let itemsSiteURL = ref(null)
 let formData = reactive({
   from_date: moment().startOf('month').format('YYYY-MM-DD').toString(),
   to_date: moment().endOf('month').format('YYYY-MM-DD').toString(),
+  customer_id: '',
 })
 
 const companyStore = useCompanyStore()
@@ -188,11 +153,15 @@ const getSelectedCompany = computed(() => {
 })
 
 const customerDateRangeUrl = computed(() => {
-  return `${customerSiteURL.value}?from_date=${moment(
+  let url = `${customerSiteURL.value}?from_date=${moment(
     formData.from_date
   ).format('YYYY-MM-DD')}&to_date=${moment(formData.to_date).format(
     'YYYY-MM-DD'
   )}`
+  if (formData.customer_id) {
+    url += `&customer_id=${formData.customer_id}`
+  }
+  return url
 })
 
 const itemDaterangeUrl = computed(() => {

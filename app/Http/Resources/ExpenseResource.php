@@ -27,6 +27,7 @@ class ExpenseResource extends JsonResource
             'company_id' => $this->company_id,
             'expense_category_id' => $this->expense_category_id,
             'creator_id' => $this->creator_id,
+            'updated_by' => $this->updated_by,
             'formatted_expense_date' => $this->formattedExpenseDate,
             'formatted_created_at' => $this->formattedCreatedAt,
             'exchange_rate' => $this->exchange_rate,
@@ -44,6 +45,9 @@ class ExpenseResource extends JsonResource
             }),
             'creator' => $this->whenLoaded('creator', function () {
                 return new UserResource($this->creator);
+            }),
+            'updatedBy' => $this->whenLoaded('updatedBy', function () {
+                return new UserResource($this->updatedBy);
             }),
             'fields' => $this->whenLoaded('fields', function () {
                 return CustomFieldValueResource::collection($this->fields);

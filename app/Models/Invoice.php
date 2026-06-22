@@ -62,7 +62,6 @@ class Invoice extends Model implements HasMedia
     protected $dates = [
         'created_at',
         'updated_at',
-        'deleted_at',
         'invoice_date',
         'due_date',
     ];
@@ -108,6 +107,10 @@ class Invoice extends Model implements HasMedia
             $dates = $model->modified_dates ?? [];
             $dates[] = now()->toDateTimeString();
             $model->modified_dates = $dates;
+
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
         });
 
         static::saving(function ($model) {
@@ -182,6 +185,11 @@ class Invoice extends Model implements HasMedia
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function getInvoicePdfUrlAttribute()
@@ -1056,39 +1064,46 @@ class Invoice extends Model implements HasMedia
             'Broker Bank Account No' => 'broker_bank_account_no',
         ];
 
+        // Load all custom fields ONCE instead of 74 individual queries
+        $allFields = $this->fields()->with('customField')->get();
+        $fieldValues = [];
+        foreach ($allFields as $field) {
+            $cf = $field->customField;
+            if ($cf) {
+                $fieldValues[$cf->label] = $field->defaultAnswer;
+                $fieldValues[$cf->name] = $field->defaultAnswer;
+            }
+        }
+
         foreach ($fieldMap as $label => $attribute) {
-            $value = $this->getCustomFieldValueByLabel($label);
-            $lorryReceipt->{$attribute} = $value;
+            $lorryReceipt->{$attribute} = $fieldValues[$label] ?? null;
         }
 
-        // Also resolve the customer IDs
-        $ownerName = $lorryReceipt->owner_name;
-        if (! empty($ownerName)) {
-            $ownerProfile = LorryPartyProfile::query()
+        // Resolve all 3 party profiles in a single query instead of 3 separate queries
+        $partyNames = array_filter([
+            LorryPartyProfile::TYPE_OWNER => $lorryReceipt->owner_name,
+            LorryPartyProfile::TYPE_DRIVER => $lorryReceipt->driver_name,
+            LorryPartyProfile::TYPE_BROKER => $lorryReceipt->broker_name,
+        ]);
+
+        if (! empty($partyNames)) {
+            $profiles = LorryPartyProfile::query()
                 ->where('company_id', $this->company_id)
-                ->where('type', LorryPartyProfile::TYPE_OWNER)
-                ->where('name', $ownerName)
-                ->first();
+                ->where(function ($query) use ($partyNames) {
+                    foreach ($partyNames as $type => $name) {
+                        $query->orWhere(function ($q) use ($type, $name) {
+                            $q->where('type', $type)->where('name', $name);
+                        });
+                    }
+                })
+                ->get();
+
+            $ownerProfile = $profiles->first(fn ($p) => $p->type === LorryPartyProfile::TYPE_OWNER);
+            $driverProfile = $profiles->first(fn ($p) => $p->type === LorryPartyProfile::TYPE_DRIVER);
+            $brokerProfile = $profiles->first(fn ($p) => $p->type === LorryPartyProfile::TYPE_BROKER);
+
             $lorryReceipt->owner_customer_id = $ownerProfile?->customer_id;
-        }
-
-        $driverName = $lorryReceipt->driver_name;
-        if (! empty($driverName)) {
-            $driverProfile = LorryPartyProfile::query()
-                ->where('company_id', $this->company_id)
-                ->where('type', LorryPartyProfile::TYPE_DRIVER)
-                ->where('name', $driverName)
-                ->first();
             $lorryReceipt->driver_customer_id = $driverProfile?->customer_id;
-        }
-
-        $brokerName = $lorryReceipt->broker_name;
-        if (! empty($brokerName)) {
-            $brokerProfile = LorryPartyProfile::query()
-                ->where('company_id', $this->company_id)
-                ->where('type', LorryPartyProfile::TYPE_BROKER)
-                ->where('name', $brokerName)
-                ->first();
             $lorryReceipt->broker_customer_id = $brokerProfile?->customer_id;
         }
 
@@ -1116,6 +1131,11 @@ class Invoice extends Model implements HasMedia
             })->first();
 
         return $value?->defaultAnswer;
+    }
+
+    public function customField(string $label): mixed
+    {
+        return $this->getCustomFieldValueByLabel($label);
     }
 
     private function sanitizeBase64Pdf(string $data, string $fileName): string

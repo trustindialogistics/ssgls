@@ -416,16 +416,17 @@ return [
             'ability' => 'view-invoice',
             'model' => Invoice::class,
         ],
-        [
-            'title' => 'navigation.recurring-invoices',
-            'group' => 2,
-            'link' => '/admin/recurring-invoices',
-            'icon' => 'DocumentTextIcon',
-            'name' => 'Recurring Invoices',
-            'owner_only' => false,
-            'ability' => 'view-recurring-invoice',
-            'model' => RecurringInvoice::class,
-        ],
+        // Recurring Invoices - Commented out as not needed for this implementation
+        // [
+        //     'title' => 'navigation.recurring-invoices',
+        //     'group' => 2,
+        //     'link' => '/admin/recurring-invoices',
+        //     'icon' => 'DocumentTextIcon',
+        //     'name' => 'Recurring Invoices',
+        //     'owner_only' => false,
+        //     'ability' => 'view-recurring-invoice',
+        //     'model' => RecurringInvoice::class,
+        // ],
         [
             'title' => 'navigation.payments',
             'group' => 2,

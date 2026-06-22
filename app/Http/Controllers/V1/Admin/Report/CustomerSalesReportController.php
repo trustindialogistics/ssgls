@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use PDF;
 
 class CustomerSalesReportController extends Controller
@@ -35,32 +36,85 @@ class CustomerSalesReportController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $request->from_date);
         $end = Carbon::createFromFormat('Y-m-d', $request->to_date);
 
-        $customers = Customer::with(['invoices' => function ($query) use ($start, $end) {
-            $query->whereBetween(
-                'invoice_date',
-                [$start->format('Y-m-d'), $end->format('Y-m-d')]
-            )
-                ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
-        }])
+        // Fetch all invoices in date range with customer and consignee, optionally filtered by customer name/id
+        $invoices = Invoice::with(['customer', 'consigneeCustomer'])
             ->where('company_id', $company->id)
-            ->whereHas('invoices', function ($query) use ($start, $end) {
-                $query->whereBetween(
-                    'invoice_date',
-                    [$start->format('Y-m-d'), $end->format('Y-m-d')]
-                )
-                    ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE);
+            ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE)
+            ->whereBetween('invoice_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->when($request->customer_id, function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('customer_id', $request->customer_id)
+                      ->orWhere('consignee_customer_id', $request->customer_id);
+                });
+            })
+            ->when($request->customer_name, function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->whereHas('customer', function ($sub) use ($request) {
+                        $sub->where('name', 'LIKE', '%'.$request->customer_name.'%');
+                    })->orWhereHas('consigneeCustomer', function ($sub) use ($request) {
+                        $sub->where('name', 'LIKE', '%'.$request->customer_name.'%');
+                    });
+                });
             })
             ->get();
 
+        // Group sales by paying customer (based on GST Tax Through field)
+        $customerSales = [];
         $totalAmount = 0;
-        foreach ($customers as $customer) {
-            $customerTotalAmount = 0;
-            foreach ($customer->invoices as $invoice) {
-                $customerTotalAmount += $invoice->base_total;
+
+        foreach ($invoices as $invoice) {
+            // Get GST Tax Through custom field value
+            $gstTaxThrough = $invoice->customField('GST Tax Through');
+            
+            // Determine who pays: CONSIGNEE or CONSIGNOR (default)
+            $payingCustomerType = $gstTaxThrough === 'CONSIGNEE' ? 'CONSIGNEE' : 'CONSIGNOR';
+            
+            // Get the appropriate customer ID based on who pays
+            $payingCustomerId = null;
+            if ($payingCustomerType === 'CONSIGNEE' && $invoice->consignee_customer_id) {
+                $payingCustomerId = $invoice->consignee_customer_id;
+            } else {
+                $payingCustomerId = $invoice->customer_id;
             }
-            $customer->totalAmount = $customerTotalAmount;
-            $totalAmount += $customerTotalAmount;
+
+            // Skip if no paying customer
+            if (!$payingCustomerId) {
+                continue;
+            }
+
+            // Initialize customer sales entry if not exists
+            if (!isset($customerSales[$payingCustomerId])) {
+                $customerSales[$payingCustomerId] = (object) [
+                    'id' => $payingCustomerId,
+                    'name' => '',
+                    'totalAmount' => 0,
+                    'invoiceCount' => 0,
+                    'invoices' => collect(),
+                ];
+            }
+
+            // Add invoice to customer's invoices
+            $customerSales[$payingCustomerId]->invoices->push($invoice);
+
+            // Add invoice amount to customer total
+            $customerSales[$payingCustomerId]->totalAmount += $invoice->base_total;
+            $customerSales[$payingCustomerId]->invoiceCount++;
+            $totalAmount += $invoice->base_total;
         }
+
+        // Enrich customer data with names
+        $customerIds = array_keys($customerSales);
+        if (!empty($customerIds)) {
+            $customersData = Customer::whereIn('id', $customerIds)->get();
+            foreach ($customersData as $customer) {
+                if (isset($customerSales[$customer->id])) {
+                    $customerSales[$customer->id]->name = $customer->name ?? $customer->display_name;
+                }
+            }
+        }
+
+        // Convert to array for the view
+        $customers = collect($customerSales)->values();
 
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $company->id);
         $from_date = Carbon::createFromFormat('Y-m-d', $request->from_date)->translatedFormat($dateFormat);

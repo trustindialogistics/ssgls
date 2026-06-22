@@ -145,6 +145,10 @@
           </div>
         </template>
 
+        <template #cell-sl_no="{ index }">
+          {{ index + 1 }}
+        </template>
+
         <template #cell-status="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -246,6 +250,13 @@ const paymentColumns = computed(() => {
       sortable: false,
       thClass: 'extra w-10',
       tdClass: 'text-left text-sm font-medium extra',
+    },
+    {
+      key: 'sl_no',
+      label: 'SL No',
+      thClass: 'extra w-12',
+      tdClass: 'font-medium text-gray-500',
+      sortable: false,
     },
     {
       key: 'payment_date',

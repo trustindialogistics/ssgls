@@ -114,6 +114,9 @@ class InvoiceResource extends JsonResource
             'creator' => $this->whenLoaded('creator', function () {
                 return new UserResource($this->creator);
             }),
+            'updatedBy' => $this->whenLoaded('updatedBy', function () {
+                return new UserResource($this->updatedBy);
+            }),
             'taxes' => $this->whenLoaded('taxes', function () {
                 return TaxResource::collection($this->taxes);
             }),

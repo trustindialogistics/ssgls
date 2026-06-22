@@ -38,6 +38,17 @@
         </BaseInputGroup>
       </div>
 
+      <BaseInputGroup
+        label="Customer Name"
+        class="col-span-12 md:col-span-8 my-6"
+      >
+        <BaseCustomerSelectInput
+          v-model="formData.customer_id"
+          type="CUSTOMER,CONSIGNEE"
+          placeholder="Search by customer name"
+        />
+      </BaseInputGroup>
+
       <BaseButton
         variant="primary-outline"
         class="content-center hidden mt-0 w-md md:flex md:mt-8"
@@ -92,6 +103,7 @@ import moment from 'moment'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
 import { useI18n } from 'vue-i18n'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
+import BaseCustomerSelectInput from '@/scripts/components/base/BaseCustomerSelectInput.vue'
 const globalStore = useGlobalStore()
 const companyStore = useCompanyStore()
 const { t } = useI18n()
@@ -99,10 +111,6 @@ const { t } = useI18n()
 globalStore.downloadReport = downloadReport
 
 const dateRange = reactive([
-  {
-    label: t('dateRange.today'),
-    key: 'Today',
-  },
   {
     label: t('dateRange.this_week'),
     key: 'This Week',
@@ -112,43 +120,20 @@ const dateRange = reactive([
     key: 'This Month',
   },
   {
-    label: t('dateRange.this_quarter'),
-    key: 'This Quarter',
-  },
-  {
     label: t('dateRange.this_year'),
     key: 'This Year',
   },
-  {
-    label: t('dateRange.previous_week'),
-    key: 'Previous Week',
-  },
-  {
-    label: t('dateRange.previous_month'),
-    key: 'Previous Month',
-  },
-  {
-    label: t('dateRange.previous_quarter'),
-    key: 'Previous Quarter',
-  },
-  {
-    label: t('dateRange.previous_year'),
-    key: 'Previous Year',
-  },
-  {
-    label: t('dateRange.custom'),
-    key: 'Custom',
-  },
 ])
 
-const selectedRange = ref(dateRange[2])
+const selectedRange = ref(dateRange[1])
 let url = ref(null)
 let siteURL = ref(null)
 let range = ref(new Date())
 
 const formData = reactive({
-  from_date: moment().startOf('month').toString(),
-  to_date: moment().endOf('month').toString(),
+  from_date: moment().startOf('month').format('YYYY-MM-DD').toString(),
+  to_date: moment().endOf('month').format('YYYY-MM-DD').toString(),
+  customer_id: '',
 })
 
 const getReportUrl = computed(() => {
@@ -160,9 +145,13 @@ const getSelectedCompany = computed(() => {
 })
 
 const dateRangeUrl = computed(() => {
-  return `${siteURL.value}?from_date=${moment(formData.from_date).format(
+  let url = `${siteURL.value}?from_date=${moment(formData.from_date).format(
     'YYYY-MM-DD'
   )}&to_date=${moment(formData.to_date).format('YYYY-MM-DD')}`
+  if (formData.customer_id) {
+    url += `&customer_id=${formData.customer_id}`
+  }
+  return url
 })
 
 watch(range, (newRange) => {

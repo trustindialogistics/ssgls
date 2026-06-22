@@ -15,9 +15,34 @@ class TransportInvoiceRow extends Model
         'old_bill_date',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->creator_id = auth()->id();
+            }
+        });
+
+        static::updating(function ($model) {
+            if (auth()->check()) {
+                $model->updated_by = auth()->id();
+            }
+        });
+    }
+
     public function transportInvoice(): BelongsTo
     {
         return $this->belongsTo(TransportInvoice::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }
 

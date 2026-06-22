@@ -83,7 +83,7 @@
                   class=""
                   :class="getTdClass(column)"
                 >
-                  <slot :name="'cell-' + column.key" :row="row">
+                  <slot :name="'cell-' + column.key" :row="row" :index="index">
                     {{ lodashGet(row.data, column.key) }}
                   </slot>
                 </td>
