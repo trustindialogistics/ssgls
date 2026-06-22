@@ -163,19 +163,26 @@ class InvoicesRequest extends FormRequest
             }
         }
 
-        $customer = Customer::where('company_id', $companyId)
+        $query = Customer::where('company_id', $companyId)
             ->where('type', $type)
-            ->where('name', $name)->first();
+            ->where(function ($q) use ($name) {
+                $q->where('name', $name)
+                  ->orWhereRaw('LOWER(name) = ?', [strtolower($name)]);
+            });
 
-        if (! $customer) {
-            $customer = Customer::where('company_id', $companyId)
-                ->where('type', $type)
-                ->whereRaw('LOWER(name) = ?', [strtolower($name)])
-                ->first();
-        }
+        if (!empty($city)) {
+            $customer = (clone $query)->whereHas('billingAddress', function ($q) use ($city) {
+                $q->whereRaw('LOWER(city) = ?', [strtolower(trim($city))]);
+            })->first();
 
-        if ($customer) {
-            return $customer;
+            if ($customer) {
+                return $customer;
+            }
+        } else {
+            $customer = $query->first();
+            if ($customer) {
+                return $customer;
+            }
         }
 
         // Parse address block to format billing/shipping address
@@ -185,9 +192,11 @@ class InvoicesRequest extends FormRequest
 
         [$street1, $street2] = $this->splitAddress($actualAddressBlock);
 
+        $resolvedCity = $this->resolveCity($city, null, $actualAddressBlock);
+
         // Generate prefix if empty
         if (empty($prefix)) {
-            $abbrev = $this->generateAbbreviation($city);
+            $abbrev = $this->generateAbbreviation($resolvedCity);
             $count = Customer::where('company_id', $companyId)->where('type', $type)->count();
             $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
         }
@@ -207,7 +216,7 @@ class InvoicesRequest extends FormRequest
             'name' => $name,
             'address_street_1' => $street1,
             'address_street_2' => $street2,
-            'city' => $city ?? '',
+            'city' => $resolvedCity,
             'state' => '',
             'zip' => '',
             'country_id' => 1,
@@ -219,7 +228,7 @@ class InvoicesRequest extends FormRequest
             'name' => $name,
             'address_street_1' => $street1,
             'address_street_2' => $street2,
-            'city' => $city ?? '',
+            'city' => $resolvedCity,
             'state' => '',
             'zip' => '',
             'country_id' => 1,
@@ -254,6 +263,21 @@ class InvoicesRequest extends FormRequest
         } else {
             return substr($cityName, 0, 3);
         }
+    }
+
+    private function resolveCity(?string $specifiedCity, ?string $fallbackPlace, ?string $address): ?string
+    {
+        $city = trim((string) $specifiedCity);
+        if ($city !== '') {
+            return $city;
+        }
+
+        $fallbackPlace = trim((string) $fallbackPlace);
+        if ($fallbackPlace !== '') {
+            return $fallbackPlace;
+        }
+
+        return null;
     }
 
     /**

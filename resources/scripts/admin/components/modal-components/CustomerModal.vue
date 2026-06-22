@@ -232,11 +232,16 @@
               />
             </BaseInputGroup>
 
-            <BaseInputGroup :label="$t('customers.city')">
+            <BaseInputGroup
+              :label="$t('customers.city') + ' *'"
+              :error="v$.billing.city?.$error && v$.billing.city?.$errors[0]?.$message"
+            >
               <BaseInput
                 v-model="customerStore.currentCustomer.billing.city"
                 type="text"
                 class="mt-1 md:mt-0"
+                :invalid="v$.billing.city?.$error"
+                @input="v$.billing.city?.$touch()"
               />
             </BaseInputGroup>
           </BaseInputGrid>
@@ -421,6 +426,13 @@ const rules = computed(() => {
         ),
       },
       address_street_2: {
+        maxLength: helpers.withMessage(
+          t('validation.address_maxlength', { count: 255 }),
+          maxLength(255)
+        ),
+      },
+      city: {
+        required: helpers.withMessage(t('validation.required'), required),
         maxLength: helpers.withMessage(
           t('validation.address_maxlength', { count: 255 }),
           maxLength(255)

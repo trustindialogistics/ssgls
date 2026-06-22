@@ -32,6 +32,48 @@ class CustomerRequest extends FormRequest
         $rules = [
             'name' => [
                 'required',
+                function ($attribute, $value, $fail) {
+                    $companyId = $this->header('company');
+                    $type = $this->input('type') 
+                        ?? ($this->route('customer') ? $this->route('customer')->type : null)
+                        ?? ($this->is('*consignees*') ? \App\Models\Customer::TYPE_CONSIGNEE : \App\Models\Customer::TYPE_CUSTOMER);
+                    
+                    if (!in_array($type, [\App\Models\Customer::TYPE_CUSTOMER, \App\Models\Customer::TYPE_CONSIGNEE])) {
+                        return;
+                    }
+
+                    $city = $this->input('billing.city');
+                    $gstin = trim((string) $this->input('tax_id'));
+
+                    $query = \App\Models\Customer::where('company_id', $companyId)
+                        ->where('type', $type)
+                        ->where(function ($q) use ($value) {
+                            $q->where('name', $value)
+                              ->orWhereRaw('LOWER(name) = ?', [strtolower($value)]);
+                        });
+
+                    if ($this->route('customer')) {
+                        $query->where('id', '!=', $this->route('customer')->id);
+                    }
+
+                    if ($gstin !== '') {
+                        $existsGstin = (clone $query)->where('tax_id', $gstin)->exists();
+                        if ($existsGstin) {
+                            $fail('A customer with this GSTIN already exists.');
+                            return;
+                        }
+                    }
+
+                    if (!empty($city)) {
+                        $existsNameCity = $query->whereHas('billingAddress', function ($q) use ($city) {
+                            $q->whereRaw('LOWER(city) = ?', [strtolower(trim($city))]);
+                        })->exists();
+
+                        if ($existsNameCity) {
+                            $fail('A customer with this Name and City already exists.');
+                        }
+                    }
+                }
             ],
             'type' => [
                 'nullable',
@@ -85,6 +127,12 @@ class CustomerRequest extends FormRequest
                 'nullable',
             ],
             'billing.city' => [
+                Rule::requiredIf(fn () => in_array(
+                    $this->input('type') 
+                        ?? ($this->route('customer') ? $this->route('customer')->type : null)
+                        ?? ($this->is('*consignees*') ? \App\Models\Customer::TYPE_CONSIGNEE : \App\Models\Customer::TYPE_CUSTOMER),
+                    [\App\Models\Customer::TYPE_CUSTOMER, \App\Models\Customer::TYPE_CONSIGNEE]
+                )),
                 'nullable',
             ],
             'billing.state' => [

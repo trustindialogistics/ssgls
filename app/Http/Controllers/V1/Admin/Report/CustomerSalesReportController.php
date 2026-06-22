@@ -41,11 +41,23 @@ class CustomerSalesReportController extends Controller
             ->where('company_id', $company->id)
             ->where('template_name', Invoice::TEMPLATE_OFFICE_INVOICE)
             ->whereBetween('invoice_date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->when($request->customer_id, function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('customer_id', $request->customer_id)
-                      ->orWhere('consignee_customer_id', $request->customer_id);
-                });
+            ->when($request->customer_id, function ($query) use ($request, $company) {
+                $customer = Customer::find($request->customer_id);
+                if ($customer) {
+                    $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $customer->name));
+                    $allIds = Customer::whereCompany($company->id)
+                        ->get(['id', 'name'])
+                        ->filter(function ($c) use ($normalizedName) {
+                            return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $c->name)) === $normalizedName;
+                        })
+                        ->pluck('id')
+                        ->toArray();
+
+                    $query->where(function ($q) use ($allIds) {
+                        $q->whereIn('customer_id', $allIds)
+                          ->orWhereIn('consignee_customer_id', $allIds);
+                    });
+                }
             })
             ->when($request->customer_name, function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {

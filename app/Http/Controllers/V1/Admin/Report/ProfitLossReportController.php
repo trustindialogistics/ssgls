@@ -41,11 +41,23 @@ class ProfitLossReportController extends Controller
             ->where('template_name', Invoice::TEMPLATE_LR_RECEIPT)
             ->when($request->from_date, fn ($query, $date) => $query->where('invoice_date', '>=', $date))
             ->when($request->to_date, fn ($query, $date) => $query->where('invoice_date', '<=', $date))
-            ->when($request->customer_id, function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('customer_id', $request->customer_id)
-                      ->orWhere('consignee_customer_id', $request->customer_id);
-                });
+            ->when($request->customer_id, function ($query) use ($request, $company) {
+                $customer = Customer::find($request->customer_id);
+                if ($customer) {
+                    $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $customer->name));
+                    $allIds = Customer::whereCompany($company->id)
+                        ->get(['id', 'name'])
+                        ->filter(function ($c) use ($normalizedName) {
+                            return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $c->name)) === $normalizedName;
+                        })
+                        ->pluck('id')
+                        ->toArray();
+
+                    $query->where(function ($q) use ($allIds) {
+                        $q->whereIn('customer_id', $allIds)
+                          ->orWhereIn('consignee_customer_id', $allIds);
+                    });
+                }
             })
             ->when($request->customer_name, function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {

@@ -168,10 +168,10 @@ class LrReceiptAutoFillController extends Controller
             // Perform lookups for Consignor and Consignee
             $consignorData = null;
             if (!empty($data['consignor_name'])) {
-                $consignor = $this->findCustomer($data['consignor_name'], $data['consignor_gstin'] ?? null, Customer::TYPE_CUSTOMER);
+                $consignorCity = $this->resolveCity($data['consignor_city'] ?? null, $data['from'] ?? null, $data['consignor_address'] ?? null);
+                $consignor = $this->findCustomer($data['consignor_name'], $data['consignor_gstin'] ?? null, Customer::TYPE_CUSTOMER, $consignorCity);
                 if (!$consignor) {
-                    $city = trim((string) ($data['consignor_city'] ?? ''));
-                    $abbrev = $this->generateAbbreviation($city);
+                    $abbrev = $this->generateAbbreviation($consignorCity);
                     $count = Customer::whereCompany()->where('type', Customer::TYPE_CUSTOMER)->count();
                     $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
 
@@ -184,27 +184,25 @@ class LrReceiptAutoFillController extends Controller
                         'company_id' => request()->header('company'),
                     ]);
 
-                    if (!empty($data['consignor_address'])) {
-                        [$street1, $street2] = $this->splitAddress($data['consignor_address']);
-                        $consignor->billingAddress()->create([
-                            'name' => $data['consignor_name'],
-                            'address_street_1' => $street1,
-                            'address_street_2' => $street2,
-                            'city' => $data['consignor_city'] ?? null,
-                            'country_id' => 1,
-                            'type' => 'billing',
-                        ]);
-                    }
+                    [$street1, $street2] = $this->splitAddress($data['consignor_address'] ?? '');
+                    $consignor->billingAddress()->create([
+                        'name' => $data['consignor_name'],
+                        'address_street_1' => $street1,
+                        'address_street_2' => $street2,
+                        'city' => $consignorCity,
+                        'country_id' => 1,
+                        'type' => 'billing',
+                    ]);
                 }
                 $consignorData = (new CustomerResource($consignor->load(['billingAddress', 'shippingAddress'])))->toArray(request());
             }
 
             $consigneeData = null;
             if (!empty($data['consignee_name'])) {
-                $consignee = $this->findCustomer($data['consignee_name'], $data['consignee_gstin'] ?? null, Customer::TYPE_CONSIGNEE);
+                $consigneeCity = $this->resolveCity($data['consignee_city'] ?? null, $data['to'] ?? null, $data['consignee_address'] ?? null);
+                $consignee = $this->findCustomer($data['consignee_name'], $data['consignee_gstin'] ?? null, Customer::TYPE_CONSIGNEE, $consigneeCity);
                 if (!$consignee) {
-                    $city = trim((string) ($data['consignee_city'] ?? ''));
-                    $abbrev = $this->generateAbbreviation($city);
+                    $abbrev = $this->generateAbbreviation($consigneeCity);
                     $count = Customer::whereCompany()->where('type', Customer::TYPE_CONSIGNEE)->count();
                     $prefix = $abbrev !== '' ? ($count + 101) . $abbrev : null;
 
@@ -217,17 +215,15 @@ class LrReceiptAutoFillController extends Controller
                         'company_id' => request()->header('company'),
                     ]);
 
-                    if (!empty($data['consignee_address'])) {
-                        [$street1, $street2] = $this->splitAddress($data['consignee_address']);
-                        $consignee->billingAddress()->create([
-                            'name' => $data['consignee_name'],
-                            'address_street_1' => $street1,
-                            'address_street_2' => $street2,
-                            'city' => $data['consignee_city'] ?? null,
-                            'country_id' => 1,
-                            'type' => 'billing',
-                        ]);
-                    }
+                    [$street1, $street2] = $this->splitAddress($data['consignee_address'] ?? '');
+                    $consignee->billingAddress()->create([
+                        'name' => $data['consignee_name'],
+                        'address_street_1' => $street1,
+                        'address_street_2' => $street2,
+                        'city' => $consigneeCity,
+                        'country_id' => 1,
+                        'type' => 'billing',
+                    ]);
                 }
                 $consigneeData = (new CustomerResource($consignee->load(['billingAddress', 'shippingAddress'])))->toArray(request());
             }
@@ -309,7 +305,7 @@ class LrReceiptAutoFillController extends Controller
         }
     }
 
-    private function findCustomer(string $name, ?string $gstin, string $type = 'CUSTOMER'): ?Customer
+    private function findCustomer(string $name, ?string $gstin, string $type = 'CUSTOMER', ?string $city = null): ?Customer
     {
         $gstin = trim((string) $gstin);
         if ($gstin !== '') {
@@ -328,19 +324,26 @@ class LrReceiptAutoFillController extends Controller
             return null;
         }
 
-        $customer = Customer::whereCompany()
+        $query = Customer::whereCompany()
             ->where('type', $type)
-            ->where('name', $name)->first();
+            ->where(function ($q) use ($name) {
+                $q->where('name', $name)
+                  ->orWhereRaw('LOWER(name) = ?', [strtolower($name)]);
+            });
 
-        if (! $customer) {
-            $customer = Customer::whereCompany()
-                ->where('type', $type)
-                ->whereRaw('LOWER(name) = ?', [strtolower($name)])
-                ->first();
-        }
+        if (!empty($city)) {
+            $customer = (clone $query)->whereHas('billingAddress', function ($q) use ($city) {
+                $q->whereRaw('LOWER(city) = ?', [strtolower(trim($city))]);
+            })->first();
 
-        if ($customer) {
-            return $customer->load(['billingAddress', 'shippingAddress']);
+            if ($customer) {
+                return $customer->load(['billingAddress', 'shippingAddress']);
+            }
+        } else {
+            $customer = $query->first();
+            if ($customer) {
+                return $customer->load(['billingAddress', 'shippingAddress']);
+            }
         }
 
         return null;
@@ -409,5 +412,20 @@ class LrReceiptAutoFillController extends Controller
         } else {
             return substr($cityName, 0, 3);
         }
+    }
+
+    private function resolveCity(?string $specifiedCity, ?string $fallbackPlace, ?string $address): ?string
+    {
+        $city = trim((string) $specifiedCity);
+        if ($city !== '') {
+            return $city;
+        }
+
+        $fallbackPlace = trim((string) $fallbackPlace);
+        if ($fallbackPlace !== '') {
+            return $fallbackPlace;
+        }
+
+        return null;
     }
 }

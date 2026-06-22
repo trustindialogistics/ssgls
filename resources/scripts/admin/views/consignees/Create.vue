@@ -260,13 +260,18 @@
 
             <BaseInputGroup
               :content-loading="isFetchingInitialData"
-              :label="$t('customers.city')"
+              :label="$t('customers.city') + ' *'"
+              :error="
+                v$.currentCustomer.billing.city?.$error &&
+                v$.currentCustomer.billing.city?.$errors[0]?.$message
+              "
             >
               <BaseInput
                 v-model="customerStore.currentCustomer.billing.city"
                 :content-loading="isFetchingInitialData"
                 name="billing.city"
                 type="text"
+                :error="v$.currentCustomer.billing.city?.$error"
               />
             </BaseInputGroup>
 
@@ -495,6 +500,14 @@ const rules = computed(() => {
         },
 
         address_street_2: {
+          maxLength: helpers.withMessage(
+            t('validation.address_maxlength', { count: 255 }),
+            maxLength(255)
+          ),
+        },
+
+        city: {
+          required: helpers.withMessage(t('validation.required'), required),
           maxLength: helpers.withMessage(
             t('validation.address_maxlength', { count: 255 }),
             maxLength(255)
