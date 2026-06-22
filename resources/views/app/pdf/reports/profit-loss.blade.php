@@ -204,9 +204,9 @@
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px;">
                     <thead>
                         <tr style="background-color: #F9FBFF; border-bottom: 1px solid #EAF1FB;">
-                            <th style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('LR No.') }}</th>
-                            <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Income') }}</th>
-                            <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Expenses') }}</th>
+                            <th style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Lorry Receipt Number') }}</th>
+                            <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Credit/Income Amount') }}</th>
+                            <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Debit/Expense Amount') }}</th>
                             <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Net Profit / Loss') }}</th>
                         </tr>
                     </thead>
@@ -220,19 +220,19 @@
                                 <td style="padding: 6px 8px; text-align: left; font-size: 10px; color: #595959;">
                                     {{ $lrReceipt['lr_no'] }}<br>
                                     @if(!empty($lrReceipt['lr_date']))
-                                        <span style="font-size: 8px; color: #a5acc1;">{{ $lrReceipt['lr_date'] }}</span>
+                                        <span style="font-size: 8px; color: #a5acc1;">Lorry Receipt Date: {{ $lrReceipt['lr_date'] }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 6px 8px; text-align: right; font-size: 10px; color: #595959;">
                                     {!! format_money_pdf($lrReceipt['amount_credit'], $currency) !!}<br>
                                     @if(!empty($lrReceipt['amount_credit_date']))
-                                        <span style="font-size: 8px; color: #a5acc1;">{{ $lrReceipt['amount_credit_date'] }}</span>
+                                        <span style="font-size: 8px; color: #a5acc1;">Credit Date: {{ $lrReceipt['amount_credit_date'] }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 6px 8px; text-align: right; font-size: 10px; color: #595959;">
                                     {!! format_money_pdf($lrReceipt['amount_debit'], $currency) !!}<br>
                                     @if(!empty($lrReceipt['amount_debit_date']))
-                                        <span style="font-size: 8px; color: #a5acc1;">{{ $lrReceipt['amount_debit_date'] }}</span>
+                                        <span style="font-size: 8px; color: #a5acc1;">Debit Date: {{ $lrReceipt['amount_debit_date'] }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: {{ $netColor }};">
