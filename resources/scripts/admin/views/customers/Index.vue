@@ -279,8 +279,16 @@ const customerColumns = computed(() => {
     { key: 'phone', label: t('customers.phone') },
     { key: 'due_amount', label: t('customers.amount_due') },
     {
-      key: 'created_at',
-      label: t('items.added_on'),
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
     },
     {
       key: 'actions',

@@ -50,7 +50,7 @@ services:
       TRUSTED_PROXIES: "*"
       DOMPDF_ENABLE_REMOTE: "false"
       OFFICIAL_DOCUMENT_ARCHIVE_PATH: "/official-documents"
-      GEMINI_API_KEY: "AQ.Ab8RN6KijH6JvqvgfjKI_D5_mq3L01luU3DM-Pk_mr58JDR7ZQ"
+      GEMINI_API_KEY: "AQ.Ab8RN6KzJ3kHR0ueND5rOxQOnx3wmALmABm_QErtsY1nStT2ng"
     volumes:
       - D:/SSGLS_DATABASE/database.sqlite:/var/www/html/storage/app/database.sqlite
       - D:/Backup_Data:/var/www/html/Backup_Data

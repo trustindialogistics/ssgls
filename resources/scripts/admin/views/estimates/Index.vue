@@ -326,6 +326,18 @@ const estimateColumns = computed(() => {
       tdClass: 'font-medium text-gray-900',
     },
     {
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
       key: 'actions',
       tdClass: 'text-right text-sm font-medium pl-0',
       thClass: 'text-right pl-0',

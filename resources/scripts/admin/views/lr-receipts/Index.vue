@@ -182,6 +182,11 @@
             <BaseIcon name="ArrowDownTrayIcon" class="mr-3 text-gray-600" />
             {{ $t('general.download_lorry_receipt') }}
           </BaseDropdownItem>
+
+          <BaseDropdownItem v-if="isLorryReceiptRoute" @click="downloadLorryReceiptWithDocuments">
+            <BaseIcon name="DocumentArrowDownIcon" class="mr-3 text-gray-600" />
+            Download Lorry Receipt Document
+          </BaseDropdownItem>
         </BaseDropdown>
       </div>
 
@@ -442,6 +447,18 @@ const invoiceColumns = computed(() => {
         ]
       : []),
     {
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
       key: 'actions',
       label: t('invoices.action'),
       tdClass: 'text-right text-sm font-medium',
@@ -688,6 +705,35 @@ async function downloadBulkLorryReceipts() {
     link.remove()
   } catch (error) {
     console.error('Failed to download lorry receipts', error)
+  }
+}
+
+async function downloadLorryReceiptWithDocuments() {
+  if (invoiceStore.selectedInvoices.length !== 1) {
+    dialogStore.openDialog({
+      title: 'Select One Receipt',
+      message: 'Please select exactly one lorry receipt to download with documents.',
+      yesLabel: t('general.ok'),
+      hideNoButton: true,
+      size: 'lg',
+    })
+    return
+  }
+
+  const id = invoiceStore.selectedInvoices[0]
+  try {
+    const response = await http.get(`/api/v1/invoices/${id}/download-with-documents`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `lorry-receipt-${id}-with-documents.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download lorry receipt with documents', error)
   }
 }
 

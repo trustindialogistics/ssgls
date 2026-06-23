@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\LorryPartyProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Silber\Bouncer\BouncerFacade;
 
 class LorryPartyProfilesController extends Controller
@@ -63,6 +64,16 @@ class LorryPartyProfilesController extends Controller
         $payload = $request->validated();
         $payload['company_id'] = (int) $request->header('company');
 
+        $documentFields = [
+            'rc_front_path', 'rc_back_path', 'pan_front_path', 'insurance_path',
+            'license_front_path', 'license_back_path', 'pan_front_path_broker'
+        ];
+        foreach ($documentFields as $field) {
+            if (isset($payload[$field])) {
+                $payload[$field] = $this->handleBase64Upload($payload[$field], $field);
+            }
+        }
+
         $profile = LorryPartyProfile::create($payload);
         $this->syncAssociatedCustomer($profile, $payload);
 
@@ -85,6 +96,17 @@ class LorryPartyProfilesController extends Controller
         abort_unless((int) $lorry_party_profile->company_id === (int) $request->header('company'), 404);
 
         $payload = $request->validated();
+
+        $documentFields = [
+            'rc_front_path', 'rc_back_path', 'pan_front_path', 'insurance_path',
+            'license_front_path', 'license_back_path', 'pan_front_path_broker'
+        ];
+        foreach ($documentFields as $field) {
+            if (array_key_exists($field, $payload)) {
+                $payload[$field] = $this->handleBase64Upload($payload[$field], $field);
+            }
+        }
+
         $lorry_party_profile->update($payload);
 
         $payload['company_id'] = $lorry_party_profile->company_id;
@@ -152,5 +174,42 @@ class LorryPartyProfilesController extends Controller
         } else {
             $customer->addresses()->where('type', \App\Models\Address::BILLING_TYPE)->delete();
         }
+    }
+
+    /**
+     * Decode and save base64 uploaded files.
+     */
+    private function handleBase64Upload(?string $base64Data, string $fieldName): ?string
+    {
+        if (empty($base64Data)) {
+            return null;
+        }
+
+        if (!str_starts_with($base64Data, 'data:')) {
+            return $base64Data;
+        }
+
+        preg_match('/^data:(\w+\/\w+);base64,(.*)$/', $base64Data, $matches);
+        if (count($matches) < 3) {
+            return null;
+        }
+
+        $mimeType = $matches[1];
+        $data = base64_decode($matches[2]);
+
+        $extension = match ($mimeType) {
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'application/pdf' => 'pdf',
+            default => 'bin'
+        };
+
+        $filename = $fieldName . '_' . uniqid() . '.' . $extension;
+        $path = 'profiles/' . $filename;
+
+        Storage::disk('public')->put($path, $data);
+
+        return '/storage/' . $path;
     }
 }

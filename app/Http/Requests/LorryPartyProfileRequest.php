@@ -34,6 +34,13 @@ class LorryPartyProfileRequest extends FormRequest
             'destination_broker_name' => ['nullable', 'string'],
             'destination_broker_address' => ['nullable', 'string'],
             'bank_account_no' => ['nullable', 'string'],
+            'rc_front_path' => ['nullable', 'string'],
+            'rc_back_path' => ['nullable', 'string'],
+            'pan_front_path' => ['nullable', 'string'],
+            'insurance_path' => ['nullable', 'string'],
+            'license_front_path' => ['nullable', 'string'],
+            'license_back_path' => ['nullable', 'string'],
+            'pan_front_path_broker' => ['nullable', 'string'],
         ];
     }
 }

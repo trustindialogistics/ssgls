@@ -285,6 +285,16 @@
         <template v-if="hasAtleastOneAbility()" #cell-actions="{ row }">
           <InvoiceDropdown :row="row.data" :table="table" />
         </template>
+
+        <!-- Created By -->
+        <template #cell-creator="{ row }">
+          <span>{{ row.data.creator?.name || '-' }}</span>
+        </template>
+
+        <!-- Updated By -->
+        <template #cell-updatedBy="{ row }">
+          <span>{{ row.data.updatedBy?.name || '-' }}</span>
+        </template>
       </BaseTable>
     </div>
   </BasePage>
@@ -407,7 +417,18 @@ const invoiceColumns = computed(() => {
       label: t('invoices.total'),
       tdClass: 'font-medium text-gray-900',
     },
-
+    {
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
     {
       key: 'actions',
       label: t('invoices.action'),

@@ -45,7 +45,7 @@ class CustomerSalesReportController extends Controller
                 $customer = Customer::find($request->customer_id);
                 if ($customer) {
                     $normalizedName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $customer->name));
-                    $allIds = Customer::whereCompany($company->id)
+                    $allIds = Customer::where('customers.company_id', $company->id)
                         ->get(['id', 'name'])
                         ->filter(function ($c) use ($normalizedName) {
                             return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $c->name)) === $normalizedName;

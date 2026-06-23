@@ -77,6 +77,18 @@
       {{ downloadLabel }}
     </BaseDropdownItem>
 
+    <!-- Download Lorry Receipt Document -->
+    <BaseDropdownItem
+      v-if="isLorryReceipt && userStore.hasAbilities(abilities.VIEW_INVOICE)"
+      @click="downloadLorryReceiptWithDocuments"
+    >
+      <BaseIcon
+        name="DocumentArrowDownIcon"
+        class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-500"
+      />
+      Download Lorry Receipt Document
+    </BaseDropdownItem>
+
     <!-- Download Multi LR -->
     <BaseDropdownItem
       v-if="isLrReceipt && userStore.hasAbilities(abilities.VIEW_INVOICE)"
@@ -189,6 +201,7 @@
 </template>
 
 <script setup>
+import http from '@/scripts/http'
 import { useInvoiceStore } from '@/scripts/admin/stores/invoice'
 import { useNotificationStore } from '@/scripts/stores/notification'
 import { useDialogStore } from '@/scripts/stores/dialog'
@@ -289,6 +302,23 @@ function downloadMultiPdf() {
   let templateParam = props.row.template_name ? `&template_name=${props.row.template_name}` : ''
   let downloadUrl = `${window.location.origin}/invoices/pdf/${props.row.unique_hash}?download=1${templateParam}&copy=multi`
   window.open(downloadUrl, '_blank')
+}
+
+async function downloadLorryReceiptWithDocuments() {
+  try {
+    const response = await http.get(`/api/v1/invoices/${props.row.id}/download-with-documents`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `lorry-receipt-${props.row.id}-with-documents.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Failed to download lorry receipt with documents', error)
+  }
 }
 
 function canReSendInvoice(row) {

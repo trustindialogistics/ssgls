@@ -30,6 +30,13 @@ class LorryPartyProfileResource extends JsonResource
             'destination_broker_name' => $this->destination_broker_name,
             'destination_broker_address' => $this->destination_broker_address,
             'bank_account_no' => $this->bank_account_no,
+            'rc_front_path' => $this->rc_front_path,
+            'rc_back_path' => $this->rc_back_path,
+            'pan_front_path' => $this->pan_front_path,
+            'insurance_path' => $this->insurance_path,
+            'license_front_path' => $this->license_front_path,
+            'license_back_path' => $this->license_back_path,
+            'pan_front_path_broker' => $this->pan_front_path_broker,
             'created_at' => $this->created_at,
             'formatted_created_at' => optional($this->created_at)->format('d M Y'),
             'customer' => $this->when($this->relationLoaded('customer') && $this->customer, function () {

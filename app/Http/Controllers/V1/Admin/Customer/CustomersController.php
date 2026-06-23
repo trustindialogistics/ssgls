@@ -124,33 +124,74 @@ class CustomersController extends Controller
 
         $cityName = trim(strtoupper($city));
 
-        $dictionary = [
-            'UMBERGAON' => 'UMB',
-            'UMBARGAON' => 'UMB',
-            'VAPI' => 'VAPI',
-            'SURAT' => 'SURAT',
-            'MUMBAI' => 'MUM',
-            'DAMAN' => 'DAM',
-            'SILVASSA' => 'SIL',
-            'AHMEDABAD' => 'AMD',
-        ];
+        // Get city code: first 3 letters by default
+        // Use 4 letters if there's potential conflict (cities starting with same 3 letters)
+        $cityCode = $this->getCityCode($cityName);
 
-        if (isset($dictionary[$cityName])) {
-            $abbrev = $dictionary[$cityName];
-        } elseif (strlen($cityName) <= 4) {
-            $abbrev = $cityName;
+        // Determine customer type and prefix
+        $type = $request->is('*consignees*') ? Customer::TYPE_CONSIGNEE : Customer::TYPE_CUSTOMER;
+        $typePrefix = $type === Customer::TYPE_CONSIGNEE ? 'CNE' : 'CNR';
+
+        // Get next sequence number for this specific city and type combination
+        $lastCustomer = Customer::whereCompany()
+            ->where('type', $type)
+            ->whereHas('billingAddress', function ($query) use ($cityName) {
+                $query->whereRaw('LOWER(city) = ?', [strtolower($cityName)]);
+            })
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastCustomer && preg_match('/' . $cityCode . '(\d{3,})' . $typePrefix . '/', $lastCustomer->prefix, $matches)) {
+            $sequence = (int) $matches[1] + 1;
         } else {
-            $abbrev = substr($cityName, 0, 3);
+            // Start from 001 for new city+type combinations
+            $sequence = 1;
         }
 
-        $type = $request->is('*consignees*') ? Customer::TYPE_CONSIGNEE : Customer::TYPE_CUSTOMER;
-        $count = Customer::whereCompany()->where('type', $type)->count();
-        $sequence = 101 + $count;
-
-        $suggestedCode = $sequence . $abbrev;
+        // Format: CITY + SEQUENCE + TYPE (e.g., SURAT001CNR, VAPI001CNE)
+        $suggestedCode = $cityCode . str_pad($sequence, 3, '0', STR_PAD_LEFT) . $typePrefix;
 
         return response()->json([
             'code' => $suggestedCode,
         ]);
+    }
+
+    /**
+     * Get city code - 3 letters by default, 4 if conflict detected
+     * Dynamically checks database for existing cities with same prefix
+     */
+    private function getCityCode(string $cityName): string
+    {
+        // Default: first 3 letters
+        $code = substr($cityName, 0, 3);
+
+        // Check database for existing cities with same 3-letter prefix
+        // This dynamically detects conflicts without hardcoding
+        $existingCities = DB::table('addresses')
+            ->select('city')
+            ->where('type', 'billing')
+            ->whereRaw('UPPER(SUBSTRING(city, 1, 3)) = ?', [strtoupper($code)])
+            ->distinct()
+            ->pluck('city');
+
+        // Check if there are different cities with same 3-letter prefix
+        $hasConflict = false;
+        foreach ($existingCities as $existingCity) {
+            $existingCityUpper = strtoupper($existingCity);
+            $existingPrefix3 = substr($existingCityUpper, 0, 3);
+            
+            // If same 3-letter prefix but different city name
+            if ($existingPrefix3 === $code && strtoupper($cityName) !== $existingCityUpper) {
+                $hasConflict = true;
+                break;
+            }
+        }
+
+        // Use 4 letters if conflict detected
+        if ($hasConflict && strlen($cityName) >= 4) {
+            $code = substr($cityName, 0, 4);
+        }
+
+        return $code;
     }
 }

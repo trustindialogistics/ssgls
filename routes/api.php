@@ -10,6 +10,7 @@ use App\Http\Controllers\V1\Admin\Company\CompanyController as AdminCompanyContr
 use App\Http\Controllers\V1\Admin\Customer\CustomersController;
 use App\Http\Controllers\V1\Admin\Customer\CustomerStatsController;
 use App\Http\Controllers\V1\Admin\CustomField\CustomFieldsController;
+use App\Http\Controllers\V1\Admin\Dashboard\ChatBotController;
 use App\Http\Controllers\V1\Admin\Dashboard\DashboardController;
 use App\Http\Controllers\V1\Admin\Estimate\ChangeEstimateStatusController;
 use App\Http\Controllers\V1\Admin\Estimate\CloneEstimateController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\V1\Admin\General\TimezonesController;
 use App\Http\Controllers\V1\Admin\Invoice\ChangeInvoiceStatusController;
 use App\Http\Controllers\V1\Admin\Invoice\BulkInvoicePdfController;
 use App\Http\Controllers\V1\Admin\Invoice\CloneInvoiceController;
+use App\Http\Controllers\V1\Admin\Invoice\DownloadLorryReceiptWithDocumentsController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoiceTemplatesController;
 use App\Http\Controllers\V1\Admin\Invoice\LorryReceiptVehicleLookupController;
@@ -217,6 +219,8 @@ Route::prefix('/v1')->group(function () {
 
             Route::get('/dashboard', DashboardController::class);
 
+            Route::post('/dashboard/chat', ChatBotController::class);
+
             // Auth check
             // ----------------------------------
 
@@ -295,6 +299,8 @@ Route::prefix('/v1')->group(function () {
             Route::post('/invoices/{invoice}/pod', UploadInvoicePodController::class);
 
             Route::post('/invoices/bulk-pdf', BulkInvoicePdfController::class);
+
+            Route::get('/invoices/{invoice}/download-with-documents', DownloadLorryReceiptWithDocumentsController::class);
 
             Route::post('/invoices/delete', [InvoicesController::class, 'delete']);
 

@@ -320,6 +320,18 @@ const expenseColumns = computed(() => {
     { key: 'notes', label: t('expenses.note') },
     { key: 'amount', label: t('expenses.amount') },
     {
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
       key: 'actions',
       sortable: false,
       tdClass: 'text-right text-sm font-medium',

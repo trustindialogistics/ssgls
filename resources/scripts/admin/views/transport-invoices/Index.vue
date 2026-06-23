@@ -68,6 +68,18 @@ const columns = computed(() => [
   { key: 'lr_number', label: 'Bill No. (LR No.)' },
   { key: 'customer', label: 'Party' },
   { key: 'due_date', label: 'Due Date' },
+  {
+    key: 'creator.name',
+    label: 'Created By',
+    tdClass: 'font-medium text-gray-500',
+    sortable: true,
+  },
+  {
+    key: 'updatedBy.name',
+    label: 'Updated By',
+    tdClass: 'font-medium text-gray-500',
+    sortable: true,
+  },
 ])
 
 async function fetchData({ page, sort }) {

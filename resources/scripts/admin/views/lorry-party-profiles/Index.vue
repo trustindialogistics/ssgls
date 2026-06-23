@@ -248,8 +248,16 @@ const columns = computed(() => [
   },
   { key: 'phone', label: 'Phone No.' },
   {
-    key: 'created_at',
-    label: t('items.added_on'),
+    key: 'creator.name',
+    label: 'Created By',
+    tdClass: 'font-medium text-gray-500',
+    sortable: true,
+  },
+  {
+    key: 'updatedBy.name',
+    label: 'Updated By',
+    tdClass: 'font-medium text-gray-500',
+    sortable: true,
   },
   {
     key: 'actions',

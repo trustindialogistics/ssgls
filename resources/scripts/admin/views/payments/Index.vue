@@ -270,6 +270,18 @@ const paymentColumns = computed(() => {
     { key: 'invoice_number', label: t('payments.invoice') },
     { key: 'amount', label: t('payments.amount') },
     {
+      key: 'creator.name',
+      label: 'Created By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
+      key: 'updatedBy.name',
+      label: 'Updated By',
+      tdClass: 'font-medium text-gray-500',
+      sortable: true,
+    },
+    {
       key: 'actions',
       label: '',
       tdClass: 'text-right text-sm font-medium',

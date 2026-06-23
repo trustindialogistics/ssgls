@@ -49,6 +49,29 @@
                 </label>
               </div>
             </div>
+            
+            <!-- Document Attachments Section -->
+            <div class="flex flex-col">
+              <label class="mb-1 text-sm font-medium text-left text-gray-400 uppercase whitespace-nowrap">
+                Attached Documents
+              </label>
+              <div class="flex flex-col flex-1 p-0 text-left">
+                <template v-for="doc in getProfileDocuments(selectedProfiles[profile.key], profile.type)" :key="doc.label">
+                  <a
+                    v-if="doc.path"
+                    :href="doc.path"
+                    target="_blank"
+                    class="relative w-11/12 text-sm truncate text-primary-500 hover:text-primary-600 flex items-center gap-1 mb-1"
+                  >
+                    <BaseIcon name="DocumentIcon" class="h-4 w-4" />
+                    {{ doc.label }}
+                  </a>
+                  <span v-else class="relative w-11/12 text-sm truncate text-gray-400 mb-1 block">
+                    {{ doc.label }} (Not attached)
+                  </span>
+                </template>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -346,6 +369,34 @@ function formatProfileLines(profile) {
     compact(profile?.phone),
     compact(profile?.code),
   ].filter(Boolean)
+}
+
+function getProfileDocuments(profile, type) {
+  if (!profile) return []
+  
+  if (type === 'OWNER') {
+    return [
+      { label: 'RC Front', path: profile.rc_front_path },
+      { label: 'RC Back', path: profile.rc_back_path },
+      { label: 'PAN Front', path: profile.pan_front_path },
+      { label: 'Insurance Copy', path: profile.insurance_path },
+    ]
+  }
+  
+  if (type === 'DRIVER') {
+    return [
+      { label: 'License Front', path: profile.license_front_path },
+      { label: 'License Back', path: profile.license_back_path },
+    ]
+  }
+  
+  if (type === 'BROKER') {
+    return [
+      { label: 'PAN Front', path: profile.pan_front_path_broker },
+    ]
+  }
+  
+  return []
 }
 
 function fillProfileFields(type, profile) {
