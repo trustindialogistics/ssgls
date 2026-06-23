@@ -95,6 +95,7 @@ class DownloadLorryReceiptWithDocumentsController extends Controller
 
         return response()->streamDownload(function () use ($invoice, $documents) {
             $merger = new \iio\libmergepdf\Merger();
+            $tempFiles = [];
 
             // Add LR Receipt PDF
             $lrPdfPath = storage_path('app/invoices/' . $invoice->id . '.pdf');
@@ -102,11 +103,30 @@ class DownloadLorryReceiptWithDocumentsController extends Controller
                 $merger->addFile($lrPdfPath);
             }
 
-            // Add party document PDFs
+            // Add party document PDFs or converted images
             foreach ($documents as $doc) {
-                $fullPath = storage_path('app/' . $doc['path']);
-                if (file_exists($fullPath) && strtolower(pathinfo($fullPath, PATHINFO_EXTENSION)) === 'pdf') {
+                $path = $doc['path'];
+                // Resolve storage path
+                $relativePath = ltrim($path, '/');
+                if (str_starts_with($relativePath, 'storage/')) {
+                    $relativePath = 'public/' . substr($relativePath, 8);
+                }
+                $fullPath = storage_path('app/' . $relativePath);
+
+                if (!file_exists($fullPath)) {
+                    continue;
+                }
+
+                $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+                if ($extension === 'pdf') {
                     $merger->addFile($fullPath);
+                } elseif (in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                    $convertedPdf = $this->imageToPdf($fullPath);
+                    if ($convertedPdf && file_exists($convertedPdf)) {
+                        $merger->addFile($convertedPdf);
+                        $tempFiles[] = $convertedPdf;
+                    }
                 }
             }
 
@@ -118,10 +138,60 @@ class DownloadLorryReceiptWithDocumentsController extends Controller
                 if (file_exists($lrPdfPath)) {
                     readfile($lrPdfPath);
                 }
+            } finally {
+                // Clean up any temporary files created
+                foreach ($tempFiles as $tempFile) {
+                    if (file_exists($tempFile)) {
+                        @unlink($tempFile);
+                    }
+                }
             }
         }, $filename, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Convert an image to a temporary PDF file.
+     */
+    private function imageToPdf(string $imagePath): ?string
+    {
+        if (!file_exists($imagePath)) {
+            return null;
+        }
+
+        try {
+            $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+            $imageData = base64_encode(file_get_contents($imagePath));
+            
+            // Render basic HTML with the image scaled to fit page
+            $html = '
+            <html>
+            <head>
+                <style>
+                    @page { margin: 0px; }
+                    body { margin: 0px; padding: 0px; background-color: #ffffff; text-align: center; }
+                    img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                </style>
+            </head>
+            <body>
+                <img src="data:image/' . $extension . ';base64,' . $imageData . '" />
+            </body>
+            </html>';
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+            
+            $tempFile = tempnam(sys_get_temp_dir(), 'img_pdf_');
+            rename($tempFile, $tempFile . '.pdf');
+            $tempFile = $tempFile . '.pdf';
+
+            file_put_contents($tempFile, $pdf->output());
+
+            return $tempFile;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to convert image to PDF: ' . $e->getMessage());
+            return null;
+        }
     }
 }

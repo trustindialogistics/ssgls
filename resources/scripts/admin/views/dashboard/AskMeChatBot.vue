@@ -24,7 +24,7 @@
     </div>
 
     <!-- Chat Messages Area with Scrolling -->
-    <div ref="messagesContainer" class="h-96 overflow-y-auto p-6 space-y-4 bg-gray-50">
+    <div ref="messagesContainer" class="h-96 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50">
       <!-- Welcome Message (if no chat) -->
       <div v-if="messages.length === 0" class="text-center py-12">
         <div class="bg-white/50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -49,20 +49,20 @@
           </button>
         </div>
       </div>
-
+ 
       <!-- Chat Messages -->
-      <div v-else>
+      <div v-else class="space-y-4">
         <div v-for="(message, index) in messages" :key="index" 
-             :class="['flex', message.type === 'user' ? 'justify-end' : 'justify-start']">
+             :class="['flex w-full', message.type === 'user' ? 'justify-end' : 'justify-start']">
           
           <!-- User Message (Right aligned) -->
           <div v-if="message.type === 'user'"
-               class="max-w-[80%] bg-primary-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
+               class="max-w-[85%] sm:max-w-[80%] bg-primary-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
             <p class="text-sm">{{ message.text }}</p>
           </div>
           
           <!-- Assistant Message (Left aligned) -->
-          <div v-else class="max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+          <div v-else class="max-w-[85%] sm:max-w-[80%] bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
             <div class="flex items-start justify-between">
               <div class="flex items-start space-x-3 flex-1">
                 <div class="bg-primary-100 p-1.5 rounded-lg flex-shrink-0">

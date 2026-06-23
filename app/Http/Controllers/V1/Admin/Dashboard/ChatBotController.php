@@ -43,6 +43,14 @@ class ChatBotController extends Controller
 
         $intent = $this->classifyIntent($userMessage);
 
+        if ($intent === 'high_demand') {
+            return response()->json([
+                'answer' => "The ChatBOT is currently experiencing high demand or rate limits. Please try again in a few moments.",
+                'sql' => null,
+                'data' => null,
+            ]);
+        }
+
         if ($intent === 'generic') {
             return $this->askGeneric($userMessage);
         }
@@ -69,6 +77,15 @@ class ChatBotController extends Controller
                 return $this->formatAnswer($userMessage, $sql, $results);
             } catch (\Exception $e) {
                 $lastError = $e->getMessage();
+
+                if ($lastError === 'GEMINI_HIGH_DEMAND') {
+                    return response()->json([
+                        'answer' => "The ChatBOT is currently experiencing high demand or rate limits. Please try again in a few moments.",
+                        'sql' => null,
+                        'data' => null,
+                    ]);
+                }
+
                 Log::warning("ChatBOT SQL Error (attempt " . ($retryCount + 1) . "): " . $lastError);
                 Log::warning("SQL Query: $sql");
                 
@@ -109,6 +126,9 @@ Respond with ONLY one word: 'data' or 'generic'"
 
         if ($response->failed()) {
             Log::error("Gemini API Error in classifyIntent: " . $response->body());
+            if ($response->status() === 503 || $response->status() === 429) {
+                return 'high_demand';
+            }
         }
 
         $result = $response->json();
@@ -134,6 +154,13 @@ Assistant:"
 
         if ($response->failed()) {
             Log::error("Gemini API Error in askGeneric: " . $response->body());
+            if ($response->status() === 503 || $response->status() === 429) {
+                return response()->json([
+                    'answer' => "The ChatBOT is currently experiencing high demand or rate limits. Please try again in a few moments.",
+                    'sql' => null,
+                    'data' => null,
+                ]);
+            }
         }
 
         $result = $response->json();
@@ -180,6 +207,9 @@ Generate the SQL query:"
 
         if ($response->failed()) {
             Log::error("Gemini API Error in generateSQL: " . $response->body());
+            if ($response->status() === 503 || $response->status() === 429) {
+                throw new \Exception("GEMINI_HIGH_DEMAND");
+            }
         }
 
         $result = $response->json();
