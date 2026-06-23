@@ -109,7 +109,7 @@ Password: invoiceshelf@123
 
 Run this command as one full line:
 
-& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" artisan tinker --execute="`$company=App\Models\Company::first(); `$user=App\Models\User::first(); `$company->update(['name'=>'SS Gujarat Logistics Services','slug'=>'ss-gujarat-logistics-services','vat_id'=>'NBKPS0084L','tax_id'=>'24NBKPS0084L1ZZ']); App\Models\Address::updateOrCreate(['company_id'=>`$company->id], ['user_id'=>`$user->id,'name'=>'SS Gujarat Logistics Services','address_street_1'=>'1953, Ground Floor, Mehsana Steel Compound, Umbergaon','city'=>'Valsad','state'=>'Gujarat','zip'=>'396171','phone'=>'6355071130']); App\Models\Setting::setSetting('profile_complete','COMPLETED');"
+& "C:\Users\18042\AppData\Local\Microsoft\WinGet\Packages\PHP.PHP.8.4_Microsoft.Winget.Source_8wekyb3d8bbwe\php.exe" artisan tinker --execute="`$company=App\Models\Company::first(); `$user=App\Models\\User::first(); `$company->update(['name'=>'HisabKitabb Services','slug'=>'hisabkitabb-services','vat_id'=>'NBKPS0084L','tax_id'=>'24NBKPS0084L1ZZ']); App\\Models\\Address::updateOrCreate(['company_id'=>`$company->id], ['user_id'=>`$user->id,'name'=>'HisabKitabb Services','address_street_1'=>'1953, Ground Floor, Mehsana Steel Compound, Umbergaon','city'=>'Valsad','state'=>'Gujarat','zip'=>'396171','phone'=>'6355071130']); App\\Models\\Setting::setSetting('profile_complete','COMPLETED');"
 
 What this does:
 It sets the fresh database company name, address, phone, PAN/GST values, and skips the installation wizard.

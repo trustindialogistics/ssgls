@@ -17,34 +17,6 @@
     
     <form @submit.prevent="submit">
       <div class="px-6 pb-6 max-h-[70vh] overflow-y-auto space-y-6">
-        <!-- Auto-fill with Document -->
-        <div class="bg-primary-50 border border-primary-200 rounded-md p-4 flex items-center justify-between gap-4 mt-4">
-          <div class="flex-1 flex items-start gap-3">
-            <BaseIcon name="DocumentTextIcon" class="h-6 w-6 text-primary-500 mt-0.5" />
-            <div class="text-left">
-              <label class="text-sm font-semibold text-gray-900 block">Auto-fill with Document</label>
-              <span class="text-xs text-gray-500">Upload Aadhaar, DL, or PAN to automatically extract name, address, and ID. Upload front and back images sequentially to merge details.</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <input
-              type="file"
-              ref="autofillFile"
-              class="hidden"
-              accept="image/*,application/pdf"
-              @change="handleAutofillUpload"
-            />
-            <BaseButton
-              type="button"
-              variant="primary-outline"
-              size="sm"
-              :loading="isAutofilling"
-              @click="$refs.autofillFile.click()"
-            >
-              Upload Document
-            </BaseButton>
-          </div>
-        </div>
 
         <!-- Basic Info -->
         <div class="grid grid-cols-5 gap-4 mt-4 mb-2">
@@ -93,12 +65,6 @@
                 v-model="form.financer_name"
                 label="Owner PAN No."
               />
-              <ProfileField
-                v-model="form.financer_address"
-                label="Financer Address"
-                textarea
-                class="md:col-span-2"
-              />
 
               <!-- Document Upload Section for Owner -->
               <div class="col-span-5 mt-4 mb-2">
@@ -133,7 +99,7 @@
               />
               <ProfileField
                 v-model="form.licence_date"
-                label="Issued DT."
+                label="Issued Date"
                 type="date"
               />
               <ProfileField
@@ -438,83 +404,5 @@ async function submit() {
   }
 }
 
-const autofillFile = ref(null)
-const isAutofilling = ref(false)
 
-async function handleAutofillUpload(event) {
-  const file = event.target.files[0]
-  if (!file) return
-
-  isAutofilling.value = true
-  const formData = new FormData()
-  formData.append('file', file)
-
-  try {
-    const response = await http.post('/api/v1/lorry-party-profiles/auto-fill', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-
-    if (response.data && response.data.data) {
-      const data = response.data.data
-
-      // Incremental merging: only overwrite if response field is present and non-empty
-      if (data.name && data.name.trim() !== '') {
-        form.name = data.name.trim()
-      }
-      if (data.phone && data.phone.trim() !== '') {
-        form.phone = data.phone.trim()
-      }
-      if (data.address && data.address.trim() !== '') {
-        form.address = data.address.trim()
-      }
-
-      if (form.type === 'OWNER') {
-        if (data.id_type === 'PAN' && data.id_number) {
-          form.financer_name = data.id_number
-        }
-      } else if (form.type === 'DRIVER') {
-        if (data.id_type === 'DRIVING_LICENSE' && data.id_number) {
-          form.licence_no = data.id_number
-        }
-        if (data.licence_date) {
-          form.licence_date = data.licence_date
-        }
-        if (data.valid_up_to) {
-          form.valid_up_to = data.valid_up_to
-        }
-        if (data.rto_address) {
-          form.rto_address = data.rto_address
-        }
-        if (data.place) {
-          form.place = data.place
-        }
-      } else if (form.type === 'BROKER') {
-        if (data.id_type === 'PAN' && data.id_number) {
-          form.advice_no = data.id_number
-        }
-      }
-
-      notificationStore.showNotification({
-        type: 'success',
-        message: 'Document parsed and details auto-filled successfully!',
-      })
-    }
-  } catch (err) {
-    console.error(err)
-    const errorMsg = err.response?.data?.error || 'Failed to parse document.'
-    notificationStore.showNotification({
-      type: 'error',
-      message: errorMsg,
-    })
-  } finally {
-    isAutofilling.value = false
-  } finally {
-    isAutofilling.value = false
-    if (event.target) {
-      event.target.value = ''
-    }
-  }
-}
 </script>

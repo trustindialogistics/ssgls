@@ -26,6 +26,7 @@ class InvoiceResource extends JsonResource
                         'file_name' => $media->file_name,
                         'mime_type' => $media->mime_type,
                         'size' => $media->size,
+                        'url' => asset($media->getUrl()),
                     ] : null,
                 ];
             });

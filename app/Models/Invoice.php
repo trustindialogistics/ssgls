@@ -410,7 +410,27 @@ class Invoice extends Model implements HasMedia
             $query->where('customer_id', $customerId);
         })->when($filters['orderByField'] ?? null, function ($query, $orderByField) use ($filters) {
             $orderBy = $filters['orderBy'] ?? 'desc';
-            $query->orderBy($orderByField, $orderBy);
+            if ($orderByField === 'name') {
+                $query->orderBy(
+                    \App\Models\Customer::select('name')
+                        ->whereColumn('customers.id', 'invoices.customer_id'),
+                    $orderBy
+                );
+            } elseif ($orderByField === 'creator.name') {
+                $query->orderBy(
+                    \App\Models\User::select('name')
+                        ->whereColumn('users.id', 'invoices.creator_id'),
+                    $orderBy
+                );
+            } elseif ($orderByField === 'updatedBy.name') {
+                $query->orderBy(
+                    \App\Models\User::select('name')
+                        ->whereColumn('users.id', 'invoices.updated_by'),
+                    $orderBy
+                );
+            } else {
+                $query->orderBy($orderByField, $orderBy);
+            }
         }, function ($query) {
             $query->orderBy('sequence_number', 'desc');
         });
@@ -944,12 +964,17 @@ class Invoice extends Model implements HasMedia
 
     public function syncLorryDocuments(?array $documents): void
     {
-        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT || empty($documents)) {
+        if ($this->template_name !== self::TEMPLATE_LORRY_RECEIPT) {
             return;
         }
 
         foreach (self::LORRY_DOCUMENT_COLLECTIONS as $collection => $label) {
             $document = $documents[$collection] ?? null;
+
+            if ($document === null) {
+                $this->clearMediaCollection($collection);
+                continue;
+            }
 
             if (! is_array($document) || empty($document['data']) || empty($document['name'])) {
                 continue;

@@ -63,7 +63,7 @@ I
         v-if="!customerLogo"
         class="flex items-center justify-center mt-4 text-gray-500 font-normal"
       >
-        SS Gujarat Logistics Services
+        HisabKitabb Services
       </div>
     </div>
   </div>

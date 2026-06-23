@@ -144,6 +144,7 @@
               accept="image/*,application/pdf"
               base64
               :input-field-name="document.key"
+              :model-value="getLorryDocumentValue(document.key)"
               :recommended-text="getLorryDocumentHint(document.key)"
               @change="onLorryDocumentChange"
               @remove="onLorryDocumentRemove(document.key)"
@@ -605,5 +606,21 @@ function getLorryDocumentHint(fieldName) {
   }
 
   return 'PNG, JPEG, or PDF'
+}
+
+function getLorryDocumentValue(fieldName) {
+  const doc = invoiceStore.newInvoice.lorry_documents?.[fieldName]
+  if (!doc) {
+    return []
+  }
+  const name = doc.file_name || doc.name || ''
+  const isPdf = name.toLowerCase().endsWith('.pdf') || (doc.mime_type && doc.mime_type === 'application/pdf')
+  const isImage = !isPdf
+  return [
+    {
+      name: name,
+      image: isImage ? (doc.url || doc.image) : null,
+    },
+  ]
 }
 </script>

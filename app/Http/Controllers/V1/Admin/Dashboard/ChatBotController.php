@@ -143,7 +143,7 @@ Respond with ONLY one word: 'data' or 'generic'"
         $response = Http::post($url, [
             'contents' => [[
                 'parts' => [[
-                    'text' => "You are a helpful business assistant for SS Gujarat Logistics, a transportation and logistics company.
+                    'text' => "You are a helpful business assistant for HisabKitabb Services, a transportation and logistics company.
 
 User: $question
 
@@ -186,7 +186,7 @@ Assistant:"
         $response = Http::post($url, [
             'contents' => [[
                 'parts' => [[
-                    'text' => "You are a SQL generator for SS Gujarat Logistics.
+                    'text' => "You are a SQL generator for HisabKitabb Services.
 
 DATABASE SCHEMA:
 $schema
@@ -311,7 +311,7 @@ Format numbers with ₹ symbol for currency. Keep it concise."
     private function getSchemaInfo(): string
     {
         return "
-DATABASE: SS Gujarat Logistics - Transportation Management System
+DATABASE: HisabKitabb Services - Transportation Management System
 
 === INVOICES TABLE (Main table for LR Receipts) ===
 Table: invoices

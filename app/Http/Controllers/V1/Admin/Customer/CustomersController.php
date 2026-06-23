@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomersController extends Controller
 {
@@ -141,8 +142,14 @@ class CustomersController extends Controller
             ->orderBy('id', 'desc')
             ->first();
 
-        if ($lastCustomer && preg_match('/' . $cityCode . '(\d{3,})' . $typePrefix . '/', $lastCustomer->prefix, $matches)) {
-            $sequence = (int) $matches[1] + 1;
+        if ($lastCustomer) {
+            if (preg_match('/' . $cityCode . '(\d{3,})' . $typePrefix . '/', $lastCustomer->prefix, $matches)) {
+                $sequence = (int) $matches[1] + 1;
+            } elseif (preg_match('/' . $typePrefix . $cityCode . '(\d{3,})/', $lastCustomer->prefix, $matches)) {
+                $sequence = (int) $matches[1] + 1;
+            } else {
+                $sequence = 1;
+            }
         } else {
             // Start from 001 for new city+type combinations
             $sequence = 1;

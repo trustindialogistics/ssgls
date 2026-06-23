@@ -97,10 +97,21 @@ class DownloadLorryReceiptWithDocumentsController extends Controller
             $merger = new \iio\libmergepdf\Merger();
             $tempFiles = [];
 
-            // Add LR Receipt PDF
-            $lrPdfPath = storage_path('app/invoices/' . $invoice->id . '.pdf');
-            if (file_exists($lrPdfPath)) {
+            // Generate LR Receipt PDF dynamically
+            $lrPdfPath = null;
+            try {
+                $pdf = $invoice->getPDFData();
+                $pdfOutput = $pdf->output();
+                
+                $lrPdfPath = tempnam(sys_get_temp_dir(), 'lr_pdf_');
+                rename($lrPdfPath, $lrPdfPath . '.pdf');
+                $lrPdfPath = $lrPdfPath . '.pdf';
+                file_put_contents($lrPdfPath, $pdfOutput);
+                
                 $merger->addFile($lrPdfPath);
+                $tempFiles[] = $lrPdfPath;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to generate base LR PDF: ' . $e->getMessage());
             }
 
             // Add party document PDFs or converted images
@@ -134,9 +145,12 @@ class DownloadLorryReceiptWithDocumentsController extends Controller
                 echo $merger->merge();
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to merge PDFs: ' . $e->getMessage());
-                // Fallback: Just send the original LR receipt PDF
-                if (file_exists($lrPdfPath)) {
-                    readfile($lrPdfPath);
+                // Fallback: Just stream the dynamically generated LR PDF
+                try {
+                    $pdf = $invoice->getPDFData();
+                    echo $pdf->output();
+                } catch (\Exception $ex) {
+                    \Illuminate\Support\Facades\Log::error('Fallback PDF generation failed: ' . $ex->getMessage());
                 }
             } finally {
                 // Clean up any temporary files created

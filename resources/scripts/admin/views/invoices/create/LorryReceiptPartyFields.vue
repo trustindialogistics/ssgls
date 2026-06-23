@@ -251,7 +251,6 @@ const fieldMappingsByType = {
     ['Driver Address', 'address'],
     ['Driver Licence No', 'licence_no'],
     ['Issued Dt.', 'licence_date'],
-    ['Driver Licence Issued By', 'licence_issued_by'],
     ['Driver RTO', 'rto_address'],
     ['Driver Valid Up To', 'valid_up_to'],
     ['Driver Bank Account No', 'bank_account_no'],

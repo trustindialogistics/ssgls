@@ -120,7 +120,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@invoiceshelf.com'),
-        'name' => env('MAIL_FROM_NAME', 'SS Gujarat Logistics Services'),
+        'name' => env('MAIL_FROM_NAME', 'HisabKitabb Services'),
     ],
 
 ];

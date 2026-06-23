@@ -117,7 +117,7 @@ function get_page_title($company_id)
 
     $routeName = Route::currentRouteName();
 
-    $defaultPageTitle = 'SS Gujarat Logistics Services';
+    $defaultPageTitle = 'HisabKitabb Services';
 
     if ($routeName === 'customer.dashboard') {
         $pageTitle = CompanySetting::getSetting('customer_portal_page_title', $company_id);

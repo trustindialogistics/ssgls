@@ -23,7 +23,7 @@
     {{-- Footer --}}
     @slot('footer')
         @component('mail::footer')
-            SS Gujarat Logistics Services
+            HisabKitabb Services
         @endcomponent
     @endslot
 @endcomponent

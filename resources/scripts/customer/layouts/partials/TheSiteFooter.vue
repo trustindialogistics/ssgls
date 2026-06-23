@@ -16,6 +16,6 @@
       bg-white
     "
   >
-    SS Gujarat Logistics Services
+    HisabKitabb Services
   </footer>
 </template>

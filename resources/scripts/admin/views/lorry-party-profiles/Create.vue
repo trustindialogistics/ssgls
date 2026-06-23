@@ -71,13 +71,6 @@
                 label="Owner PAN No."
                 :content-loading="isLoadingExisting"
               />
-              <ProfileField
-                v-model="form.financer_address"
-                label="Financer Address"
-                textarea
-                class="md:col-span-2"
-                :content-loading="isLoadingExisting"
-              />
 
               <!-- Document Upload Section for Owner -->
               <div class="col-span-5 mt-4 mb-2">
@@ -118,13 +111,8 @@
               />
               <ProfileField
                 v-model="form.licence_date"
-                label="Dt."
+                label="Issued Date"
                 type="date"
-                :content-loading="isLoadingExisting"
-              />
-              <ProfileField
-                v-model="form.licence_issued_by"
-                label="Issued"
                 :content-loading="isLoadingExisting"
               />
               <ProfileField
