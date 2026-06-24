@@ -274,6 +274,20 @@ class LrReceiptCalculationService
         }
 
         if ($totalCredit == 0.0) {
+            $count = count($dockets);
+            if ($count === 0) {
+                return 0.0;
+            }
+            if (!in_array($docketNumber, $dockets)) {
+                return 0.0;
+            }
+            
+            // If there is only a single docket, it gets the full debit amount
+            if ($count === 1) {
+                return $totalDebit;
+            }
+            
+            // If there are multiple dockets, return 0.00 since we don't know the split yet
             return 0.0;
         }
 
