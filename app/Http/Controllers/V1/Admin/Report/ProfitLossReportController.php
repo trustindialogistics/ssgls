@@ -94,9 +94,9 @@ class ProfitLossReportController extends Controller
                 continue;
             }
 
-            // Calculate income for this LR
-            $amountCredit = (float) $lrReceipt->amount_credit;
-            $amountDebit = (float) $lrReceipt->amount_debit;
+            // Calculate income for this LR (multiply by 100 since format_money_pdf divides by 100)
+            $amountCredit = (float) $lrReceipt->amount_credit * 100;
+            $amountDebit = (float) $lrReceipt->amount_debit * 100;
             $netProfit = $amountCredit - $amountDebit;
 
             // Initialize customer entry if not exists
@@ -163,10 +163,10 @@ class ProfitLossReportController extends Controller
             ->whereCompany($company->id)
             ->get();
 
-        // Calculate total gross income for the view
+        // Calculate total gross income for the view (multiply by 100 since format_money_pdf divides by 100)
         $totalIncome = 0;
         foreach ($lrReceipts as $lrReceipt) {
-            $totalIncome += (float) $lrReceipt->amount_credit;
+            $totalIncome += (float) $lrReceipt->amount_credit * 100;
         }
 
         view()->share([

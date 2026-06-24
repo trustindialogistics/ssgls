@@ -101,27 +101,22 @@ class User extends Authenticatable implements HasMedia
 
     public function estimates(): HasMany
     {
-        return $this->hasMany(Estimate::class, 'creator_id');
+        return $this->hasMany(Estimate::class);
     }
 
     public function customers(): HasMany
     {
-        return $this->hasMany(Customer::class, 'creator_id');
+        return $this->hasMany(Customer::class);
     }
 
     public function recurringInvoices(): HasMany
     {
-        return $this->hasMany(RecurringInvoice::class, 'creator_id');
+        return $this->hasMany(RecurringInvoice::class);
     }
 
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_id');
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function companies(): BelongsToMany
@@ -131,22 +126,22 @@ class User extends Authenticatable implements HasMedia
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(Expense::class, 'creator_id');
+        return $this->hasMany(Expense::class);
     }
 
     public function payments(): HasMany
     {
-        return $this->hasMany(Payment::class, 'creator_id');
+        return $this->hasMany(Payment::class);
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(Invoice::class, 'creator_id');
+        return $this->hasMany(Invoice::class);
     }
 
     public function items(): HasMany
     {
-        return $this->hasMany(Item::class, 'creator_id');
+        return $this->hasMany(Item::class);
     }
 
     public function settings(): HasMany
@@ -405,34 +400,6 @@ class User extends Authenticatable implements HasMedia
     {
         foreach ($ids as $id) {
             $user = self::find($id);
-
-            if ($user->invoices()->exists()) {
-                $user->invoices()->update(['creator_id' => null]);
-            }
-
-            if ($user->estimates()->exists()) {
-                $user->estimates()->update(['creator_id' => null]);
-            }
-
-            if ($user->customers()->exists()) {
-                $user->customers()->update(['creator_id' => null]);
-            }
-
-            if ($user->recurringInvoices()->exists()) {
-                $user->recurringInvoices()->update(['creator_id' => null]);
-            }
-
-            if ($user->expenses()->exists()) {
-                $user->expenses()->update(['creator_id' => null]);
-            }
-
-            if ($user->payments()->exists()) {
-                $user->payments()->update(['creator_id' => null]);
-            }
-
-            if ($user->items()->exists()) {
-                $user->items()->update(['creator_id' => null]);
-            }
 
             if ($user->settings()->exists()) {
                 $user->settings()->delete();

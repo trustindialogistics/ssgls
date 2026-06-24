@@ -71,8 +71,8 @@ const loginPageLogo = computed(() => {
 .login-logo {
   display: block;
   height: auto;
-  max-height: 112px;
-  max-width: 240px;
+  max-height: 160px;
+  max-width: 320px;
   object-fit: contain;
   width: auto;
 }
@@ -86,7 +86,7 @@ const loginPageLogo = computed(() => {
   width: 100%;
 }
 
-.login-card :deep(svg) {
+.login-card :deep(svg:not(.login-logo)) {
   height: 20px;
   width: 20px;
 }

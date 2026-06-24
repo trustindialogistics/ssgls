@@ -130,7 +130,6 @@ class EstimatesRequest extends FormRequest
 
         return collect($this->except('items', 'taxes'))
             ->merge([
-                'creator_id' => $this->user()->id ?? null,
                 'status' => $this->has('estimateSend') ? Estimate::STATUS_SENT : Estimate::STATUS_DRAFT,
                 'company_id' => $this->header('company'),
                 'tax_per_item' => CompanySetting::getSetting('tax_per_item', $this->header('company')) ?? 'NO ',

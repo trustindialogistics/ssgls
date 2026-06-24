@@ -54,7 +54,6 @@ class ConvertEstimateController extends Controller
         $exchange_rate = $estimate->exchange_rate;
 
         $invoice = Invoice::create([
-            'creator_id' => Auth::id(),
             'invoice_date' => $invoice_date->format('Y-m-d'),
             'due_date' => $due_date,
             'invoice_number' => $serial->getNextNumber(),

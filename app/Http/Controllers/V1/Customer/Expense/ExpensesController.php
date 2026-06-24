@@ -21,7 +21,7 @@ class ExpensesController extends Controller
     {
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $expenses = Expense::with('category', 'creator', 'fields')
+        $expenses = Expense::with('category', 'fields')
             ->whereUser(Auth::guard('customer')->id())
             ->applyFilters($request->only([
                 'expense_category_id',

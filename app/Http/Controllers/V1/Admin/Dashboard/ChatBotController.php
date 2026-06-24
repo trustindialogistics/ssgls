@@ -328,8 +328,6 @@ Columns:
 - created_at (datetime)
 - updated_at (datetime)
 - template_name (string) - 'lr_receipt' for LR Receipts
-- creator_id (integer) - User who created
-- updated_by (integer) - User who last updated
 
 === LORRY RECEIPTS TABLE (Separate table for Lorry Receipts) ===
 Table: lorry_receipts
@@ -375,8 +373,6 @@ Columns:
 - final_balance_on (string)
 - created_at (datetime)
 - updated_at (datetime)
-- creator_id (integer)
-- updated_by (integer)
 
 === CUSTOMERS TABLE (Stores Consignor, Consignee, Owners, Drivers, Brokers) ===
 Table: customers
@@ -391,8 +387,6 @@ Columns:
 - created_at (datetime)
 - updated_at (datetime)
 - company_id (integer)
-- creator_id (integer)
-- updated_by (integer)
 
 === PAYMENTS TABLE ===
 Table: payments
@@ -405,8 +399,6 @@ Columns:
 - payment_method (string)
 - created_at (datetime)
 - updated_at (datetime)
-- creator_id (integer)
-- updated_by (integer)
 
 === EXPENSES TABLE ===
 Table: expenses
@@ -419,8 +411,6 @@ Columns:
 - category_id (integer) - FK to expense_categories
 - created_at (datetime)
 - updated_at (datetime)
-- creator_id (integer)
-- updated_by (integer)
 
 === EXPENSE CATEGORIES TABLE ===
 Table: expense_categories
@@ -447,8 +437,6 @@ Columns:
 - aadhar_back_path (string) - For BROKER
 - created_at (datetime)
 - updated_at (datetime)
-- creator_id (integer)
-- updated_by (integer)
 
 === ITEMS TABLE ===
 Table: items
@@ -459,8 +447,6 @@ Columns:
 - unit_name (string)
 - created_at (datetime)
 - updated_at (datetime)
-- creator_id (integer)
-- updated_by (integer)
 
 === IMPORTANT NOTES FOR SQL QUERIES ===
 

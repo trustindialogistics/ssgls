@@ -64,11 +64,6 @@ class Payment extends Model implements HasMedia
             GeneratePaymentPdfJob::dispatch($payment, true);
         });
 
-        static::updating(function ($model) {
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
-        });
     }
 
     public function setSettingsAttribute($value)
@@ -122,15 +117,6 @@ class Payment extends Model implements HasMedia
         return $this->belongsTo(Invoice::class);
     }
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
 
     public function currency(): BelongsTo
     {
@@ -209,7 +195,6 @@ class Payment extends Model implements HasMedia
                     'invoice_id' => $alloc['invoice_id'],
                     'payment_method_id' => $request->payment_method_id,
                     'notes' => $request->notes,
-                    'creator_id' => $request->user()->id,
                     'company_id' => $request->header('company'),
                     'base_amount' => $allocAmount * $exchangeRate,
                     'currency_id' => $customer->currency_id,
@@ -487,7 +472,6 @@ class Payment extends Model implements HasMedia
                 'expense_category_id' => $category->id,
                 'company_id' => $this->company_id,
                 'customer_id' => $this->customer_id,
-                'creator_id' => $this->creator_id,
                 'exchange_rate' => $this->exchange_rate,
                 'base_amount' => $deductionAmount * $this->exchange_rate,
                 'currency_id' => $this->currency_id,

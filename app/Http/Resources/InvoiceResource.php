@@ -63,7 +63,6 @@ class InvoiceResource extends JsonResource
             'base_discount_val' => $this->base_discount_val,
             'base_sub_total' => $this->base_sub_total,
             'base_total' => $this->base_total,
-            'creator_id' => $this->creator_id,
             'base_tax' => $this->base_tax,
             'base_due_amount' => $this->base_due_amount,
             'currency_id' => $this->currency_id,
@@ -111,12 +110,6 @@ class InvoiceResource extends JsonResource
             }),
             'consignor' => $this->when($this->template_name === Invoice::TEMPLATE_LR_RECEIPT && $this->relationLoaded('fields'), function () {
                 return $this->getConsignorCustomer();
-            }),
-            'creator' => $this->whenLoaded('creator', function () {
-                return new UserResource($this->creator);
-            }),
-            'updatedBy' => $this->whenLoaded('updatedBy', function () {
-                return new UserResource($this->updatedBy);
             }),
             'taxes' => $this->whenLoaded('taxes', function () {
                 return TaxResource::collection($this->taxes);

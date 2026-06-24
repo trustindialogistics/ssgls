@@ -36,30 +36,6 @@ class Item extends Model
         return $this->belongsTo(Company::class);
     }
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (auth()->check()) {
-                $model->creator_id = auth()->id();
-            }
-        });
-
-        static::updating(function ($model) {
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
-        });
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
 
     public function currency(): BelongsTo
     {
@@ -160,7 +136,6 @@ class Item extends Model
     {
         $data = $request->validated();
         $data['company_id'] = $request->header('company');
-        $data['creator_id'] = Auth::id();
         $company_currency = CompanySetting::getSetting('currency', $request->header('company'));
         $data['currency_id'] = $company_currency;
         $item = self::create($data);

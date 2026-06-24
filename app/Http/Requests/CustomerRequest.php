@@ -211,7 +211,6 @@ class CustomerRequest extends FormRequest
                 'invoice_prefix',
             ])
             ->merge([
-                'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
             ])
             ->toArray();

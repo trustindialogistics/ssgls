@@ -451,7 +451,6 @@ class InvoicesRequest extends FormRequest
 
         return collect($this->except('items', 'taxes', 'lorry_documents'))
             ->merge([
-                'creator_id' => $this->user()->id ?? null,
                 'status' => $this->invoiceStatus($existingInvoice),
                 'paid_status' => $this->invoicePaidStatus($existingInvoice),
                 'company_id' => $this->header('company'),

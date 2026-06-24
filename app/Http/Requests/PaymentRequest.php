@@ -146,7 +146,6 @@ class PaymentRequest extends FormRequest
 
         return $validated
             ->merge([
-                'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
                 'exchange_rate' => $exchange_rate,
                 'base_amount' => $this->amount * $exchange_rate,

@@ -25,7 +25,7 @@ class PaymentsController extends Controller
         $limit = $request->has('limit') ? $request->limit : 10;
 
         $payments = Payment::whereCompany()
-            ->with(['customer', 'invoice.customer', 'paymentMethod', 'fields.customField', 'creator', 'updatedBy'])
+            ->with(['customer', 'invoice.customer', 'paymentMethod', 'fields.customField'])
             ->join('customers', 'customers.id', '=', 'payments.customer_id')
             ->leftJoin('invoices', 'invoices.id', '=', 'payments.invoice_id')
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'payments.payment_method_id')

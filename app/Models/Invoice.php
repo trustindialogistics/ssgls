@@ -107,10 +107,6 @@ class Invoice extends Model implements HasMedia
             $dates = $model->modified_dates ?? [];
             $dates[] = now()->toDateTimeString();
             $model->modified_dates = $dates;
-
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
         });
 
         static::saving(function ($model) {
@@ -182,15 +178,6 @@ class Invoice extends Model implements HasMedia
         return $this->belongsTo(RecurringInvoice::class);
     }
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
 
     public function getInvoicePdfUrlAttribute()
     {
@@ -414,18 +401,6 @@ class Invoice extends Model implements HasMedia
                 $query->orderBy(
                     \App\Models\Customer::select('name')
                         ->whereColumn('customers.id', 'invoices.customer_id'),
-                    $orderBy
-                );
-            } elseif ($orderByField === 'creator.name') {
-                $query->orderBy(
-                    \App\Models\User::select('name')
-                        ->whereColumn('users.id', 'invoices.creator_id'),
-                    $orderBy
-                );
-            } elseif ($orderByField === 'updatedBy.name') {
-                $query->orderBy(
-                    \App\Models\User::select('name')
-                        ->whereColumn('users.id', 'invoices.updated_by'),
                     $orderBy
                 );
             } else {

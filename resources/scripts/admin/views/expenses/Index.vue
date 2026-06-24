@@ -164,10 +164,6 @@
             />
           </div>
         </template>
-        <template #cell-sl_no="{ index }">
-          {{ index + 1 }}
-        </template>
-
         <template #cell-status="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -292,13 +288,6 @@ const expenseColumns = computed(() => {
       sortable: false,
     },
     {
-      key: 'sl_no',
-      label: 'SL No',
-      thClass: 'extra w-12',
-      tdClass: 'font-medium text-gray-500',
-      sortable: false,
-    },
-    {
       key: 'expense_date',
       label: t('expenses.date'),
       thClass: 'extra',
@@ -319,18 +308,6 @@ const expenseColumns = computed(() => {
     { key: 'user_name', label: t('expenses.customer') },
     { key: 'notes', label: t('expenses.note') },
     { key: 'amount', label: t('expenses.amount') },
-    {
-      key: 'creator.name',
-      label: 'Created By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
-    },
-    {
-      key: 'updatedBy.name',
-      label: 'Updated By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
-    },
     {
       key: 'actions',
       sortable: false,

@@ -146,10 +146,6 @@
           </div>
         </template>
 
-        <template #cell-sl_no="{ index }">
-          {{ index + 1 }}
-        </template>
-
         <template #cell-status="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -262,13 +258,6 @@ const customerColumns = computed(() => {
       thClass: 'extra w-10 pr-0',
       sortable: false,
       tdClass: 'font-medium text-gray-900 pr-0',
-    },
-    {
-      key: 'sl_no',
-      label: 'SL No',
-      thClass: 'extra w-12',
-      tdClass: 'font-medium text-gray-500',
-      sortable: false,
     },
     {
       key: 'name',

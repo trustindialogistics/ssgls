@@ -97,10 +97,6 @@
           </div>
         </template>
 
-        <template #cell-sl_no="{ index }">
-          {{ index + 1 }}
-        </template>
-
         <template #cell-status="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -234,31 +230,12 @@ const columns = computed(() => [
     tdClass: 'font-medium text-gray-900 pr-0',
   },
   {
-    key: 'sl_no',
-    label: 'SL No',
-    thClass: 'extra w-12',
-    tdClass: 'font-medium text-gray-500',
-    sortable: false,
-  },
-  {
     key: 'name',
     label: `${singularTitle.value} Name`,
     thClass: 'extra',
     tdClass: 'font-medium text-gray-900',
   },
   { key: 'phone', label: 'Phone No.' },
-  {
-    key: 'creator.name',
-    label: 'Created By',
-    tdClass: 'font-medium text-gray-500',
-    sortable: true,
-  },
-  {
-    key: 'updatedBy.name',
-    label: 'Updated By',
-    tdClass: 'font-medium text-gray-500',
-    sortable: true,
-  },
   {
     key: 'actions',
     tdClass: 'text-right text-sm font-medium pl-0',

@@ -65,7 +65,14 @@
           </TransitionChild>
           <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div class="flex items-center shrink-0 px-4 mb-10">
+              <img
+                v-if="companyLogo"
+                :src="companyLogo"
+                class="block h-auto max-w-full w-36 object-contain"
+                alt="Company Logo"
+              />
               <MainLogo
+                v-else
                 class="block h-auto max-w-full w-36 text-primary-400"
                 alt="InvoiceShelf Logo"
               />
@@ -125,6 +132,20 @@
       pt-16
     "
   >
+    <div class="flex items-center shrink-0 px-6 mb-6">
+      <img
+        v-if="companyLogo"
+        :src="companyLogo"
+        class="block h-auto max-w-full w-36 object-contain"
+        alt="Company Logo"
+      />
+      <MainLogo
+        v-else
+        class="block h-auto max-w-full w-36 text-primary-400"
+        alt="InvoiceShelf Logo"
+      />
+    </div>
+
     <div
       v-for="menu in globalStore.menuGroups"
       :key="menu"
@@ -169,9 +190,24 @@ import {
 
 import { useRoute } from 'vue-router'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
+import { useCompanyStore } from '@/scripts/admin/stores/company'
+import { computed } from 'vue'
 
 const route = useRoute()
 const globalStore = useGlobalStore()
+const companyStore = useCompanyStore()
+
+const companyLogo = computed(() => {
+  if (companyStore.selectedCompany && companyStore.selectedCompany.logo) {
+    return companyStore.selectedCompany.logo
+  }
+
+  if (globalStore.globalSettings.admin_portal_logo) {
+    return '/storage/' + globalStore.globalSettings.admin_portal_logo
+  }
+
+  return false
+})
 
 function hasActiveUrl(url) {
   return route.path.indexOf(url) > -1

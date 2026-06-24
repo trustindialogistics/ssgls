@@ -21,7 +21,7 @@ class PaymentsController extends Controller
     {
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $payments = Payment::with(['customer', 'invoice', 'paymentMethod', 'creator'])
+        $payments = Payment::with(['customer', 'invoice', 'paymentMethod'])
             ->whereCustomer(Auth::guard('customer')->id())
             ->leftJoin('invoices', 'invoices.id', '=', 'payments.invoice_id')
             ->applyFilters($request->only([

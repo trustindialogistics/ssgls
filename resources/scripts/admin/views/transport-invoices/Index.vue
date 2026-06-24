@@ -26,10 +26,6 @@
       :key="tableKey"
       class="mt-6"
     >
-      <template #cell-sl_no="{ index }">
-        {{ index + 1 }}
-      </template>
-
       <template #cell-lr_number="{ row }">
         <router-link
           :to="{ path: `/admin/transport-invoices/${row.data.id}/view` }"
@@ -63,23 +59,10 @@ const table = ref(null)
 const tableKey = ref(0)
 
 const columns = computed(() => [
-  { key: 'sl_no', label: 'SL No', thClass: 'extra w-12', tdClass: 'font-medium text-gray-500', sortable: false },
   { key: 'invoice_date', label: 'Bill Date', thClass: 'extra', tdClass: 'font-medium' },
   { key: 'lr_number', label: 'Bill No. (LR No.)' },
   { key: 'customer', label: 'Party' },
   { key: 'due_date', label: 'Due Date' },
-  {
-    key: 'creator.name',
-    label: 'Created By',
-    tdClass: 'font-medium text-gray-500',
-    sortable: true,
-  },
-  {
-    key: 'updatedBy.name',
-    label: 'Updated By',
-    tdClass: 'font-medium text-gray-500',
-    sortable: true,
-  },
 ])
 
 async function fetchData({ page, sort }) {

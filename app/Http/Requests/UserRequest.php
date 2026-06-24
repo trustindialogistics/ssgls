@@ -65,9 +65,6 @@ class UserRequest extends FormRequest
     public function getUserPayload()
     {
         return collect($this->validated())
-            ->merge([
-                'creator_id' => $this->user()->id,
-            ])
             ->toArray();
     }
 }

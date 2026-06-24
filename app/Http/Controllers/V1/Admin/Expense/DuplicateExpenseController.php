@@ -37,7 +37,6 @@ class DuplicateExpenseController extends Controller
             'customer_id' => $expense->customer_id,
             'notes' => $duplicatedNotes,
             'currency_id' => $expense->currency_id,
-            'creator_id' => $request->user()->id,
             'company_id' => $request->header('company'),
             'exchange_rate' => $exchangeRate,
             'base_amount' => $expense->amount * $exchangeRate,

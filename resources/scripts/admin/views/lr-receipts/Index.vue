@@ -208,10 +208,6 @@
           </div>
         </template>
 
-        <template #cell-sl_no="{ index }">
-          {{ index + 1 }}
-        </template>
-
         <template #cell-checkbox="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -239,53 +235,10 @@
           {{ row.data.formatted_invoice_date }}
         </template>
 
-        <template #cell-total="{ row }">
-          <div class="font-medium text-gray-900">
-            <BaseFormatMoney
-              :amount="isLorryReceiptRoute ? row.data.lorry_receipt_advance_amount : row.data.amount_credit"
-              :currency="row.data.customer?.currency"
-            />
-          </div>
-        </template>
-
         <template #cell-status="{ row }">
           <BaseInvoiceStatusBadge :status="row.data.status" class="px-3 py-1">
             <BaseInvoiceStatusLabel :status="row.data.status" />
           </BaseInvoiceStatusBadge>
-        </template>
-
-        <template #cell-due_amount="{ row }">
-          <div class="font-medium text-gray-900">
-            <BaseFormatMoney
-              :amount="isLorryReceiptRoute ? (row.data.lorry_receipt_display_net_amount ?? row.data.display_due_amount) : row.data.amount_debit"
-              :currency="row.data.customer?.currency"
-            />
-          </div>
-        </template>
-
-        <template #cell-final_balance_date="{ row }">
-          {{ row.data.formatted_final_balance_on || '-' }}
-        </template>
-
-        <template #cell-amount_debit_date="{ row }">
-          {{ row.data.formatted_amount_debit_date || '-' }}
-        </template>
-
-        <template #cell-advance_paid_date="{ row }">
-          {{ row.data.formatted_advance_on || '-' }}
-        </template>
-
-        <template #cell-amount_credit_date="{ row }">
-          {{ row.data.formatted_amount_credit_date || '-' }}
-        </template>
-
-        <template #cell-profit_loss="{ row }">
-          <span :class="profitLossClass(row.data)">
-            <BaseFormatMoney
-              :amount="lrProfitLoss(row.data)"
-              :currency="row.data.customer?.currency"
-            />
-          </span>
         </template>
 
         <template v-if="hasAtleastOneAbility()" #cell-actions="{ row }">
@@ -337,8 +290,6 @@ const basePath = computed(() => isLorryReceiptRoute.value ? '/admin/lorry-receip
 const pageTitle = computed(() => isLorryReceiptRoute.value ? 'Lorry Receipts' : 'LR Receipts')
 const singularTitle = computed(() => isLorryReceiptRoute.value ? 'Lorry Receipt' : 'LR Receipt')
 const receiptNumberLabel = computed(() => isLorryReceiptRoute.value ? 'Challan No.' : 'Docket No.')
-const amountColumnLabel = computed(() => isLorryReceiptRoute.value ? 'Net Amount Payable' : 'AMOUNT DEBIT')
-const creditColumnLabel = computed(() => isLorryReceiptRoute.value ? 'Advance Paid' : 'AMOUNT CREDITED')
 const newButtonLabel = computed(() => `New ${singularTitle.value}`)
 const createButtonLabel = computed(() => `Create ${singularTitle.value}`)
 const emptyTitle = computed(() => `No ${pageTitle.value}`)
@@ -392,72 +343,10 @@ const invoiceColumns = computed(() => {
       placeholderClass: 'w-10',
       sortable: false,
     },
-    {
-      key: 'sl_no',
-      label: 'SL No',
-      thClass: 'extra w-12',
-      tdClass: 'font-medium text-gray-500',
-      sortable: false,
-    },
     { key: 'invoice_date', label: t('invoices.date'), thClass: 'extra', tdClass: 'font-medium' },
     { key: 'invoice_number', label: receiptNumberLabel.value },
     { key: 'name', label: t('invoices.customer') },
     { key: 'status', label: t('invoices.status') },
-    { key: 'due_amount', label: amountColumnLabel.value },
-    ...(!isLorryReceiptRoute.value
-      ? [
-          {
-            key: 'amount_debit_date',
-            label: 'Amount Debit Date',
-          },
-        ]
-      : []),
-    ...(isLorryReceiptRoute.value
-      ? [
-          {
-            key: 'final_balance_date',
-            label: 'Final Balance Date',
-          },
-        ]
-      : []),
-    { key: 'total', label: creditColumnLabel.value, tdClass: 'font-medium text-gray-900' },
-    ...(!isLorryReceiptRoute.value
-      ? [
-          {
-            key: 'amount_credit_date',
-            label: 'Amount Credit Date',
-          },
-        ]
-      : []),
-    ...(isLorryReceiptRoute.value
-      ? [
-          {
-            key: 'advance_paid_date',
-            label: 'Advance Paid Date',
-          },
-        ]
-      : []),
-    ...(!isLorryReceiptRoute.value
-      ? [
-          {
-            key: 'profit_loss',
-            label: 'Profit/Loss',
-            tdClass: 'font-medium',
-          },
-        ]
-      : []),
-    {
-      key: 'creator.name',
-      label: 'Created By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
-    },
-    {
-      key: 'updatedBy.name',
-      label: 'Updated By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
-    },
     {
       key: 'actions',
       label: t('invoices.action'),
@@ -470,38 +359,6 @@ const invoiceColumns = computed(() => {
 
 function partyName(invoice) {
   return invoice.customer?.name || invoice.customer?.display_name || '-'
-}
-
-function formatTransportAmount(amount) {
-  if (amount === null || amount === undefined || amount === '') {
-    return '-'
-  }
-
-  const numericAmount = Number(String(amount).replace(/,/g, ''))
-
-  if (Number.isNaN(numericAmount)) {
-    return String(amount)
-  }
-
-  return `Rs ${Math.round(numericAmount)}`
-}
-
-function lrProfitLoss(invoice) {
-  return Number(invoice.amount_credit || 0) - Number(invoice.amount_debit || 0)
-}
-
-function profitLossClass(invoice) {
-  const amount = lrProfitLoss(invoice)
-
-  if (amount > 0) {
-    return 'text-green-600'
-  }
-
-  if (amount < 0) {
-    return 'text-red-600'
-  }
-
-  return 'text-gray-500'
 }
 
 debouncedWatch(

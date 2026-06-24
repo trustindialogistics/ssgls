@@ -57,31 +57,6 @@ class PaymentMethod extends Model
         $query->where('company_id', request()->header('company'));
     }
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (auth()->check()) {
-                $model->creator_id = auth()->id();
-            }
-        });
-
-        static::updating(function ($model) {
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
-        });
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
     public function scopeWherePaymentMethod($query, $payment_id)
     {
         $query->orWhere('id', $payment_id);

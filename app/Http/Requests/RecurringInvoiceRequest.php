@@ -109,7 +109,6 @@ class RecurringInvoiceRequest extends FormRequest
 
         return collect($this->except('items', 'taxes'))
             ->merge([
-                'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
                 'next_invoice_at' => $nextInvoiceAt,
                 'tax_per_item' => CompanySetting::getSetting('tax_per_item', $this->header('company')) ?? 'NO ',

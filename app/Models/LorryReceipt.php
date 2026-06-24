@@ -11,31 +11,31 @@ class LorryReceipt extends Model
 {
     protected $guarded = ['id'];
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (auth()->check()) {
-                $model->creator_id = auth()->id();
-            }
-            $model->date_created = now();
-        });
-
-        static::updating(function ($model) {
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
-            $model->date_modified = now();
-            $dates = $model->modified_dates ?? [];
-            $dates[] = now()->toDateTimeString();
-            $model->modified_dates = $dates;
-        });
-    }
-
     protected function casts(): array
     {
         return [
             'modified_dates' => 'array',
         ];
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function ownerCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'owner_customer_id');
+    }
+
+    public function driverCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'driver_customer_id');
+    }
+
+    public function brokerCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'broker_customer_id');
     }
 
     public const PAYLOAD_FIELDS = [
@@ -143,36 +143,6 @@ class LorryReceipt extends Model
     protected $appends = [
         'pdf_url',
     ];
-
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function ownerCustomer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class, 'owner_customer_id');
-    }
-
-    public function driverCustomer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class, 'driver_customer_id');
-    }
-
-    public function brokerCustomer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class, 'broker_customer_id');
-    }
 
     public function getPdfUrlAttribute(): string
     {

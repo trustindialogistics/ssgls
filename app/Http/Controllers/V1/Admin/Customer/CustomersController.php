@@ -29,7 +29,7 @@ class CustomersController extends Controller
 
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $customers = Customer::with(['creator', 'billingAddress'])
+        $customers = Customer::with(['billingAddress'])
             ->whereCompany()
             ->applyFilters($request->all())
             ->withSum([

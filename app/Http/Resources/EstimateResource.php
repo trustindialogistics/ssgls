@@ -32,7 +32,6 @@ class EstimateResource extends JsonResource
             'total' => $this->total,
             'tax' => $this->tax,
             'unique_hash' => $this->unique_hash,
-            'creator_id' => $this->creator_id,
             'template_name' => $this->template_name,
             'customer_id' => $this->customer_id,
             'exchange_rate' => $this->exchange_rate,
@@ -52,9 +51,6 @@ class EstimateResource extends JsonResource
             }),
             'customer' => $this->whenLoaded('customer', function () {
                 return new CustomerResource($this->customer);
-            }),
-            'creator' => $this->whenLoaded('creator', function () {
-                return new UserResource($this->creator);
             }),
             'taxes' => $this->whenLoaded('taxes', function () {
                 return TaxResource::collection($this->taxes);

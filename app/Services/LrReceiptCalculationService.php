@@ -66,8 +66,8 @@ class LrReceiptCalculationService
             })
             ->exists();
 
-        // Golden Rule: Both conditions must be met, else everything is 0/null
-        if ($matchedLorryReceipts->isEmpty() || !$hasOfficeInvoice) {
+        // If there are no matched lorry receipts, everything is 0/null
+        if ($matchedLorryReceipts->isEmpty()) {
             return [
                 'amount_debit' => 0.00,
                 'amount_credit' => 0.00,
@@ -77,10 +77,16 @@ class LrReceiptCalculationService
             ];
         }
 
-        $amountCredit = $this->calculateAmountCredit($docketNumber, $companyId);
+        $amountCredit = 0.00;
+        $creditDate = null;
+
+        if ($hasOfficeInvoice) {
+            $amountCredit = $this->calculateAmountCredit($docketNumber, $companyId);
+            $creditDate = $this->calculateCreditDate($docketNumber, $companyId);
+        }
+
         $amountDebit = $this->calculateAmountDebit($docketNumber, $companyId, $matchedLorryReceipts);
         $debitDate = $this->calculateDebitDate($docketNumber, $companyId, $matchedLorryReceipts);
-        $creditDate = $this->calculateCreditDate($docketNumber, $companyId);
         $lorryReceiptId = $matchedLorryReceipts->first()->id;
 
         return [
@@ -276,16 +282,29 @@ class LrReceiptCalculationService
             return 0.0;
         }
 
-        $lastDocket = end($dockets);
+        // Filter dockets to only active ones (credits > 0)
+        $activeDockets = [];
+        foreach ($dockets as $doc) {
+            if (($credits[$doc] ?? 0.0) > 0.0) {
+                $activeDockets[] = $doc;
+            }
+        }
 
-        if ($docketNumber !== $lastDocket) {
+        // If this specific docket has no credit, it gets 0.00
+        if (!in_array($docketNumber, $activeDockets)) {
+            return 0.0;
+        }
+
+        $lastActiveDocket = end($activeDockets);
+
+        if ($docketNumber !== $lastActiveDocket) {
             return round($totalDebit * ($credits[$docketNumber] / $totalCredit), 2);
         }
 
-        // If it is the last docket, calculate sum of all others and assign remainder
+        // If it is the last active docket, calculate sum of all other active dockets and assign remainder
         $sumOfOthers = 0.0;
-        foreach ($dockets as $doc) {
-            if ($doc === $lastDocket) {
+        foreach ($activeDockets as $doc) {
+            if ($doc === $lastActiveDocket) {
                 continue;
             }
             $sumOfOthers += round($totalDebit * ($credits[$doc] / $totalCredit), 2);

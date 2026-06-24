@@ -24,7 +24,6 @@ class RecurringInvoiceResource extends JsonResource
             'send_automatically' => $this->send_automatically,
             'customer_id' => $this->customer_id,
             'company_id' => $this->company_id,
-            'creator_id' => $this->creator_id,
             'status' => $this->status,
             'next_invoice_at' => $this->next_invoice_at,
             'frequency' => $this->frequency,
@@ -63,9 +62,6 @@ class RecurringInvoiceResource extends JsonResource
             }),
             'taxes' => $this->when($this->taxes()->exists(), function () {
                 return TaxResource::collection($this->taxes);
-            }),
-            'creator' => $this->when($this->creator()->exists(), function () {
-                return new UserResource($this->creator);
             }),
             'currency' => $this->when($this->currency()->exists(), function () {
                 return new CurrencyResource($this->currency);

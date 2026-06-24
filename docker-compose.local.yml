@@ -30,7 +30,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      APP_NAME: "HisabKitabb Services"
+      APP_NAME: "HisabKitabb"
       APP_ENV: production
       APP_DEBUG: "false"
       APP_KEY: "base64:kgk/4DW1vEVy7aEvet5FPp5un6PIGe/so8H0mvoUtW0="
@@ -50,7 +50,7 @@ services:
       TRUSTED_PROXIES: "*"
       DOMPDF_ENABLE_REMOTE: "false"
       OFFICIAL_DOCUMENT_ARCHIVE_PATH: "/official-documents"
-      GEMINI_API_KEY: "AQ.Ab8RN6KzJ3kHR0ueND5rOxQOnx3wmALmABm_QErtsY1nStT2ng"
+      GEMINI_API_KEY: "AQ.Ab8RN6JXmYEXOXMdRx82_O9Wf1CFbP4VlC_dOZYGNT-JCLr7Tg"
     volumes:
       - D:/SSGLS_DATABASE/database.sqlite:/var/www/html/storage/app/database.sqlite
       - D:/Backup_Data:/var/www/html/Backup_Data

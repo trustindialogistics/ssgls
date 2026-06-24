@@ -79,7 +79,6 @@ class ExpenseRequest extends FormRequest
 
         return collect($this->validated())
             ->merge([
-                'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
                 'exchange_rate' => $exchange_rate,
                 'base_amount' => $this->amount * $exchange_rate,

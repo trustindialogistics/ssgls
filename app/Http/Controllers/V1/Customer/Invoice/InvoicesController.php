@@ -21,7 +21,7 @@ class InvoicesController extends Controller
     {
         $limit = $request->has('limit') ? $request->limit : 10;
 
-        $invoices = Invoice::with(['items', 'customer', 'creator', 'taxes'])
+        $invoices = Invoice::with(['items', 'customer', 'taxes'])
             ->where('status', '<>', 'DRAFT')
             ->whereRegularInvoice()
             ->applyFilters($request->all())

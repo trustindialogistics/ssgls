@@ -25,7 +25,6 @@ class EstimatesController extends Controller
             'items',
             'customer',
             'taxes',
-            'creator',
         ])
             ->where('status', '<>', 'DRAFT')
             ->whereCustomer(Auth::guard('customer')->id())

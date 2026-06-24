@@ -192,10 +192,6 @@
           </div>
         </template>
 
-        <template #cell-sl_no="{ index }">
-          {{ index + 1 }}
-        </template>
-
         <template #cell-checkbox="{ row }">
           <div class="relative block">
             <BaseCheckbox
@@ -286,15 +282,6 @@
           <InvoiceDropdown :row="row.data" :table="table" />
         </template>
 
-        <!-- Created By -->
-        <template #cell-creator="{ row }">
-          <span>{{ row.data.creator?.name || '-' }}</span>
-        </template>
-
-        <!-- Updated By -->
-        <template #cell-updatedBy="{ row }">
-          <span>{{ row.data.updatedBy?.name || '-' }}</span>
-        </template>
       </BaseTable>
     </div>
   </BasePage>
@@ -384,13 +371,6 @@ const invoiceColumns = computed(() => {
       sortable: false,
     },
     {
-      key: 'sl_no',
-      label: 'SL No',
-      thClass: 'extra w-12',
-      tdClass: 'font-medium text-gray-500',
-      sortable: false,
-    },
-    {
       key: 'invoice_date',
       label: t('invoices.date'),
       thClass: 'extra',
@@ -416,18 +396,6 @@ const invoiceColumns = computed(() => {
       key: 'total',
       label: t('invoices.total'),
       tdClass: 'font-medium text-gray-900',
-    },
-    {
-      key: 'creator.name',
-      label: 'Created By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
-    },
-    {
-      key: 'updatedBy.name',
-      label: 'Updated By',
-      tdClass: 'font-medium text-gray-500',
-      sortable: true,
     },
     {
       key: 'actions',

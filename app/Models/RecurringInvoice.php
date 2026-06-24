@@ -96,34 +96,9 @@ class RecurringInvoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            if (auth()->check()) {
-                $model->creator_id = auth()->id();
-            }
-        });
-
-        static::updating(function ($model) {
-            if (auth()->check()) {
-                $model->updated_by = auth()->id();
-            }
-        });
-    }
-
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class, 'customer_id');
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creator_id');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function company(): BelongsTo
@@ -340,7 +315,6 @@ class RecurringInvoice extends Model
             $days = 7;
         }
 
-        $newInvoice['creator_id'] = $this->creator_id;
         $newInvoice['invoice_date'] = Carbon::today()->format('Y-m-d');
         $newInvoice['due_date'] = Carbon::today()->addDays($days)->format('Y-m-d');
         $newInvoice['status'] = Invoice::STATUS_DRAFT;
