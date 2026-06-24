@@ -66,23 +66,23 @@ class LrReceiptCalculationService
             })
             ->exists();
 
-        // If there are no matched lorry receipts, everything is 0/null
-        if ($matchedLorryReceipts->isEmpty()) {
-            return [
-                'amount_debit' => 0.00,
-                'amount_credit' => 0.00,
-                'amount_debit_date' => null,
-                'amount_credit_date' => null,
-                'lorry_receipt_id' => null,
-            ];
-        }
-
         $amountCredit = 0.00;
         $creditDate = null;
 
         if ($hasOfficeInvoice) {
             $amountCredit = $this->calculateAmountCredit($docketNumber, $companyId);
             $creditDate = $this->calculateCreditDate($docketNumber, $companyId);
+        }
+
+        // If there are no matched lorry receipts, debit is 0, but credit remains calculated
+        if ($matchedLorryReceipts->isEmpty()) {
+            return [
+                'amount_debit' => 0.00,
+                'amount_credit' => $amountCredit,
+                'amount_debit_date' => null,
+                'amount_credit_date' => $creditDate,
+                'lorry_receipt_id' => null,
+            ];
         }
 
         $amountDebit = $this->calculateAmountDebit($docketNumber, $companyId, $matchedLorryReceipts);
@@ -178,7 +178,7 @@ class LrReceiptCalculationService
         foreach ($records as $record) {
             // Filter LorryReceipts that contain this docket (from already-loaded collection)
             $matchedLorryReceipts = $allLorryReceipts->filter(function ($lr) use ($record) {
-                $bilties = array_map('trim', explode(',', $lr->received_no_bilties));
+                $bilties = array_map('trim', explode(',', (string) $lr->received_no_bilties));
                 $bilties = array_unique(array_filter($bilties));
                 return in_array(trim($record->invoice_number), $bilties);
             });
@@ -249,7 +249,7 @@ class LrReceiptCalculationService
         $netAmountPayable = $hasFinal ? Invoice::numericTransportAmount($lorryReceipt->net_amount_payable) : 0;
         $totalDebit = Invoice::numericTransportAmount($lorryReceipt->advance_amount) + $netAmountPayable;
 
-        $dockets = array_map('trim', explode(',', $lorryReceipt->received_no_bilties));
+        $dockets = array_map('trim', explode(',', (string) $lorryReceipt->received_no_bilties));
         $dockets = array_unique(array_filter($dockets));
         sort($dockets); // Sort ascending
 

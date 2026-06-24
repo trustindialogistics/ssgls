@@ -46,7 +46,7 @@ class RecalculateOnOfficeInvoiceDeleted
         $allDocketNumbers = collect($consignmentNumbers); // Also include the consignment numbers themselves to ensure they are recalculated to 0
 
         foreach ($lorryReceipts as $lr) {
-            $bilties = array_map('trim', explode(',', $lr->received_no_bilties));
+            $bilties = array_map('trim', explode(',', (string) $lr->received_no_bilties));
             $bilties = array_unique(array_filter($bilties));
             $allDocketNumbers = $allDocketNumbers->merge($bilties);
         }

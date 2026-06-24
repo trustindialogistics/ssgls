@@ -201,12 +201,34 @@ function format_money_pdf($money, $currency = null)
         $currency = Currency::findOrFail(CompanySetting::getSetting('currency', 1));
     }
 
-    $format_money = number_format(
-        $money,
-        $currency->precision,
-        $currency->decimal_separator,
-        $currency->thousand_separator
-    );
+    $format_money = null;
+    if ($currency->symbol === '₹' && class_exists('\NumberFormatter')) {
+        try {
+            $formatter = new \NumberFormatter('en_IN', \NumberFormatter::DECIMAL);
+            $formatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, $currency->precision);
+            $formatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, $currency->precision);
+            $formatted = $formatter->format($money);
+            if ($formatted !== false) {
+                $format_money = $formatted;
+                if ($currency->decimal_separator !== '.' || $currency->thousand_separator !== ',') {
+                    $parts = explode('.', $format_money);
+                    $parts[0] = str_replace(',', $currency->thousand_separator, $parts[0]);
+                    $format_money = implode($currency->decimal_separator, $parts);
+                }
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+    }
+
+    if ($format_money === null) {
+        $format_money = number_format(
+            $money,
+            $currency->precision,
+            $currency->decimal_separator,
+            $currency->thousand_separator
+        );
+    }
 
     $currency_with_symbol = '';
     if ($currency->swap_currency_symbol) {

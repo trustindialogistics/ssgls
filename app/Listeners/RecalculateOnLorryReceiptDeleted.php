@@ -19,7 +19,7 @@ class RecalculateOnLorryReceiptDeleted implements ShouldQueue
 
     public function handle(LorryReceipt $lorryReceipt): void
     {
-        $dockets = array_map('trim', explode(',', $lorryReceipt->received_no_bilties));
+        $dockets = array_map('trim', explode(',', (string) $lorryReceipt->received_no_bilties));
         $dockets = array_unique(array_filter($dockets));
 
         if (empty($dockets)) {

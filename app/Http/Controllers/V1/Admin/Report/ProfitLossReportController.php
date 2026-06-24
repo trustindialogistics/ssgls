@@ -94,8 +94,8 @@ class ProfitLossReportController extends Controller
                 continue;
             }
 
-            // Calculate income for this LR (multiply by 100 since format_money_pdf divides by 100)
-            $amountCredit = (float) $lrReceipt->amount_credit * 100;
+            // Calculate income for this LR (amount_credit is already in cents, amount_debit is in rupees)
+            $amountCredit = (float) $lrReceipt->amount_credit;
             $amountDebit = (float) $lrReceipt->amount_debit * 100;
             $netProfit = $amountCredit - $amountDebit;
 
@@ -120,6 +120,8 @@ class ProfitLossReportController extends Controller
                 'amount_debit_date' => $lrReceipt->amount_debit_date,
                 'income' => $amountCredit, // Gross Income is amount_credit
                 'net_profit' => $netProfit,
+                'office_invoice_no' => $lrReceipt->office_invoice_number,
+                'challan_no' => $lrReceipt->challan_number,
             ];
 
             // Update customer totals
@@ -163,10 +165,10 @@ class ProfitLossReportController extends Controller
             ->whereCompany($company->id)
             ->get();
 
-        // Calculate total gross income for the view (multiply by 100 since format_money_pdf divides by 100)
+        // Calculate total gross income for the view (amount_credit is already in cents)
         $totalIncome = 0;
         foreach ($lrReceipts as $lrReceipt) {
-            $totalIncome += (float) $lrReceipt->amount_credit * 100;
+            $totalIncome += (float) $lrReceipt->amount_credit;
         }
 
         view()->share([

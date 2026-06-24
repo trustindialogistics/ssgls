@@ -76,6 +76,16 @@ class CompanySetting extends Model
             return $setting->value;
         }
 
+        $defaults = [
+            'carbon_date_format' => 'Y/m/d',
+            'carbon_time_format' => 'H:i',
+            'invoice_use_time' => 'NO',
+        ];
+
+        if (array_key_exists($key, $defaults)) {
+            return $defaults[$key];
+        }
+
         static::$settingsCache[$company_id][$key] = null;
 
         return null;

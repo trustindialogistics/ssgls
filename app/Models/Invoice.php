@@ -1075,8 +1075,22 @@ class Invoice extends Model implements HasMedia
             }
         }
 
+        // Group field values by their target attribute to avoid overrides
+        $attributeValues = [];
         foreach ($fieldMap as $label => $attribute) {
-            $lorryReceipt->{$attribute} = $fieldValues[$label] ?? null;
+            $val = $fieldValues[$label] ?? null;
+            if ($val !== null && $val !== '') {
+                $attributeValues[$attribute][] = $val;
+            }
+        }
+
+        foreach ($fieldMap as $label => $attribute) {
+            if (!empty($attributeValues[$attribute])) {
+                // If there is any non-empty value, take the first one
+                $lorryReceipt->{$attribute} = $attributeValues[$attribute][0];
+            } else {
+                $lorryReceipt->{$attribute} = null;
+            }
         }
 
         // Resolve all 3 party profiles in a single query instead of 3 separate queries
@@ -1191,6 +1205,44 @@ class Invoice extends Model implements HasMedia
             ->first();
 
         return $this->cachedLorryReceipt;
+    }
+
+    public function getOfficeInvoiceNumberAttribute(): ?string
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT) {
+            return null;
+        }
+
+        $item = \App\Models\InvoiceItem::whereHas('invoice', function ($q) {
+            $q->where('template_name', self::TEMPLATE_OFFICE_INVOICE);
+        })
+        ->where('consignment_number', $this->invoice_number)
+        ->first();
+
+        return $item?->invoice?->invoice_number;
+    }
+
+    public function getChallanNumberAttribute(): ?string
+    {
+        if ($this->template_name !== self::TEMPLATE_LR_RECEIPT) {
+            return null;
+        }
+
+        if ($this->lorry_receipt_id) {
+            $lr = \App\Models\LorryReceipt::find($this->lorry_receipt_id);
+            return $lr?->challan_no;
+        }
+
+        $lr = \App\Models\LorryReceipt::where('company_id', $this->company_id)
+            ->where(function ($q) {
+                $q->where('received_no_bilties', 'like', $this->invoice_number)
+                  ->orWhere('received_no_bilties', 'like', $this->invoice_number . ',%')
+                  ->orWhere('received_no_bilties', 'like', '%,' . $this->invoice_number)
+                  ->orWhere('received_no_bilties', 'like', '%,' . $this->invoice_number . ',%');
+            })
+            ->first();
+
+        return $lr?->challan_no;
     }
 
     public function getFormattedAdvanceOnAttribute(): ?string
@@ -1506,7 +1558,7 @@ class Invoice extends Model implements HasMedia
         }
 
         // 1. Get all dockets (LR numbers) inside this Lorry Receipt
-        $dockets = array_map('trim', explode(',', $lorryReceipt->received_no_bilties));
+        $dockets = array_map('trim', explode(',', (string) $lorryReceipt->received_no_bilties));
         $dockets = array_unique(array_filter($dockets));
 
         // 2. Check if Profit & Loss is calculated for EACH LR docket

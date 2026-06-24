@@ -47,24 +47,37 @@ export default {
 
       const negativeSign = amount < 0 ? '-' : ''
 
-      let i = parseInt(
-        (amount = Math.abs(Number(amount) || 0).toFixed(precision))
-      ).toString()
-      let j = i.length > 3 ? i.length % 3 : 0
+      let combinedAmountText
+      if (symbol === '₹') {
+        const formatter = new Intl.NumberFormat('en-IN', {
+          minimumFractionDigits: precision,
+          maximumFractionDigits: precision,
+        })
+        let formatted = formatter.format(Math.abs(amount))
+        if (decimal_separator !== '.' || thousand_separator !== ',') {
+          formatted = formatted.split('.').map(part => part.replace(/,/g, thousand_separator)).join(decimal_separator)
+        }
+        combinedAmountText = negativeSign + formatted
+      } else {
+        let i = parseInt(
+          (amount = Math.abs(Number(amount) || 0).toFixed(precision))
+        ).toString()
+        let j = i.length > 3 ? i.length % 3 : 0
+
+        let thousandText = j ? i.substr(0, j) + thousand_separator : ''
+        let amountText = i
+          .substr(j)
+          .replace(/(\d{3})(?=\d)/g, '$1' + thousand_separator)
+        let precisionText = precision
+          ? decimal_separator +
+          Math.abs(amount - i)
+            .toFixed(precision)
+            .slice(2)
+          : ''
+        combinedAmountText = negativeSign + thousandText + amountText + precisionText
+      }
 
       let moneySymbol = `${symbol}`
-      let thousandText = j ? i.substr(0, j) + thousand_separator : ''
-      let amountText = i
-        .substr(j)
-        .replace(/(\d{3})(?=\d)/g, '$1' + thousand_separator)
-      let precisionText = precision
-        ? decimal_separator +
-        Math.abs(amount - i)
-          .toFixed(precision)
-          .slice(2)
-        : ''
-      let combinedAmountText =
-        negativeSign + thousandText + amountText + precisionText
 
       return swap_currency_symbol
         ? combinedAmountText + ' ' + moneySymbol

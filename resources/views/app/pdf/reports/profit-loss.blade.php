@@ -204,7 +204,7 @@
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px;">
                     <thead>
                         <tr style="background-color: #F9FBFF; border-bottom: 1px solid #EAF1FB;">
-                            <th style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Lorry Receipt Number') }}</th>
+                            <th style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Lorry Receipt details') }}</th>
                             <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Credit/Income Amount') }}</th>
                             <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Debit/Expense Amount') }}</th>
                             <th style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #040405; width: 25%;">{{ __('Net Profit / Loss') }}</th>
@@ -218,9 +218,15 @@
                             @endphp
                             <tr style="border-bottom: 1px solid #EAF1FB;">
                                 <td style="padding: 6px 8px; text-align: left; font-size: 10px; color: #595959;">
-                                    {{ $lrReceipt['lr_no'] }}<br>
+                                    {{ __('Docket No') }}: <strong>{{ $lrReceipt['lr_no'] }}</strong><br>
+                                    @if(!empty($lrReceipt['challan_no']))
+                                        <span style="font-size: 8px; color: #595959;">Challan No: {{ $lrReceipt['challan_no'] }}</span><br>
+                                    @endif
+                                    @if(!empty($lrReceipt['office_invoice_no']))
+                                        <span style="font-size: 8px; color: #595959;">Invoice No: {{ $lrReceipt['office_invoice_no'] }}</span><br>
+                                    @endif
                                     @if(!empty($lrReceipt['lr_date']))
-                                        <span style="font-size: 8px; color: #a5acc1;">Lorry Receipt Date: {{ $lrReceipt['lr_date'] }}</span>
+                                        <span style="font-size: 8px; color: #a5acc1;">Date: {{ $lrReceipt['lr_date'] }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 6px 8px; text-align: right; font-size: 10px; color: #595959;">

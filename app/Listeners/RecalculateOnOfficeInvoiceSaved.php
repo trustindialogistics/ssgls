@@ -69,7 +69,7 @@ class RecalculateOnOfficeInvoiceSaved implements ShouldQueue
 
         $allDocketNumbers = collect();
         foreach ($lorryReceipts as $lr) {
-            $bilties = array_map('trim', explode(',', $lr->received_no_bilties));
+            $bilties = array_map('trim', explode(',', (string) $lr->received_no_bilties));
             $bilties = array_unique(array_filter($bilties));
 
             if (!empty(array_intersect($consignmentNumbers, $bilties))) {
