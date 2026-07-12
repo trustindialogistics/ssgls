@@ -48,14 +48,12 @@
         }
 
         .jurisdiction {
-            font-size: 10px;
-            left: 190px;
+            font-size: 10.5px;
             line-height: 9px;
-            position: absolute;
+            margin-bottom: 2px;
             text-align: center;
             text-decoration: underline;
-            top: 6px;
-            width: 190px;
+            white-space: nowrap;
         }
 
         .header-left {
@@ -71,67 +69,58 @@
             width: 39%;
         }
 
-        .company-panel {
-            border: 0;
-            height: 132px;
-            padding: 2px 7px !important;
-            position: relative;
-            width: 100%;
+        .logo-cell {
+            text-align: center;
+            width: 17%;
+            vertical-align: top;
         }
 
         .company-logo {
-            max-height: 88px;
-            max-width: 118px;
-        }
-
-        .brand-mark {
-            color: #27324a;
-            font-size: 51px;
-            font-weight: bold;
-            letter-spacing: -5px;
-            line-height: 42px;
-            text-align: left;
-            width: 92px;
-        }
-
-        .brand-small {
+            max-height: 72px;
+            max-width: 112px;
             display: block;
-            font-size: 9px;
-            letter-spacing: 0;
-            line-height: 7px;
-            margin-top: 2px;
+            margin: 0 auto;
+        }
+
+        .brand-fallback {
+            color: #111;
+            font-size: 34px;
+            font-weight: bold;
+            line-height: 27px;
+            padding-top: 8px;
+            text-align: center;
+        }
+
+        .company-cell {
+            text-align: center;
+            width: 83%;
+            vertical-align: top;
         }
 
         .company-name {
             color: #111;
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 31px;
+            font-size: 27px;
             font-weight: bold;
-            line-height: 28px;
-            margin-top: 3px;
+            line-height: 24px;
+            margin-top: 1px;
+            text-align: center;
         }
 
         .company-tagline {
-            font-size: 13.5px;
+            font-size: 14.5px;
             font-weight: bold;
-            line-height: 11px;
+            line-height: 12px;
+            text-align: center;
         }
 
         .company-address {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 11px;
-            line-height: 9.2px;
-            margin-top: 3px;
-        }
-
-        .header-contact {
-            font-size: 16px;
-            line-height: 14px;
-            position: absolute;
-            right: 7px;
-            text-align: right;
-            top: 2px;
-            white-space: nowrap;
+            font-size: 14.4px;
+            font-weight: bold;
+            line-height: 15px;
+            margin-top: 4px;
+            text-align: center;
         }
 
         .header-left table,
@@ -150,13 +139,18 @@
         }
 
         .top-detail-table td {
-            height: 20px;
+            font-size: 16px;
+            height: 24px;
             padding: 2px 6px;
             vertical-align: middle;
         }
 
+        .top-detail-table td .label {
+            font-size: 11px;
+        }
+
         .top-detail-table .tax-line {
-            height: 24px;
+            height: 32px;
         }
 
         .party-table {
@@ -169,23 +163,32 @@
         }
 
         .party-cell {
-            height: 132px;
+            height: 142px;
             padding: 4px 6px;
             width: 50%;
         }
 
+        .party-cell > .label {
+            font-size: 12.5px;
+        }
+
         .party-lines {
             border-bottom: 1px solid #ddd;
-            font-size: 11.5px;
-            height: 23px;
-            line-height: 21px;
+            font-size: 18px;
+            height: 31px;
+            line-height: 29px;
             margin-top: 0;
             overflow: hidden;
         }
 
+        .party-lines .label {
+            font-size: 13px;
+        }
+
         .party-details {
-            height: 59px;
-            line-height: 13px;
+            font-size: 18px;
+            height: 80px;
+            line-height: 18px;
             padding-top: 4px;
         }
 
@@ -201,22 +204,26 @@
         }
 
         .docket-no {
-            font-size: 11px;
+            font-size: 18px;
             font-weight: bold;
             letter-spacing: 0;
             text-align: left;
         }
 
         .owner-risk {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
         }
 
         .tax-line {
-            font-size: 13.5px;
+            font-size: 19px;
             font-weight: bold;
-            line-height: 13px;
+            line-height: 17px;
             overflow-wrap: anywhere;
+        }
+
+        .tax-line .label {
+            font-size: 14px;
         }
 
         .goods {
@@ -224,18 +231,18 @@
         }
 
         .goods td {
-            font-size: 11.8px;
-            height: 20px;
-            line-height: 11px;
+            font-size: 18px;
+            height: 28px;
+            line-height: 17px;
         }
 
         .goods .large {
-            height: 36px;
+            height: 45px;
         }
 
         .delivery-cell {
-            font-size: 12px;
-            line-height: 12px;
+            font-size: 18px;
+            line-height: 17px;
         }
 
         .eway-inline {
@@ -250,6 +257,10 @@
             width: 100%;
         }
 
+        .left-panel .label, .goods .label {
+            font-size: 13px;
+        }
+
         .freight-panel {
             padding: 0;
             vertical-align: top;
@@ -257,17 +268,18 @@
         }
 
         .charges th {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
-            height: 25px;
-            line-height: 10px;
+            height: 28px;
+            line-height: 13px;
             text-align: center;
             vertical-align: middle;
         }
 
         .charges td {
-            height: 17px;
-            line-height: 12px;
+            font-size: 19px;
+            height: 25px;
+            line-height: 19px;
         }
 
         .mode {
@@ -305,39 +317,38 @@
         }
 
         .footer-left td {
-            height: 88px;
+            padding: 0;
         }
 
         .declaration {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-            font-size: 8.2px;
-            line-height: 8.9px;
-            height: 51px;
+            font-size: 9px;
+            line-height: 9.8px;
+            height: 56px;
             overflow: hidden;
             padding: 3px 5px;
         }
 
         .agreement {
-            border-top: 1.5px solid #000;
+            border-top: 1.5px solid #000 !important;
             font-size: 12.4px;
             font-weight: bold;
-            height: 36px;
-            line-height: 11px;
-            padding-top: 7px;
+            line-height: 12px;
+            padding: 5px 2px !important;
             text-align: center;
         }
 
         .consignee-sign {
-            height: 88px;
+            height: 98px;
             line-height: 13px;
-            padding: 4px 6px;
+            padding: 4px 6px !important;
         }
 
         .gst-payable {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
-            height: 39px;
-            line-height: 12px;
+            height: 42px;
+            line-height: 14px;
             padding-top: 8px;
             text-align: center;
             vertical-align: middle;
@@ -348,23 +359,23 @@
             border-top: 1.5px solid #000 !important;
             font-size: 16px;
             font-weight: bold;
-            height: 49px;
+            height: 75px;
             line-height: 18px;
-            padding-top: 12px;
-            position: relative;
+            padding-top: 6px;
             text-align: center;
         }
 
+        .sig-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 4px;
+        }
+
         .signature-image {
-            display: block;
-            height: 34px;
-            left: 0;
-            margin: 0 auto;
+            display: inline-block;
+            height: 38px;
             max-width: 180px;
             object-fit: contain;
-            position: absolute;
-            right: 0;
-            top: 27px;
         }
 
         .company-separator {
@@ -648,22 +659,21 @@
                 <td class="header-left">
                     <table class="brand-block">
                         <tr>
-                            <td class="company-panel">
+                            <td class="logo-cell">
                                 <div class="jurisdiction">{{ $companyTopHeading }}</div>
-                                <div class="header-contact">
-                                    Mob. {{ $mobile }}<br>
-                                    E-mail : {{ $email }}
-                                </div>
                                 @if ($logo)
                                     <img class="company-logo" src="{{ \App\Space\ImageUtils::toBase64Src($logo) }}" alt="Company Logo">
                                 @else
-                                    <div class="brand-mark">
-                                        {{ $companyInitials }}
-                                    </div>
+                                    <div class="brand-fallback">{{ $companyInitials }}</div>
                                 @endif
+                            </td>
+                            <td class="company-cell">
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">{{ $companyTagline }}</div>
-                                <div class="company-address">{!! $displayCompanyAddress !!}</div>
+                                <div class="company-address">
+                                    {!! $displayCompanyAddress !!}<br>
+                                    Mob. {{ $mobile }} &nbsp;&nbsp;&nbsp;&nbsp; E-mail : {{ $email }}
+                                </div>
                             </td>
                         </tr>
                     </table>
@@ -671,13 +681,13 @@
                     <table class="party-table">
                         <tr>
                             <td class="party-cell">
-                                <span class="label">Consignor</span> <span style="font-weight: bold; font-size: 11.5px; padding-left: 5px;">{{ $consignorData['name'] }}</span>
+                                <span class="label">Consignor</span> <span style="font-weight: bold; font-size: 16px; padding-left: 5px;">{{ $consignorData['name'] }}</span>
                                 <div class="party-lines party-details">{!! nl2br(e($consignorData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consignorPhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consignorGstin }}</div>
                             </td>
                             <td class="party-cell">
-                                <span class="label">Consignee</span> <span style="font-weight: bold; font-size: 11.5px; padding-left: 5px;">{{ $consigneeData['name'] }}</span>
+                                <span class="label">Consignee</span> <span style="font-weight: bold; font-size: 16px; padding-left: 5px;">{{ $consigneeData['name'] }}</span>
                                 <div class="party-lines party-details">{!! nl2br(e($consigneeData['address'])) !!}</div>
                                 <div class="party-lines"><span class="label">Phone No.:</span> {{ $consigneePhone }}</div>
                                 <div class="party-lines"><span class="label">GST No.:</span> {{ $consigneeGstin }}</div>
@@ -685,9 +695,20 @@
                         </tr>
                     </table>
 
+                    @php
+                        $descLength = strlen($descriptionOfGoods);
+                        $descFontSize = '18px';
+                        if ($descLength > 120) {
+                            $descFontSize = '11px';
+                        } elseif ($descLength > 80) {
+                            $descFontSize = '13px';
+                        } elseif ($descLength > 45) {
+                            $descFontSize = '15px';
+                        }
+                    @endphp
                     <table class="goods">
                         <tr>
-                            <td width="50%" class="large"><span class="label">Description of Goods</span><br>{{ $descriptionOfGoods }}</td>
+                            <td width="50%" class="large" style="font-size: {{ $descFontSize }};"><span class="label">Description of Goods</span><br>{{ $descriptionOfGoods }}</td>
                             <td width="24%"><span class="label">No. of Articles</span><br>{{ $noOfArticles }}</td>
                             <td><span class="label">Packing</span><br>{{ $itemField(['packing']) }}</td>
                         </tr>
@@ -729,19 +750,23 @@
 
                     <table class="footer-left">
                         <tr>
-                            <td width="50%" style="padding: 0;">
+                            <td width="50%" style="padding: 0; border-bottom: 0;">
                                 <div class="declaration">
                                     <span class="label">DECLARATION :</span> We Have Not Taken Gst Credit As Per The Provisions
                                     Of Convat Credit Rule 2004 Of Only Paid On Inputs Or Capital Goods
                                     Used For Providing Taxable's Service To You And Have Also Availed
                                     The Benefits Of Notification No. 11 & 13/2017 Dated 28th June 2017
                                 </div>
-                                <div class="agreement">It is taken in to consideration that agrees with<br>all the terms and condition overleaf</div>
                             </td>
-                            <td width="50%" class="consignee-sign">
+                            <td width="50%" rowspan="2" class="consignee-sign">
                                 <span class="label">Rubber Stamp and Signature of Consignee</span><br><br><br><br>
                                 <span class="label">Phone / Mobile</span><br>
                                 &nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="agreement">
+                                It is taken in to consideration that agrees with<br>all the terms and condition overleaf
                             </td>
                         </tr>
                     </table>
@@ -838,10 +863,12 @@
                         </tr>
                         <tr>
                             <td class="for-company">
-                                <div class="company-separator"></div>For {{ $companyName }}
-                                @if (file_exists($signaturePath))
-                                    <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
-                                @endif
+                                <div>For {{ $companyName }}</div>
+                                <div class="sig-container">
+                                    @if (file_exists($signaturePath))
+                                        <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     </table>

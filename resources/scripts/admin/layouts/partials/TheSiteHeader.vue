@@ -62,7 +62,7 @@
     <ul class="flex float-right h-8 m-0 list-none md:h-9">
       <li
         v-if="hasCreateAbilities"
-        class="relative hidden float-left m-0 md:block"
+        class="relative float-left m-0"
       >
         <BaseDropdown width-class="w-48">
           <template #activator>
@@ -145,6 +145,60 @@
         />
       </li>
 
+      <!-- Chatbot Toggle Button -->
+      <li class="relative float-left m-0 ml-2">
+        <button
+          ref="chatButton"
+          class="
+            flex
+            items-center
+            justify-center
+            w-8
+            h-8
+            text-sm text-black
+            bg-white
+            rounded
+            md:h-9 md:w-9
+            focus:outline-hidden
+            cursor-pointer
+            hover:bg-gray-100
+            transition
+          "
+          title="Ask Me Business Assistant"
+          @click="toggleChat"
+        >
+          <BaseIcon name="SparklesIcon" class="w-5 h-5 text-primary-500 hover:text-primary-600" />
+        </button>
+
+        <!-- Floating Chatbot Window -->
+        <div
+          v-if="isChatOpen"
+          ref="chatContainer"
+          class="
+            fixed
+            top-16
+            left-4
+            right-4
+            sm:absolute
+            sm:top-full
+            sm:left-auto
+            sm:right-0
+            sm:mt-2
+            sm:w-[450px]
+            z-50
+            bg-white
+            rounded-lg
+            shadow-2xl
+            border
+            border-gray-200
+            overflow-hidden
+            origin-top-right
+          "
+        >
+          <AskMeChatBot @close="isChatOpen = false" />
+        </div>
+      </li>
+
       <li>
         <CompanySwitcher />
       </li>
@@ -185,15 +239,16 @@
 </template>
 
 <script setup>
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/scripts/admin/stores/auth'
 import { useRouter } from 'vue-router'
-import { computed } from 'vue'
 import { useUserStore } from '@/scripts/admin/stores/user'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
 
 import CompanySwitcher from '@/scripts/components/CompanySwitcher.vue'
 import GlobalSearchBar from '@/scripts/components/GlobalSearchBar.vue'
 import MainLogo from '@/scripts/components/icons/MainLogo.vue'
+import AskMeChatBot from '@/scripts/admin/views/dashboard/AskMeChatBot.vue'
 
 import abilities from '@/scripts/admin/stub/abilities'
 
@@ -201,6 +256,34 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const router = useRouter()
+
+const isChatOpen = ref(false)
+const chatContainer = ref(null)
+const chatButton = ref(null)
+
+const toggleChat = () => {
+  isChatOpen.value = !isChatOpen.value
+}
+
+const handleClickOutside = (event) => {
+  if (
+    isChatOpen.value &&
+    chatContainer.value &&
+    !chatContainer.value.contains(event.target) &&
+    chatButton.value &&
+    !chatButton.value.contains(event.target)
+  ) {
+    isChatOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const previewAvatar = computed(() => {
   return userStore.currentUser && userStore.currentUser.avatar !== 0

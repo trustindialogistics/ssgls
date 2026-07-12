@@ -1,5 +1,10 @@
 <template>
-  <tr class="box-border bg-white border border-gray-200 border-solid rounded-b">
+  <tr
+    :class="[
+      'box-border',
+      isTransportEntryTemplate ? '' : 'bg-white border border-gray-200 border-solid rounded-b'
+    ]"
+  >
     <td :colspan="itemTableColumnCount" class="p-0 text-left align-top">
       <table class="w-full">
         <colgroup>
@@ -206,10 +211,88 @@
             />
             <td
               :colspan="itemDetailColspan"
-              class="px-5 pb-4 text-left align-top"
+              class="text-left align-top"
+              :class="isTransportEntryTemplate ? 'p-0 py-2' : 'px-5 pb-4'"
             >
+              <!-- Invoice Template -->
               <div
-                v-if="isTransportEntryTemplate"
+                v-if="isOfficeInvoiceTemplate"
+                class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg space-y-4 mb-6"
+              >
+                <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 justify-between">
+                  <div class="text-left">
+                    <h6 class="m-0 text-sm font-semibold tracking-wide text-gray-900 uppercase">
+                      Consignment Details
+                    </h6>
+                  </div>
+                  <div class="office-row-actions">
+                    <BaseIcon
+                      v-if="showRemoveButton"
+                      class="h-5 text-red-500 hover:text-red-700 cursor-pointer"
+                      name="TrashIcon"
+                      @click="store.removeItem(index)"
+                    />
+                  </div>
+                </div>
+                <div class="office-consignment-grid p-4">
+                  <CustomFieldSingle
+                    v-for="(field, fieldIndex) in itemCustomFields"
+                    :key="field.id"
+                    :custom-field-scope="`${itemValidationScope}.items.${index}.customFields`"
+                    :store="store"
+                    :store-prop="storeProp"
+                    :index="fieldIndex"
+                    :field="field"
+                    :class="{
+                      'office-invoice-field': isTransportEntryTemplate,
+                    }"
+                  />
+                  <BaseInputGroup label="Amount">
+                    <BaseFormatMoney
+                      :amount="transportAmount"
+                      :currency="selectedCurrency"
+                    />
+                  </BaseInputGroup>
+                </div>
+              </div>
+
+              <!-- LR Receipt Template -->
+              <div
+                v-else-if="isLrReceiptTemplate"
+                class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg space-y-4"
+              >
+                <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
+                  <div class="text-left">
+                    <h6 class="m-0 text-sm font-semibold tracking-wide text-gray-900 uppercase">
+                      LR Details
+                    </h6>
+                  </div>
+                </div>
+                <div class="office-consignment-grid p-4">
+                  <CustomFieldSingle
+                    v-for="(field, fieldIndex) in itemCustomFields"
+                    :key="field.id"
+                    :custom-field-scope="`${itemValidationScope}.items.${index}.customFields`"
+                    :store="store"
+                    :store-prop="storeProp"
+                    :index="fieldIndex"
+                    :field="field"
+                    :class="{
+                      'office-invoice-field': isTransportEntryTemplate,
+                    }"
+                  />
+                  <BaseInputGroup label="Net Amount">
+                    <BaseFormatMoney
+                      :amount="transportAmount"
+                      :currency="selectedCurrency"
+                    />
+                  </BaseInputGroup>
+                </div>
+              </div>
+
+              <!-- Generic Transport Template fallback -->
+              <div
+                v-else-if="isTransportEntryTemplate"
                 class="office-consignment-grid"
               >
                 <CustomFieldSingle

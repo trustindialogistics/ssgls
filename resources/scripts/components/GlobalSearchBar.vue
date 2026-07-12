@@ -1,5 +1,5 @@
 <template>
-  <div ref="searchBar" class="hidden rounded md:block relative">
+  <div ref="searchBar" class="rounded relative block w-28 sm:w-40 md:w-48">
     <div>
       <BaseInput
         v-model="name"

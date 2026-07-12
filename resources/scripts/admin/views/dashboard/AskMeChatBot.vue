@@ -19,6 +19,9 @@
           <button @click="clearChat" title="Clear Chat" class="text-white/80 hover:text-white transition">
             <BaseIcon name="TrashIcon" class="h-5 w-5" />
           </button>
+          <button @click="$emit('close')" title="Close Chat" class="text-white/80 hover:text-white transition">
+            <BaseIcon name="XMarkIcon" class="h-5 w-5" />
+          </button>
         </div>
       </div>
     </div>
@@ -145,6 +148,8 @@
 <script setup>
 import { ref, reactive, nextTick, watch } from 'vue'
 import http from '@/scripts/http'
+
+const emit = defineEmits(['close'])
 
 const messagesContainer = ref(null)
 const userInput = ref('')

@@ -7,7 +7,7 @@
 
     <style type="text/css">
         @page {
-            margin: 6px;
+            margin: 16px;
             size: 297mm 210mm;
         }
 
@@ -18,7 +18,7 @@
         body {
             color: #111;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11.8px;
+            font-size: 14px;
             margin: 0;
         }
 
@@ -29,8 +29,8 @@
 
         td,
         th {
-            border: 1.5px solid #000;
-            padding: 2px 4px;
+            border: 1px solid #111;
+            padding: 4px 6px;
             vertical-align: top;
         }
 
@@ -83,9 +83,7 @@
         }
 
         .brand-row td {
-            border-left: 0;
-            border-right: 0;
-            border-top: 0;
+            border: 0 !important;
             padding: 2px 5px;
         }
 
@@ -116,7 +114,7 @@
 
         .company-cell {
             text-align: center;
-            width: 63%;
+            width: 83%;
         }
 
         .company-name {
@@ -135,9 +133,9 @@
 
         .company-address {
             font-size: 11.4px;
-            line-height: 9.8px;
+            line-height: 12px;
             margin-top: 4px;
-            text-align: left;
+            text-align: center;
         }
 
         .contact-cell {
@@ -149,37 +147,38 @@
         }
 
         .branch-box {
-            height: 82px;
-            line-height: 10px;
+            height: 88px;
+            line-height: 12px;
             overflow: hidden;
-            padding: 4px 6px !important;
+            padding: 6px 8px !important;
             white-space: normal;
             word-break: break-word;
         }
 
         .branch-label {
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: bold;
         }
 
         .branch-address {
             display: block;
-            line-height: 11px;
-            margin-top: 2px;
+            font-size: 12.5px;
+            line-height: 15px;
+            margin-top: 5px;
             overflow-wrap: anywhere;
             white-space: normal;
         }
 
         .tax-box {
-            height: 30px;
+            height: 34px;
             overflow: hidden;
-            padding: 11px 6px 2px !important;
+            padding: 8px 6px 2px !important;
         }
 
         .tax-box div {
-            font-size: 13.5px;
+            font-size: 14px;
             font-weight: bold;
-            line-height: 13px;
+            line-height: 14px;
             overflow-wrap: anywhere;
             white-space: normal;
             word-break: break-all;
@@ -187,14 +186,13 @@
 
         .party-box {
             border-top: 0 !important;
-            height: 142px;
             padding: 0 !important;
-            position: relative;
         }
 
         .party-head {
-            height: 16px;
+            height: 20px;
             table-layout: fixed;
+            width: 100%;
         }
 
         .party-head td {
@@ -202,107 +200,107 @@
             border-left: 0;
             border-right: 0;
             border-top: 0;
-            font-size: 13px;
-            height: 16px;
+            font-size: 14.5px;
+            height: 20px;
             padding: 2px 8px;
         }
 
         .party-address-lines {
-            bottom: 18px;
-            left: 0;
-            line-height: 13px;
-            overflow: hidden;
-            padding: 2px 8px 1px;
-            position: absolute;
-            right: 0;
-            top: 16px;
+            line-height: 17px;
+            font-size: 13.5px;
+            padding: 6px 8px 4px;
         }
 
         .party-display-name {
-            font-weight: normal;
-            margin-bottom: 2px;
+            font-size: 15.5px;
+            font-weight: bold;
+            margin-bottom: 6px;
         }
 
         .party-gstin {
             border-top: 1px solid #111;
-            bottom: 0;
-            font-size: 11px;
-            height: 18px;
-            line-height: 16px;
-            overflow: hidden;
-            padding: 1px 8px;
-            position: absolute;
-            right: auto;
-            text-overflow: clip;
-            white-space: nowrap;
-            width: 55%;
+            font-size: 13px;
+            height: 20px;
+            line-height: 18px;
+            padding: 4px 8px;
+            width: 70%;
         }
 
         .bill-details td {
-            font-size: 11.8px;
-            height: 15px;
+            font-size: 12.5px;
+            height: 26px;
             padding: 2px 6px;
             vertical-align: middle;
         }
 
-        .payment-table th,
+        .payment-table th {
+            background-color: #f2f2f2;
+            font-size: 12.5px;
+            font-weight: bold;
+            height: 18px;
+            padding: 2px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
         .payment-table td {
-            font-size: 10.6px;
-            height: 14px;
-            padding: 1px 2px;
+            font-size: 13px;
+            height: 20px;
+            padding: 2px;
             text-align: center;
             vertical-align: middle;
         }
 
         .basis-row {
-            font-size: 11.8px;
-            height: 23px;
-            line-height: 11px;
+            font-size: 12.5px;
+            height: 25px;
+            line-height: 12px;
             padding: 2px 6px !important;
         }
 
         .items th {
-            font-size: 10.8px;
+            background-color: #f2f2f2;
+            font-size: 12.5px;
             font-weight: bold;
-            height: 16px;
-            line-height: 8.8px;
-            padding: 1px 2px;
+            height: 25px;
+            line-height: 11px;
+            padding: 4px 2px;
             text-align: center;
             vertical-align: middle;
         }
 
         .items .group-head th {
-            height: 18px;
+            height: 27px;
         }
 
         .items td {
-            font-size: 11.8px;
-            height: 19px;
-            padding: 2px 3px;
+            font-size: 13.5px;
+            height: 28px;
+            padding: 5px 4px;
             text-align: center;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .words-row td {
-            font-size: 12px;
-            height: 22px;
+            font-size: 15px;
+            height: 32px;
             padding: 4px 6px;
             vertical-align: middle;
         }
 
         .grand-label {
-            font-size: 12px;
+            font-size: 13.5px;
             font-weight: bold;
             text-align: center;
         }
 
         .footer td {
-            font-size: 12px;
+            font-size: 13px;
             padding: 3px 6px;
         }
 
         .footer-head td {
-            height: 20px;
+            height: 24px;
         }
 
         .footer-body td {
@@ -336,32 +334,38 @@
             font-weight: bold;
             line-height: 14px;
             text-align: center;
-        }
-
-        .signature {
-            bottom: 2px;
-            font-size: 15px;
-            left: 72px;
-            line-height: 14px;
-            position: absolute;
-            right: 0;
-            text-align: center;
-        }
-
-        .signature-image {
-            bottom: 16px;
+            width: 100%;
             display: block;
-            height: 42px;
-            margin: 0;
-            max-width: 210px;
-            object-fit: contain;
-            position: absolute;
-            right: 22px;
         }
 
         .signature-cell {
             overflow: hidden;
             position: relative;
+            padding: 3px 6px !important;
+        }
+
+        .signature-wrap {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            left: 72px;
+            right: 0;
+            text-align: center;
+        }
+
+        .signature-image {
+            display: block;
+            height: 38px;
+            margin: 0 auto;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .signature {
+            font-size: 15px;
+            line-height: 14px;
+            margin-top: 2px;
+            text-align: center;
         }
 
         .bold {
@@ -378,6 +382,20 @@
 
         .text-center {
             text-align: center !important;
+        }
+
+        .bill-bold-large {
+            font-size: 16px !important;
+        }
+
+        .amount-col {
+            font-size: 16px !important;
+            font-weight: bold !important;
+        }
+
+        .grand-total-section {
+            font-size: 17px !important;
+            font-weight: bold !important;
         }
     </style>
 </head>
@@ -577,11 +595,10 @@
                             <td class="company-cell">
                                 <div class="company-name">{{ $companyName }}</div>
                                 <div class="company-tagline">{{ $companyTagline }}</div>
-                                <div class="company-address">{!! $displayCompanyAddress !!}</div>
-                            </td>
-                            <td class="contact-cell">
-                                Mob. {{ $mobile }}<br>
-                                E-mail : {{ $email }}
+                                <div class="company-address">
+                                    {!! $displayCompanyAddress !!}<br>
+                                    Mob. {{ $mobile }} &nbsp;&nbsp;&nbsp;&nbsp; E-mail : {{ $email }}
+                                </div>
                             </td>
                         </tr>
                     </table>
@@ -602,7 +619,7 @@
                     </table>
                     <div class="party-address-lines">
                         <div class="party-display-name">{{ $partyDisplayName }}</div>
-                        {!! nl2br(e($partyAddressLines->implode("\n"))) ?: "\u{00A0}" !!}
+                        {!! nl2br(e(wordwrap($partyAddressLines->implode("\n"), 50, "\n", true))) ?: "\u{00A0}" !!}
                     </div>
                     <div class="party-gstin"><b>GSTIN :</b> {{ $partyGstin }}</div>
                 </td>
@@ -615,12 +632,12 @@
                 <td>
                     <table class="bill-details">
                         <tr>
-                            <td width="50%"><b>Bill No.:</b> {{ $invoice->invoice_number }}</td>
-                            <td><b>Branch Code :</b> {{ $branchCode }}</td>
+                            <td width="50%" class="bill-bold-large"><b>Bill No.:</b> <b>{{ $invoice->invoice_number }}</b></td>
+                            <td class="bill-bold-large"><b>Branch Code :</b> <b>{{ $branchCode }}</b></td>
                         </tr>
                         <tr>
-                            <td><b>Bill Date :</b> {{ $invoice->formattedInvoiceDate }}</td>
-                            <td><b>Payment Due Date :</b> {{ $invoice->formattedDueDate }}</td>
+                            <td class="bill-bold-large"><b>Bill Date :</b> <b>{{ $invoice->formattedInvoiceDate }}</b></td>
+                            <td class="bill-bold-large"><b>Payment Due Date :</b> </td>
                         </tr>
                     </table>
                 </td>
@@ -661,12 +678,12 @@
                 <col style="width: 6.8%;">
                 <col style="width: 9%;">
                 <col style="width: 5.5%;">
-                <col style="width: 7.4%;">
-                <col style="width: 8.5%;">
+                <col style="width: 9.0%;">
+                <col style="width: 7.5%;">
                 <col style="width: 6.8%;">
                 <col style="width: 6.8%;">
                 <col style="width: 6.8%;">
-                <col style="width: 12.2%;">
+                <col style="width: 11.6%;">
             </colgroup>
             <thead>
                 <tr class="group-head">
@@ -681,7 +698,7 @@
                     <th rowspan="2">Other Charge</th>
                     <th rowspan="2">LR Charge</th>
                     <th rowspan="2">DD Charge</th>
-                    <th rowspan="2">Amount</th>
+                    <th rowspan="2" class="amount-col">Amount</th>
                 </tr>
                 <tr>
                     <th>Number</th>
@@ -725,7 +742,7 @@
                         <td class="text-right">{{ $otherCharge }}</td>
                         <td class="text-right">{{ $lrCharge }}</td>
                         <td class="text-right">{{ $ddCharge }}</td>
-                        <td class="text-right">{!! format_money_pdf($officeLineTotal, $invoice->customer->currency) !!}</td>
+                        <td class="text-right amount-col">{!! format_money_pdf($officeLineTotal, $invoice->customer->currency) !!}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -743,9 +760,9 @@
                 <col style="width: 18%;">
             </colgroup>
             <tr>
-                <td><b>Rupees in words :</b> {{ $rupeesInWords }}</td>
-                <td class="grand-label">GRAND TOTAL</td>
-                <td class="text-right bold">{!! format_money_pdf($officeGrandTotal ?: $invoice->total, $invoice->customer->currency) !!}</td>
+                <td><b>Rupees in words :</b> <b>{{ $rupeesInWords }}</b></td>
+                <td class="grand-label grand-total-section">GRAND TOTAL</td>
+                <td class="text-right grand-total-section">{!! format_money_pdf($officeGrandTotal ?: $invoice->total, $invoice->customer->currency) !!}</td>
             </tr>
         </table>
 
@@ -768,10 +785,12 @@
                 <td width="10%" class="prepared text-center">Checked by :<br>{{ $checkedBy }}</td>
                 <td width="38%" class="signature-cell">
                     <span class="emp-box">EMP Code<br>{{ $empCode }}</span>
-                    @if (file_exists($signaturePath))
-                        <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
-                    @endif
-                    <div class="signature">Signature</div>
+                    <div class="signature-wrap">
+                        @if (file_exists($signaturePath))
+                            <img class="signature-image" src="{{ \App\Space\ImageUtils::toBase64Src($signaturePath) }}" alt="Signature">
+                        @endif
+                        <div class="signature">Signature</div>
+                    </div>
                 </td>
             </tr>
         </table>

@@ -223,10 +223,10 @@
     });
     $getFontForWidth = function ($value, $widthLimit, $baseSize = 8.4) {
         $length = strlen((string) $value);
-        $estimatedWidth = $length * ($baseSize * 0.55);
+        $estimatedWidth = $length * ($baseSize * 0.68);
         if ($estimatedWidth > $widthLimit) {
-            $shrunkSize = ($widthLimit / $length) / 0.55;
-            return 'font-size: ' . number_format(max(6.5, min($baseSize, $shrunkSize)), 1) . 'pt;';
+            $shrunkSize = ($widthLimit / $length) / 0.68;
+            return 'font-size: ' . number_format(max(5.5, min($baseSize, $shrunkSize)), 1) . 'pt;';
         }
         return '';
     };
@@ -321,17 +321,29 @@
     <div class="top" style="top:287pt;"></div>
 
     <div class="section-outline" style="left:0; top:287pt; width:520pt; height:130pt;"></div><div class="v" style="left:172pt; top:287pt; height:130pt;"></div><div class="v" style="left:374pt; top:287pt; height:130pt;"></div>
-    <div class="section-box" style="left:0; top:287pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:291pt;">B</div><div class="title" style="left:30pt; top:292pt;">OWNER</div><div class="box" style="left:72pt; top:287pt; width:99pt; height:16pt;"></div><div class="t" style="left:75pt; top:291pt;">Code</div><div class="title" style="left:178pt; top:292pt;">DRIVER</div><div class="title" style="left:380pt; top:292pt;">BROKER</div><div class="box" style="left:435pt; top:287pt; width:85pt; height:16pt;"></div>
+    <div class="section-box" style="left:0; top:287pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:291pt;">B</div><div class="title" style="left:30pt; top:292pt;">OWNER</div><div class="title" style="left:178pt; top:292pt;">DRIVER</div><div class="title" style="left:380pt; top:292pt;">BROKER</div>
     <div class="section-b-content">
-        <div class="t" style="left:6pt; top:310pt;">Name</div><div class="line" style="left:28pt; top:309pt; width:139pt; {{ $getFontForWidth($v('Owner Name'), 139, 7.4) }}">{{ $v('Owner Name') }}</div><div class="t" style="left:6pt; top:325pt;">Full Address</div><div class="line" style="left:57pt; top:324pt; width:110pt;">{{ $addressLine('Owner Address', [23, 34], 0) }}</div><div class="line" style="left:6pt; top:339pt; width:161pt;">{{ $addressLine('Owner Address', [23, 34], 1) }}</div><div class="t" style="left:6pt; top:369pt;">Phone No.</div><div class="line" style="left:43pt; top:368pt; width:124pt;">{{ $v('Owner Phone No') }}</div><div class="t" style="left:6pt; top:384pt;">Owner PAN No .</div><div class="line" style="left:68pt; top:383pt; width:99pt;">{{ $v(['Owner PAN No', 'Financer Name']) }}</div>
-        <div class="t" style="left:178pt; top:310pt;">Name</div><div class="line" style="left:201pt; top:309pt; width:167pt; {{ $getFontForWidth($v('Driver Name'), 167, 7.4) }}">{{ $v('Driver Name') }}</div><div class="t" style="left:178pt; top:325pt;">Full Address</div><div class="line" style="left:229pt; top:324pt; width:139pt;">{{ $addressLine('Driver Address', [23, 34, 34], 0) }}</div><div class="line" style="left:178pt; top:339pt; width:190pt;">{{ $addressLine('Driver Address', [23, 34, 34], 1) }}</div><div class="line" style="left:178pt; top:354pt; width:190pt;">{{ $addressLine('Driver Address', [23, 34, 34], 2) }}</div><div class="t" style="left:178pt; top:369pt;">Licence No.</div><div class="line" style="left:224pt; top:368pt; width:144pt;">{{ $v('Driver Licence No') }}</div><div class="t" style="left:178pt; top:384pt;">Issued Dt.</div><div class="line" style="left:223pt; top:383pt; width:45pt;">{{ $v(['Driver Licence Date', 'Issued Dt.']) }}</div><div class="t" style="left:270pt; top:384pt;">Valid Dt.</div><div class="line" style="left:306pt; top:383pt; width:62pt;">{{ $v('Driver Valid Up To') }}</div><div class="t" style="left:178pt; top:399pt;">RTO</div><div class="line" style="left:198pt; top:398pt; width:170pt;">{{ $v('Driver RTO') }}</div>
-        <div class="t" style="left:380pt; top:310pt;">Name</div><div class="line" style="left:405pt; top:309pt; width:109pt;">{{ $splitLines($v('Broker Name'), [26, 32])[0] ?? '' }}</div>
-        <div class="line" style="left:380pt; top:324pt; width:134pt;">{{ $splitLines($v('Broker Name'), [26, 32])[1] ?? '' }}</div>
-        <div class="t" style="left:380pt; top:339pt;">Full Address</div><div class="line" style="left:431pt; top:339pt; width:83pt;">{{ $addressLine('Broker Address', [18, 30, 30], 0) }}</div>
-        <div class="line" style="left:380pt; top:354pt; width:134pt;">{{ $addressLine('Broker Address', [18, 30, 30], 1) }}</div>
-        <div class="line" style="left:380pt; top:369pt; width:134pt;">{{ $addressLine('Broker Address', [18, 30, 30], 2) }}</div>
-        <div class="t" style="left:380pt; top:384pt;">Broker Pan No.</div><div class="line" style="left:439pt; top:384pt; width:75pt;">{{ $v('Broker Pan No') }}</div>
-        <div class="t" style="left:380pt; top:399pt;">Phone No.</div><div class="line" style="left:421pt; top:398pt; width:93pt;">{{ $v('Broker Phone No') }}</div>
+        <div class="t" style="left:6pt; top:310pt;">Name</div><div class="line" style="left:28pt; top:309pt; width:139pt; {{ $getFontForWidth($splitLines($v('Owner Name'), [28, 33])[0], 139, 7.4) }}">{{ $splitLines($v('Owner Name'), [28, 33])[0] ?? '' }}</div>
+        <div class="line" style="left:6pt; top:324pt; width:161pt; {{ $getFontForWidth($splitLines($v('Owner Name'), [28, 33])[1], 161, 7.4) }}">{{ $splitLines($v('Owner Name'), [28, 33])[1] ?? '' }}</div>
+        <div class="t" style="left:6pt; top:339pt;">Full Address</div><div class="line" style="left:57pt; top:339pt; width:110pt; {{ $getFontForWidth($addressLine('Owner Address', [22, 33, 33], 0), 110, 7.4) }}">{{ $addressLine('Owner Address', [22, 33, 33], 0) }}</div>
+        <div class="line" style="left:6pt; top:354pt; width:161pt; {{ $getFontForWidth($addressLine('Owner Address', [22, 33, 33], 1), 161, 7.4) }}">{{ $addressLine('Owner Address', [22, 33, 33], 1) }}</div>
+        <div class="line" style="left:6pt; top:369pt; width:161pt; {{ $getFontForWidth($addressLine('Owner Address', [22, 33, 33], 2), 161, 7.4) }}">{{ $addressLine('Owner Address', [22, 33, 33], 2) }}</div>
+        <div class="t" style="left:6pt; top:384pt;">Phone No.</div><div class="line" style="left:43pt; top:383pt; width:124pt; {{ $getFontForWidth($v('Owner Phone No'), 124, 7.4) }}">{{ $v('Owner Phone No') }}</div>
+        <div class="t" style="left:6pt; top:399pt;">Owner PAN No .</div><div class="line" style="left:68pt; top:398pt; width:99pt; {{ $getFontForWidth($v(['Owner PAN No', 'Financer Name']), 99, 7.4) }}">{{ $v(['Owner PAN No', 'Financer Name']) }}</div>
+        <div class="t" style="left:178pt; top:310pt;">Name</div><div class="line" style="left:201pt; top:309pt; width:167pt; {{ $getFontForWidth($v('Driver Name'), 167, 7.4) }}">{{ $v('Driver Name') }}</div>
+        <div class="t" style="left:178pt; top:325pt;">Full Address</div><div class="line" style="left:229pt; top:324pt; width:139pt; {{ $getFontForWidth($addressLine('Driver Address', [28, 39, 39], 0), 139, 7.4) }}">{{ $addressLine('Driver Address', [28, 39, 39], 0) }}</div>
+        <div class="line" style="left:178pt; top:339pt; width:190pt; {{ $getFontForWidth($addressLine('Driver Address', [28, 39, 39], 1), 190, 7.4) }}">{{ $addressLine('Driver Address', [28, 39, 39], 1) }}</div>
+        <div class="line" style="left:178pt; top:354pt; width:190pt; {{ $getFontForWidth($addressLine('Driver Address', [28, 39, 39], 2), 190, 7.4) }}">{{ $addressLine('Driver Address', [28, 39, 39], 2) }}</div>
+        <div class="t" style="left:178pt; top:369pt;">Licence No.</div><div class="line" style="left:224pt; top:368pt; width:144pt; {{ $getFontForWidth($v('Driver Licence No'), 144, 7.4) }}">{{ $v('Driver Licence No') }}</div>
+        <div class="t" style="left:178pt; top:384pt;">Issued Dt.</div><div class="line" style="left:223pt; top:383pt; width:45pt; {{ $getFontForWidth($v(['Driver Licence Date', 'Issued Dt.']), 45, 7.4) }}">{{ $v(['Driver Licence Date', 'Issued Dt.']) }}</div><div class="t" style="left:270pt; top:384pt;">Valid Dt.</div><div class="line" style="left:306pt; top:383pt; width:62pt; {{ $getFontForWidth($v('Driver Valid Up To'), 62, 7.4) }}">{{ $v('Driver Valid Up To') }}</div>
+        <div class="t" style="left:178pt; top:399pt;">RTO</div><div class="line" style="left:198pt; top:398pt; width:170pt; {{ $getFontForWidth($v('Driver RTO'), 170, 7.4) }}">{{ $v('Driver RTO') }}</div>
+        <div class="t" style="left:380pt; top:310pt;">Name</div><div class="line" style="left:405pt; top:309pt; width:109pt; {{ $getFontForWidth($splitLines($v('Broker Name'), [22, 27])[0], 109, 7.4) }}">{{ $splitLines($v('Broker Name'), [22, 27])[0] ?? '' }}</div>
+        <div class="line" style="left:380pt; top:324pt; width:134pt; {{ $getFontForWidth($splitLines($v('Broker Name'), [22, 27])[1], 134, 7.4) }}">{{ $splitLines($v('Broker Name'), [22, 27])[1] ?? '' }}</div>
+        <div class="t" style="left:380pt; top:339pt;">Full Address</div><div class="line" style="left:431pt; top:339pt; width:83pt; {{ $getFontForWidth($addressLine('Broker Address', [17, 27, 27], 0), 83, 7.4) }}">{{ $addressLine('Broker Address', [17, 27, 27], 0) }}</div>
+        <div class="line" style="left:380pt; top:354pt; width:134pt; {{ $getFontForWidth($addressLine('Broker Address', [17, 27, 27], 1), 134, 7.4) }}">{{ $addressLine('Broker Address', [17, 27, 27], 1) }}</div>
+        <div class="line" style="left:380pt; top:369pt; width:134pt; {{ $getFontForWidth($addressLine('Broker Address', [17, 27, 27], 2), 134, 7.4) }}">{{ $addressLine('Broker Address', [17, 27, 27], 2) }}</div>
+        <div class="t" style="left:380pt; top:384pt;">Broker Pan No.</div><div class="line" style="left:439pt; top:384pt; width:75pt; {{ $getFontForWidth($v('Broker Pan No'), 75, 7.4) }}">{{ $v('Broker Pan No') }}</div>
+        <div class="t" style="left:380pt; top:399pt;">Phone No.</div><div class="line" style="left:421pt; top:398pt; width:93pt; {{ $getFontForWidth($v('Broker Phone No'), 93, 7.4) }}">{{ $v('Broker Phone No') }}</div>
     </div>
     <div class="top" style="top:417pt;"></div>
 
@@ -351,7 +363,7 @@
     <div class="section-outline" style="left:0; top:558pt; width:520pt; height:35pt;"></div><div class="section-box" style="left:0; top:558pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:562pt;">D</div><div class="section-box" style="left:18pt; top:558pt; width:502pt; height:16pt;"></div><div class="title" style="left:34pt; top:564pt;">LOADING REMARKS</div><div class="t" style="left:275pt; top:577pt;">Loaded by</div><div class="line" style="left:317pt; top:577pt; width:197pt;">{{ $v('Loaded By') }}</div><div class="top" style="top:593pt;"></div>
 
     <div class="section-outline" style="left:0; top:593pt; width:520pt; height:159pt;"></div><div class="section-box" style="left:0; top:593pt; width:18pt; height:16pt;"></div><div class="letter" style="left:3pt; top:597pt;">E</div><div class="section-box" style="left:18pt; top:593pt; width:502pt; height:16pt;"></div><div class="title" style="left:34pt; top:598pt;">FINAL PAYMENT PARTICULARS</div>
-    <div class="v" style="left:438pt; top:593pt; height:159pt;"></div><div class="h" style="left:438pt; top:627pt; width:82pt;"></div><div class="h" style="left:438pt; top:644pt; width:82pt;"></div><div class="h" style="left:438pt; top:661pt; width:82pt;"></div><div class="h" style="left:438pt; top:678pt; width:82pt;"></div><div class="h" style="left:438pt; top:695pt; width:82pt;"></div>
+    <div class="v" style="left:438pt; top:593pt; height:159pt;"></div><div class="h" style="left:438pt; top:625pt; width:82pt;"></div><div class="h" style="left:438pt; top:641pt; width:82pt;"></div><div class="h" style="left:438pt; top:657pt; width:82pt;"></div><div class="h" style="left:438pt; top:673pt; width:82pt;"></div><div class="h" style="left:438pt; top:689pt; width:82pt;"></div>
 
     @php
         $finalPaidToVal = $v('Final Paid To');
@@ -359,27 +371,27 @@
             $finalPaidToVal .= ' (A/c No: ' . $ownerBankAccount . ')';
         }
     @endphp
-    <div class="t" style="left:22pt; top:626pt;">Paid to shri</div><div class="line" style="left:75pt; top:625pt; width:350pt; {{ $getFontForWidth($finalPaidToVal, 350) }}">{{ $finalPaidToVal }}</div>
-    <div class="e-label" style="left:318pt; top:631pt; width:96pt;">Balance Payable</div><div class="e-rs" style="left:419pt; top:631pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:631pt; width:58pt;">{{ $balanceAmount }}</div>
+    <div class="t" style="left:22pt; top:614pt;">Paid to shri</div><div class="line" style="left:75pt; top:613pt; width:350pt; {{ $getFontForWidth($finalPaidToVal, 350) }}">{{ $finalPaidToVal }}</div>
+    <div class="e-label" style="left:318pt; top:614pt; width:96pt;">Balance Payable</div><div class="e-rs" style="left:419pt; top:614pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:614pt; width:58pt;">{{ $balanceAmount }}</div>
 
-    <div class="t" style="left:22pt; top:646pt;">Add&nbsp; Detention&nbsp; Rs.</div><div class="mini-box" style="left:96pt; top:645pt; width:42pt;">{{ $detentionAmount !== '' ? $detentionAmount : 'I' }}</div>
-    <div class="t" style="left:146pt; top:646pt;">Extra&nbsp; Hire&nbsp; Rs.</div><div class="mini-box" style="left:204pt; top:645pt; width:42pt;">{{ $extraHireAmount !== '' ? $extraHireAmount : 'II' }}</div>
-    <div class="t" style="left:256pt; top:646pt;">Other Rs.</div><div class="mini-box" style="left:294pt; top:645pt; width:38pt;">{{ $finalOtherAmount !== '' ? $finalOtherAmount : 'III' }}</div>
-    <div class="e-label" style="left:336pt; top:647pt; width:78pt;">Total I+II+III</div><div class="e-rs" style="left:419pt; top:647pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:647pt; width:58pt;">{{ $finalTotalExtraAmount }}</div>
+    <div class="t" style="left:22pt; top:631pt;">Add&nbsp; Detention&nbsp; Rs.</div><div class="mini-box" style="left:96pt; top:630pt; width:42pt;">{{ $detentionAmount !== '' ? $detentionAmount : 'I' }}</div>
+    <div class="t" style="left:146pt; top:631pt;">Extra&nbsp; Hire&nbsp; Rs.</div><div class="mini-box" style="left:204pt; top:630pt; width:42pt;">{{ $extraHireAmount !== '' ? $extraHireAmount : 'II' }}</div>
+    <div class="t" style="left:256pt; top:631pt;">Other Rs.</div><div class="mini-box" style="left:294pt; top:630pt; width:38pt;">{{ $finalOtherAmount !== '' ? $finalOtherAmount : 'III' }}</div>
+    <div class="e-label" style="left:336pt; top:631pt; width:78pt;">Total I+II+III</div><div class="e-rs" style="left:419pt; top:631pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:631pt; width:58pt;">{{ $finalTotalExtraAmount }}</div>
 
-    <div class="e-label" style="left:336pt; top:661pt; width:78pt;">Grand Total</div><div class="e-rs" style="left:419pt; top:661pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:661pt; width:58pt;">{{ $grandTotalAmount }}</div>
+    <div class="e-label" style="left:336pt; top:648pt; width:78pt;">Grand Total</div><div class="e-rs" style="left:419pt; top:648pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:648pt; width:58pt;">{{ $grandTotalAmount }}</div>
 
-    <div class="t" style="left:22pt; top:673pt;">Less Adv. at other branch</div><div class="mini-box" style="left:120pt; top:672pt; width:48pt;">{{ $lessAdvanceOtherBranchAmount !== '' ? $lessAdvanceOtherBranchAmount : 'IV' }}</div>
-    <div class="t" style="left:188pt; top:673pt;">Less Deduction for Claims</div><div class="mini-box" style="left:284pt; top:672pt; width:38pt;">{{ $lessDeductionClaimsAmount !== '' ? $lessDeductionClaimsAmount : 'V' }}</div>
-    <div class="e-label" style="left:336pt; top:674pt; width:78pt;">Total (IV+V)</div><div class="e-rs" style="left:419pt; top:675pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:675pt; width:58pt;">{{ $totalLessAmount }}</div>
+    <div class="t" style="left:22pt; top:665pt;">Less Adv. at other branch</div><div class="mini-box" style="left:120pt; top:664pt; width:48pt;">{{ $lessAdvanceOtherBranchAmount !== '' ? $lessAdvanceOtherBranchAmount : 'IV' }}</div>
+    <div class="t" style="left:188pt; top:665pt;">Less Deduction for Claims</div><div class="mini-box" style="left:284pt; top:664pt; width:38pt;">{{ $lessDeductionClaimsAmount !== '' ? $lessDeductionClaimsAmount : 'V' }}</div>
+    <div class="e-label" style="left:336pt; top:665pt; width:78pt;">Total (IV+V)</div><div class="e-rs" style="left:419pt; top:665pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:665pt; width:58pt;">{{ $totalLessAmount }}</div>
 
-    <div class="t" style="left:22pt; top:687pt;">Final Balance Amount Paid at</div><div class="mini-box" style="left:135pt; top:686pt; width:50pt;">{{ $v(['Final Balance Amount Paid at', 'Final Balance Code']) }}</div>
-    <div class="t" style="left:226pt; top:687pt;">On</div><div class="mini-box" style="left:242pt; top:686pt; width:64pt;">{{ $v('Final Balance Date') }}</div>
-    <div class="e-label" style="left:310pt; top:688pt; width:104pt;">Net Amount payable</div><div class="e-rs" style="left:419pt; top:690pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:690pt; width:58pt;">{{ $netAmountPayable }}</div>
+    <div class="t" style="left:22pt; top:682pt;">Final Balance Amount Paid at</div><div class="mini-box" style="left:135pt; top:681pt; width:50pt;">{{ $v(['Final Balance Amount Paid at', 'Final Balance Code']) }}</div>
+    <div class="t" style="left:226pt; top:682pt;">On</div><div class="mini-box" style="left:242pt; top:681pt; width:64pt;">{{ $v('Final Balance Date') }}</div>
+    <div class="e-label" style="left:310pt; top:682pt; width:104pt;">Net Amount payable</div><div class="e-rs" style="left:419pt; top:682pt; width:17pt;">Rs.:</div><div class="e-amt" style="left:450pt; top:682pt; width:58pt;">{{ $netAmountPayable }}</div>
 
-    <div class="t" style="left:22pt; top:701pt;">Cash/Cheque No.</div><div class="line" style="left:88pt; top:700pt; width:120pt;">{{ $v(['Cash/Cheque No.', 'Final Cash Cheque No']) }}</div>
-    <div class="t" style="left:212pt; top:701pt;">On</div><div class="line" style="left:225pt; top:700pt; width:60pt;">{{ $v(['Final Cash Cheque On', 'Final Balance Date']) }}</div><div class="t" style="left:290pt; top:701pt;">Bank</div><div class="line" style="left:312pt; top:700pt; width:95pt; {{ $getFontForWidth($v('Final Bank'), 95) }}">{{ $v('Final Bank') }}</div>
-    <div class="t" style="left:22pt; top:715pt;">Rupees</div><div class="line" style="left:53pt; top:714pt; width:363pt;">{{ $finalRupeesOnly }}</div><div class="t" style="left:418pt; top:715pt;">Only</div>
+    <div class="t" style="left:22pt; top:699pt;">Cash/Cheque No.</div><div class="line" style="left:106pt; top:698pt; width:120pt;">{{ $v(['Cash/Cheque No.', 'Final Cash Cheque No']) }}</div>
+    <div class="t" style="left:246pt; top:699pt;">Bank</div><div class="line" style="left:272pt; top:698pt; width:135pt; {{ $getFontForWidth($v('Final Bank'), 135) }}">{{ $v('Final Bank') }}</div>
+    <div class="t" style="left:22pt; top:716pt;">Rupees</div><div class="line" style="left:62pt; top:715pt; width:354pt;">{{ $finalRupeesOnly }}</div><div class="t" style="left:418pt; top:716pt;">Only</div>
     <div class="sig-box" style="left:438pt; top:724pt; width:80pt; height:24pt; font-size:7.2pt; font-weight:bold; line-height:8pt; padding-top:2pt;">FINAL PAYMENT<br>RECD BY ME</div>
 
     <div class="sig" style="left:20pt; top:735pt; width:80pt;"></div><div class="t c" style="left:30pt; top:740pt; width:75pt;">Passed by</div><div class="sig" style="left:157pt; top:735pt; width:105pt;"></div><div class="t c" style="left:172pt; top:740pt; width:80pt;">Certified by</div><div class="sig" style="left:315pt; top:735pt; width:90pt;"></div><div class="t c" style="left:326pt; top:740pt; width:85pt;">Prepared by</div><div class="top" style="top:752pt;"></div>

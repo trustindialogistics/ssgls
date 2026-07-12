@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1\Admin\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -41,6 +42,10 @@ class ChatBotController extends Controller
             ]);
         }
 
+        $companyId = $request->header('company');
+        $company = Company::find($companyId);
+        $companyName = $company ? $company->name : 'S S GUJARAT LOGISTICS';
+
         $intent = $this->classifyIntent($userMessage);
 
         if ($intent === 'high_demand') {
@@ -52,7 +57,7 @@ class ChatBotController extends Controller
         }
 
         if ($intent === 'generic') {
-            return $this->askGeneric($userMessage);
+            return $this->askGeneric($userMessage, $companyName);
         }
 
         // Generate SQL with retry loop for self-correction
@@ -61,7 +66,7 @@ class ChatBotController extends Controller
         $lastError = null;
 
         while ($retryCount <= $maxRetries) {
-            $sql = $this->generateSQL($userMessage, $lastError);
+            $sql = $this->generateSQL($userMessage, $companyName, $lastError);
 
             if (!$this->isQuerySafe($sql)) {
                 Log::warning("Blocked unsafe SQL query from chatbot: $sql");
@@ -114,7 +119,7 @@ class ChatBotController extends Controller
             'contents' => [[
                 'parts' => [[
                     'text' => "Classify as 'data' or 'generic':
-- 'data': Questions about invoices, customers, payments, expenses, business data
+- 'data': Questions about invoices, lorry receipt, lr receipt, customers, consignee, Driver, owner, woner, broker, payments, expenses, business data
 - 'generic': Greetings, general questions, non-business questions
 
 Question: '$question'
@@ -136,14 +141,14 @@ Respond with ONLY one word: 'data' or 'generic'"
         return trim(strtolower($intent));
     }
 
-    private function askGeneric(string $question): \Illuminate\Http\JsonResponse
+    private function askGeneric(string $question, string $companyName): \Illuminate\Http\JsonResponse
     {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.$this->geminiModel.':generateContent?key='.$this->geminiApiKey;
 
         $response = Http::post($url, [
             'contents' => [[
                 'parts' => [[
-                    'text' => "You are a helpful business assistant for HisabKitabb Services, a transportation and logistics company.
+                    'text' => "You are a helpful business assistant for $companyName, a transportation and logistics company.
 
 User: $question
 
@@ -173,11 +178,11 @@ Assistant:"
         ]);
     }
 
-    private function generateSQL(string $question, ?string $lastError = null): string
+    private function generateSQL(string $question, string $companyName, ?string $lastError = null): string
     {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.$this->geminiModel.':generateContent?key='.$this->geminiApiKey;
 
-        $schema = $this->getSchemaInfo();
+        $schema = $this->getSchemaInfo($companyName);
 
         $errorContext = $lastError 
             ? "\n\nPREVIOUS ATTEMPT FAILED WITH ERROR: $lastError\nPlease fix this error and generate a correct SQL query."
@@ -186,7 +191,7 @@ Assistant:"
         $response = Http::post($url, [
             'contents' => [[
                 'parts' => [[
-                    'text' => "You are a SQL generator for HisabKitabb Services.
+                    'text' => "You are a SQL generator for $companyName.
 
 DATABASE SCHEMA:
 $schema
@@ -308,28 +313,42 @@ Format numbers with ₹ symbol for currency. Keep it concise."
         ]);
     }
 
-    private function getSchemaInfo(): string
+    private function getSchemaInfo(string $companyName): string
     {
         return "
-DATABASE: HisabKitabb Services - Transportation Management System
+DATABASE: $companyName - Transportation Management System
 
-=== INVOICES TABLE (Main table for LR Receipts) ===
+=== INVOICES TABLE (Main table for Invoice Receipts & LR Receipts) ===
 Table: invoices
 Columns:
 - id (integer, primary key)
-- invoice_number (string) - Docket number
-- customer_id (integer, foreign key to customers.id) - Consignor
-- consignee_customer_id (integer, foreign key to customers.id) - Consignee
-- total (decimal)
+- invoice_number (string) - Docket number / Invoice number
+- customer_id (integer, foreign key to customers.id) - Consignor (Sender)
+- consignee_customer_id (integer, foreign key to customers.id) - Consignee (Receiver)
+- total (decimal) - Grand Total
 - amount_debit (decimal) - Receivable amount
-- amount_credit (decimal) - Amount credited
+- amount_credit (decimal) - Amount credited / paid
 - status (string) - DRAFT, SENT, DUE, COMPLETED
-- invoice_date (date)
+- invoice_date (date) - Invoice / LR date
 - created_at (datetime)
 - updated_at (datetime)
-- template_name (string) - 'lr_receipt' for LR Receipts
+- template_name (string) - 'office_invoice' for standard Invoice Receipts, 'lr_receipt' for LR Receipts
 
-=== LORRY RECEIPTS TABLE (Separate table for Lorry Receipts) ===
+=== INVOICE ITEMS TABLE ===
+Table: invoice_items
+Columns:
+- id (integer, primary key)
+- name (string) - Item name
+- description (text) - Item description
+- price (bigint) - Price of item
+- quantity (decimal) - Quantity
+- total (bigint) - Total amount
+- invoice_id (integer, FK to invoices.id)
+- item_id (integer, FK to items.id)
+- company_id (integer, FK to companies.id)
+- consignment_number (string) - Associated consignment number
+
+=== LORRY RECEIPTS TABLE ===
 Table: lorry_receipts
 Columns:
 - id (integer, primary key)
@@ -337,7 +356,6 @@ Columns:
 - owner_customer_id (integer, FK to customers.id) - Owner
 - driver_customer_id (integer, FK to customers.id) - Driver
 - broker_customer_id (integer, FK to customers.id) - Broker
-- unique_hash (string)
 - contract_no (string)
 - from_code (string) - Origin code
 - from_name (string) - Origin name
@@ -378,7 +396,7 @@ Columns:
 Table: customers
 Columns:
 - id (integer, primary key)
-- name (string) - Customer name
+- name (string) - Customer / Party name
 - display_name (string)
 - phone (string)
 - email (string)
@@ -428,35 +446,48 @@ Columns:
 - type (string) - OWNER, DRIVER, BROKER
 - phone (string)
 - address (text)
-- rc_front_path (string) - For OWNER
-- rc_back_path (string) - For OWNER
-- pan_front_path (string) - For OWNER
-- license_front_path (string) - For DRIVER
-- license_back_path (string) - For DRIVER
-- aadhar_front_path (string) - For BROKER
-- aadhar_back_path (string) - For BROKER
 - created_at (datetime)
 - updated_at (datetime)
 
-=== ITEMS TABLE ===
-Table: items
+=== TRANSPORT INVOICES TABLE ===
+Table: transport_invoices
 Columns:
 - id (integer, primary key)
-- name (string)
-- price (decimal)
-- unit_name (string)
-- created_at (datetime)
-- updated_at (datetime)
+- company_id (integer)
+- customer_id (integer, FK to customers.id)
+- lr_number (string) - Lorry Receipt number
+- branch_code (string)
+- invoice_date (date)
+- due_date (date)
+
+=== TRANSPORT INVOICE ROWS TABLE ===
+Table: transport_invoice_rows
+Columns:
+- id (integer, primary key)
+- transport_invoice_id (integer, FK to transport_invoices.id)
+- consignment_no (string)
+- old_bill_date (date)
+- invoice_no (string)
+- destination (string)
+- vehicle_no (string)
+- pkg (integer)
+- charged_weight (decimal)
+- rate (decimal)
+- other_charge (decimal)
+- dd_charge (decimal)
+- amount (decimal)
 
 === IMPORTANT NOTES FOR SQL QUERIES ===
-
-1. To get LR Receipts: SELECT * FROM invoices WHERE template_name = 'lr_receipt'
-2. To get Lorry Receipts: SELECT * FROM lorry_receipts
-3. To get Consignor: SELECT * FROM customers WHERE type = 'CUSTOMER'
-4. To get Consignee: SELECT * FROM customers WHERE type = 'CONSIGNEE'
-5. To get Owner: SELECT * FROM customers WHERE type = 'OWNER' OR FROM lorry_party_profiles WHERE type = 'OWNER'
-6. To get Driver: SELECT * FROM customers WHERE type = 'DRIVER' OR FROM lorry_party_profiles WHERE type = 'DRIVER'
-7. To get Broker: SELECT * FROM customers WHERE type = 'BROKER' OR FROM lorry_party_profiles WHERE type = 'BROKER'
+1. To get Invoice Receipts: SELECT * FROM invoices WHERE template_name = 'office_invoice'
+2. To get LR Receipts: SELECT * FROM invoices WHERE template_name = 'lr_receipt'
+3. To get Lorry Receipts: SELECT * FROM lorry_receipts
+4. To get Consignor: SELECT * FROM customers WHERE type = 'CUSTOMER'
+5. To get Consignee: SELECT * FROM customers WHERE type = 'CONSIGNEE'
+6. To get Owner: SELECT * FROM customers WHERE type = 'OWNER' OR FROM lorry_party_profiles WHERE type = 'OWNER'
+7. To get Driver: SELECT * FROM customers WHERE type = 'DRIVER' OR FROM lorry_party_profiles WHERE type = 'DRIVER'
+8. To get Broker: SELECT * FROM customers WHERE type = 'BROKER' OR FROM lorry_party_profiles WHERE type = 'BROKER'
+9. To get Payment Receipts: SELECT * FROM payments
+10. To get Expenses: SELECT * FROM expenses
 
 === EXAMPLE QUERIES ===
 

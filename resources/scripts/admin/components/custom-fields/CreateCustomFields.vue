@@ -4,6 +4,7 @@
       store[storeProp] && store[storeProp].customFields.length > 0 && !isLoading
     "
   >
+    <!-- Lorry Receipt template sections -->
     <div v-if="isLorryReceiptTemplate" class="space-y-6">
       <section
         v-if="docketNoFieldEntry"
@@ -251,6 +252,14 @@ const lorryFieldSectionDefinitions = [
 
 const isLorryReceiptTemplate = computed(() => {
   return props.store[props.storeProp]?.template_name === 'lorry_receipt'
+})
+
+const isOfficeInvoiceTemplate = computed(() => {
+  return props.store[props.storeProp]?.template_name === 'office_invoice'
+})
+
+const isLrReceiptTemplate = computed(() => {
+  return props.store[props.storeProp]?.template_name === 'lr_receipt'
 })
 
 const customFieldsWithIndex = computed(() => {
