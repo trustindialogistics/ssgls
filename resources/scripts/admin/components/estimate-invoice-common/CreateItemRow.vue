@@ -768,6 +768,7 @@ function applyLrReceiptDetails(details) {
   lastMatchedLrDetails.value = details
 
   const itemFields = details.item_fields || {}
+  const freight = details.freight_details || {}
   let itemUpdated = false
 
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'From', itemFields.From) || itemUpdated
@@ -777,10 +778,10 @@ function applyLrReceiptDetails(details) {
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Consignment Date', details.invoice_date) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Pkg', itemFields.Pkg) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Charged Weight Kgs', itemFields['Charged Weight Kgs']) || itemUpdated
-  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Rate', itemFields.Rate) || itemUpdated
-  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Other Charge', itemFields['Other Charge']) || itemUpdated
-  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'LR Charge', itemFields['LR Charge']) || itemUpdated
-  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'DD Charge', itemFields['DD Charge']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Rate', freight.rate) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Other Charge', freight.other_charge) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'LR Charge', freight.lr_charge) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'DD Charge', freight.dd_charge) || itemUpdated
 
   if (itemUpdated) {
     props.store.$patch((state) => {

@@ -56,13 +56,10 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 const companyStore = useCompanyStore()
-let hasInitialValueSet = false
-
 const money = computed({
   get: () => props.modelValue,
   set: (value) => {
-    if (!hasInitialValueSet) {
-      hasInitialValueSet = true
+    if (value === props.modelValue) {
       return
     }
 

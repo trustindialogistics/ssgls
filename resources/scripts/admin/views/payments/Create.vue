@@ -264,10 +264,10 @@
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-[950px] lg:min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="w-12 px-6 py-3 text-left">
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
                     <input
                       type="checkbox"
                       :checked="isAllSelected"
@@ -275,29 +275,29 @@
                       class="rounded text-primary-600 focus:ring-primary-500 h-4 w-4 border-gray-300 cursor-pointer"
                     />
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">
                     Invoice
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[130px]">
                     Due Amount
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
-                    Amount to Pay
+                  <th scope="col" class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-48 min-w-[180px]">
+                    Amount Paid
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">
+                  <th scope="col" class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-44 min-w-[150px]">
                     TDS Amount
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-36">
+                  <th scope="col" class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-44 min-w-[150px]">
                     Deductions
                   </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40 min-w-[160px]">
                     Paid Status
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="invoice in invoiceList" :key="invoice.id" :class="{'bg-primary-50/10': invoice.selected}">
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       v-model="invoice.selected"
@@ -305,39 +305,39 @@
                       class="rounded text-primary-600 focus:ring-primary-500 h-4 w-4 border-gray-300 cursor-pointer"
                     />
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap">
                     <div class="text-sm font-semibold text-gray-900">
-                      {{ invoice.invoice_number }}
+                       {{ invoice.invoice_number }}
                     </div>
                     <div class="text-xs text-gray-500">
                       {{ invoice.formattedInvoiceDate }}
                     </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     {{ utils.formatMoney(invoice.due_amount, paymentStore.currentPayment.currency) }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-2 py-4 whitespace-nowrap w-48 min-w-[180px]">
                     <BaseMoney
-                      v-model="invoice.amount_to_pay"
+                      :model-value="invoice.amount_to_pay"
                       :currency="paymentStore.currentPayment.currency"
-                      @update:modelValue="onAmountToPayChange(invoice)"
+                      @update:modelValue="val => { invoice.amount_to_pay = val; onAmountToPayChange(invoice); }"
                     />
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-2 py-4 whitespace-nowrap w-44 min-w-[150px]">
                     <BaseMoney
-                      v-model="invoice.tds_amount"
+                      :model-value="invoice.tds_amount"
                       :currency="paymentStore.currentPayment.currency"
-                      @update:modelValue="onAllocationChange"
+                      @update:modelValue="val => { invoice.tds_amount = val; onAllocationChange(invoice); }"
                     />
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-2 py-4 whitespace-nowrap w-44 min-w-[150px]">
                     <BaseMoney
-                      v-model="invoice.deduction_amount"
+                      :model-value="invoice.deduction_amount"
                       :currency="paymentStore.currentPayment.currency"
-                      @update:modelValue="onAllocationChange"
+                      @update:modelValue="val => { invoice.deduction_amount = val; onAllocationChange(invoice); }"
                     />
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap">
                     <BaseMultiselect
                       v-model="invoice.invoice_paid_status"
                       :options="invoicePaidStatusOptions"
@@ -414,6 +414,7 @@ import {
   inject,
   watch,
   onBeforeUnmount,
+  nextTick,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -427,6 +428,7 @@ import {
 } from '@vuelidate/validators'
 
 import useVuelidate from '@vuelidate/core'
+import { debounce } from 'lodash'
 import { useCustomerStore } from '@/scripts/admin/stores/customer'
 import { usePaymentStore } from '@/scripts/admin/stores/payment'
 import { useNotificationStore } from '@/scripts/stores/notification'
@@ -463,6 +465,7 @@ const urlInvoice = ref(null)
 const lastLoadedCustomerId = ref(null)
 const totalAmountReceived = ref(0)
 const isFetchingByNumber = ref(false)
+const isProgrammaticChange = ref(false)
 
 const isAllSelected = computed(() => {
   return invoiceList.value.length > 0 && invoiceList.value.every((inv) => inv.selected)
@@ -604,36 +607,47 @@ watch(
   }
 )
 
+const searchInvoiceByNumber = debounce(async (cleanVal) => {
+  if (isFetchingByNumber.value) return
+
+  if (urlInvoice.value && urlInvoice.value.invoice_number === cleanVal) {
+    return
+  }
+
+  try {
+    isFetchingByNumber.value = true
+    const res = await invoiceStore.fetchInvoices({
+      invoice_number: cleanVal,
+      limit: 1,
+    })
+    const match = res.data.data?.[0]
+    if (match && match.invoice_number === cleanVal) {
+      const fullRes = await invoiceStore.fetchInvoice(match.id)
+      await applyInvoiceToPayment(fullRes.data.data)
+    }
+  } catch (err) {
+    console.error('Failed to fetch invoice by number:', err)
+  } finally {
+    isFetchingByNumber.value = false
+  }
+}, 500)
+
 watch(
   () => paymentStore.currentPayment.payment_number,
-  async (val) => {
+  (val) => {
     if (route.params.id) return
 
     const cleanVal = String(val || '').trim()
-    if (cleanVal.length < 3 || isFetchingByNumber.value) {
+
+    if (urlInvoice.value && urlInvoice.value.invoice_number !== cleanVal) {
+      urlInvoice.value = null
+    }
+
+    if (cleanVal.length < 3) {
       return
     }
 
-    if (urlInvoice.value && urlInvoice.value.invoice_number === cleanVal) {
-      return
-    }
-
-    try {
-      isFetchingByNumber.value = true
-      const res = await invoiceStore.fetchInvoices({
-        invoice_number: cleanVal,
-        limit: 1,
-      })
-      const match = res.data.data?.[0]
-      if (match && match.invoice_number === cleanVal) {
-        const fullRes = await invoiceStore.fetchInvoice(match.id)
-        await applyInvoiceToPayment(fullRes.data.data)
-      }
-    } catch (err) {
-      console.error('Failed to fetch invoice by number:', err)
-    } finally {
-      isFetchingByNumber.value = false
-    }
+    searchInvoiceByNumber(cleanVal)
   }
 )
 
@@ -761,8 +775,8 @@ function onCustomerChange(customer_id) {
         if (res1) {
           invoiceList.value = res1.data.data.map((inv) => ({
             ...inv,
-            selected: false,
-            amount_to_pay: 0,
+            selected: true,
+            amount_to_pay: inv.due_amount / 100,
             tds_amount: 0,
             deduction_amount: 0,
             invoice_paid_status: 'PAID',
@@ -831,6 +845,7 @@ function onCustomerChange(customer_id) {
           })
         }
 
+        onAllocationChange()
         isLoadingInvoices.value = false
       })
       .catch((error) => {
@@ -892,6 +907,8 @@ async function submitPaymentData() {
 }
 
 function onTotalAmountReceivedChange(value) {
+  if (isProgrammaticChange.value) return
+
   let remainingCents = Math.round((value || 0) * 100)
   
   invoiceList.value.forEach((inv) => {
@@ -955,14 +972,27 @@ function onAmountToPayChange(invoice) {
   onAllocationChange()
 }
 
-function onAllocationChange() {
+function onAllocationChange(invoice) {
+  if (invoice) {
+    const due = Number(invoice.due_amount || 0) / 100
+    const tds = Number(invoice.tds_amount || 0)
+    const ded = Number(invoice.deduction_amount || 0)
+    invoice.amount_to_pay = Math.max(0, due - (tds + ded))
+  }
+
   let total = 0
   invoiceList.value.forEach((inv) => {
     if (inv.selected) {
-      total += Math.round((inv.amount_to_pay || 0) * 100)
+      total += Math.round(Number(inv.amount_to_pay || 0) * 100)
     }
   })
   paymentStore.currentPayment.amount = total
+  
+  isProgrammaticChange.value = true
+  totalAmountReceived.value = total / 100
+  nextTick(() => {
+    isProgrammaticChange.value = false
+  })
 }
 
 function selectNewCustomer(id) {
