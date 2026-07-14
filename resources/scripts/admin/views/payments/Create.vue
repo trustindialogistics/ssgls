@@ -82,6 +82,7 @@
             required
           >
             <BaseCustomerSelectInput
+              :key="paymentStore.currentPayment.customer_id"
               v-model="paymentStore.currentPayment.customer_id"
               :content-loading="isLoadingContent"
               v-if="!isLoadingContent"
@@ -458,8 +459,10 @@ let isSaving = ref(false)
 let isLoadingInvoices = ref(false)
 let invoiceList = ref([])
 const selectedInvoice = ref(null)
+const urlInvoice = ref(null)
 const lastLoadedCustomerId = ref(null)
 const totalAmountReceived = ref(0)
+const isFetchingByNumber = ref(false)
 
 const isAllSelected = computed(() => {
   return invoiceList.value.length > 0 && invoiceList.value.every((inv) => inv.selected)
@@ -571,11 +574,14 @@ if (route.query.customer) {
   paymentStore.currentPayment.customer_id = route.query.customer
 }
 
-paymentStore.fetchPaymentInitialData(isEdit.value)
+async function initPaymentData() {
+  await paymentStore.fetchPaymentInitialData(isEdit.value)
 
-if (route.params.id && !isEdit.value) {
-  setInvoiceFromUrl()
+  if (route.params.id && !isEdit.value) {
+    await setInvoiceFromUrl()
+  }
 }
+initPaymentData()
 
 watch(
   () => paymentStore.currentPayment.customer_id,
@@ -598,6 +604,39 @@ watch(
   }
 )
 
+watch(
+  () => paymentStore.currentPayment.payment_number,
+  async (val) => {
+    if (route.params.id) return
+
+    const cleanVal = String(val || '').trim()
+    if (cleanVal.length < 3 || isFetchingByNumber.value) {
+      return
+    }
+
+    if (urlInvoice.value && urlInvoice.value.invoice_number === cleanVal) {
+      return
+    }
+
+    try {
+      isFetchingByNumber.value = true
+      const res = await invoiceStore.fetchInvoices({
+        invoice_number: cleanVal,
+        limit: 1,
+      })
+      const match = res.data.data?.[0]
+      if (match && match.invoice_number === cleanVal) {
+        const fullRes = await invoiceStore.fetchInvoice(match.id)
+        await applyInvoiceToPayment(fullRes.data.data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch invoice by number:', err)
+    } finally {
+      isFetchingByNumber.value = false
+    }
+  }
+)
+
 async function addPaymentMode() {
   modalStore.openModal({
     title: t('settings.payment_modes.add_payment_mode'),
@@ -609,16 +648,67 @@ function onSelectNote(data) {
   paymentStore.currentPayment.notes = '' + data.notes
 }
 
+async function applyInvoiceToPayment(invoice) {
+  urlInvoice.value = invoice
+
+  let customerId = invoice.customer.id
+
+  const fields = invoice.fields || []
+  const gstTaxThroughField = fields.find(
+    (f) => f.custom_field?.label === 'GST Tax Through' || f.custom_field?.name === 'GST Tax Through'
+  )
+  const gstTaxThroughValue = String(gstTaxThroughField?.default_answer || gstTaxThroughField?.string_answer || '').trim()
+
+  if (gstTaxThroughValue) {
+    const upperVal = gstTaxThroughValue.toUpperCase()
+    if (upperVal === 'CONSIGNEE') {
+      if (invoice.consignee_customer_id) {
+        customerId = invoice.consignee_customer_id
+      }
+    } else if (upperVal === 'CONSIGNOR') {
+      customerId = invoice.customer.id
+    } else {
+      try {
+        const customersRes = await customerStore.fetchCustomers({
+          search: gstTaxThroughValue,
+          limit: 10,
+        })
+        const foundCustomer = customersRes.data.data.find(
+          (c) => String(c.name || c.display_name).trim().toLowerCase() === gstTaxThroughValue.toLowerCase()
+        )
+        if (foundCustomer) {
+          customerId = foundCustomer.id
+        }
+      } catch (err) {
+        console.error('Failed to fetch customer for GST Tax Through:', err)
+      }
+    }
+  }
+
+  if (customerId) {
+    try {
+      let resCustomer = await customerStore.fetchCustomer(customerId)
+      customerStore.editCustomer = resCustomer.data.data
+    } catch (err) {
+      console.error('Failed to pre-fetch customer details:', err)
+    }
+  }
+
+  paymentStore.currentPayment.customer_id = customerId
+  paymentStore.currentPayment.invoice_id = invoice.id
+  paymentStore.currentPayment.payment_number = invoice.invoice_number
+}
+
 async function setInvoiceFromUrl() {
   let res = await invoiceStore.fetchInvoice(route?.params?.id)
+  const invoice = res.data.data
 
-  if (res.data.data.template_name !== 'office_invoice') {
+  if (invoice.template_name !== 'office_invoice') {
     router.push('/admin/payments/create')
     return
   }
 
-  paymentStore.currentPayment.customer_id = res.data.data.customer.id
-  paymentStore.currentPayment.invoice_id = res.data.data.id
+  await applyInvoiceToPayment(invoice)
 }
 
 async function onSelectInvoice(id) {
@@ -652,11 +742,22 @@ function onCustomerChange(customer_id) {
 
     isLoadingInvoices.value = true
 
-    Promise.all([
-      invoiceStore.fetchInvoices(data),
-      customerStore.fetchCustomer(customer_id),
-    ])
-      .then(async ([res1, res2]) => {
+    const isRecordPaymentFromInvoice =
+      route.params.id &&
+      !isEdit.value &&
+      urlInvoice.value &&
+      paymentStore.currentPayment.invoice_id === urlInvoice.value.id
+
+    const promises = [customerStore.fetchCustomer(customer_id)]
+    if (!isRecordPaymentFromInvoice) {
+      promises.push(invoiceStore.fetchInvoices(data))
+    }
+
+    Promise.all(promises)
+      .then(async (results) => {
+        const res2 = results[0]
+        const res1 = isRecordPaymentFromInvoice ? null : results[1]
+
         if (res1) {
           invoiceList.value = res1.data.data.map((inv) => ({
             ...inv,
@@ -666,15 +767,23 @@ function onCustomerChange(customer_id) {
             deduction_amount: 0,
             invoice_paid_status: 'PAID',
           }))
+        } else if (isRecordPaymentFromInvoice && urlInvoice.value) {
+          const mappedInv = {
+            ...urlInvoice.value,
+            selected: true,
+            amount_to_pay: urlInvoice.value.due_amount / 100,
+            tds_amount: 0,
+            deduction_amount: 0,
+            invoice_paid_status: 'PAID',
+          }
+          invoiceList.value = [mappedInv]
         }
 
         if (res2 && res2.data) {
           paymentStore.currentPayment.selectedCustomer = res2.data.data
           paymentStore.currentPayment.customer = res2.data.data
           paymentStore.currentPayment.currency = res2.data.data.currency
-          if(isEdit.value && !customerStore.editCustomer && paymentStore.currentPayment.customer_id) {
-            customerStore.editCustomer = res2.data.data
-          }
+          customerStore.editCustomer = res2.data.data
         }
 
         if (paymentStore.currentPayment.invoice_id) {
@@ -682,19 +791,34 @@ function onCustomerChange(customer_id) {
             (inv) => inv.id === paymentStore.currentPayment.invoice_id
           )
 
+          if (!selectedInvoice.value && urlInvoice.value && urlInvoice.value.id === paymentStore.currentPayment.invoice_id) {
+            const mappedInv = {
+              ...urlInvoice.value,
+              selected: true,
+              amount_to_pay: urlInvoice.value.due_amount / 100,
+              tds_amount: 0,
+              deduction_amount: 0,
+              invoice_paid_status: 'PAID',
+            }
+            invoiceList.value.push(mappedInv)
+            selectedInvoice.value = mappedInv
+          }
+
           if (selectedInvoice.value) {
             selectedInvoice.value.selected = true
             selectedInvoice.value.amount_to_pay = selectedInvoice.value.due_amount / 100
           }
 
-          paymentStore.currentPayment.maxPayableAmount =
-            selectedInvoice.value.due_amount +
-            paymentStore.currentPayment.amount +
-            (paymentStore.currentPayment.tds_amount || 0) +
-            (paymentStore.currentPayment.deduction_amount || 0)
+          if (selectedInvoice.value) {
+            paymentStore.currentPayment.maxPayableAmount =
+              selectedInvoice.value.due_amount +
+              paymentStore.currentPayment.amount +
+              (paymentStore.currentPayment.tds_amount || 0) +
+              (paymentStore.currentPayment.deduction_amount || 0)
 
-          if (amount.value === 0) {
-            amount.value = selectedInvoice.value.due_amount / 100
+            if (amount.value === 0) {
+              amount.value = selectedInvoice.value.due_amount / 100
+            }
           }
         }
 

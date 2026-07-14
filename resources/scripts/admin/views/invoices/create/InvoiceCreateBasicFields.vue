@@ -1,12 +1,14 @@
 <template>
   <div class="grid grid-cols-12 gap-8 mt-6 mb-8">
     <BaseCustomerSelectPopup
+      v-slot:default
       v-model="invoiceStore.newInvoice.customer"
       :valid="v.customer_id"
       :content-loading="isLoading"
       type="invoice"
       :label="isTransportReceiptTemplate ? customerLabel : ''"
       :class="isTransportReceiptTemplate ? 'order-1 col-span-12 lg:col-span-4 pr-0' : 'col-span-12 lg:col-span-5 pr-0'"
+      :disabled="isEdit ? false : allFieldsDisabled"
     />
 
     <div
@@ -34,6 +36,7 @@
             </div>
             <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
               <a
+                v-if="isEdit || !allFieldsDisabled"
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
                 @click.stop="editConsignee"
               >
@@ -41,6 +44,7 @@
                 {{ $t('general.edit') }}
               </a>
               <a
+                v-if="isEdit || !allFieldsDisabled"
                 class="relative my-0 text-sm flex items-center font-medium cursor-pointer text-primary-500"
                 @click="resetConsignee"
               >
@@ -69,11 +73,13 @@
 
         <Popover v-else v-slot="{ open }" class="relative flex flex-col rounded-md">
           <PopoverButton
+            :disabled="isEdit ? false : allFieldsDisabled"
             :class="{
               'focus:ring-2 focus:ring-primary-400': !open,
+              'opacity-60 cursor-not-allowed': isEdit ? false : allFieldsDisabled,
             }"
             class="w-full outline-hidden rounded-md"
-            @click="ensureConsigneesLoaded"
+            @click="isEdit || !allFieldsDisabled ? ensureConsigneesLoaded() : $event.preventDefault()"
           >
             <div class="relative flex justify-center px-0 p-0 py-16 bg-white border border-gray-200 border-solid rounded-md min-h-[170px]">
               <BaseIcon
@@ -164,10 +170,12 @@
           calendar-button-icon="calendar"
           :enableTime="enableTime"
           :time24hr="time24h"
+          :disabled="false"
         />
       </BaseInputGroup>
 
       <BaseInputGroup
+        v-if="!isLrReceiptTemplate && !isOfficeInvoiceTemplate"
         :label="$t('invoices.due_date')"
         :content-loading="isLoading"
       >
@@ -177,21 +185,35 @@
           :content-loading="isLoading"
           :calendar-button="true"
           calendar-button-icon="calendar"
-          :disabled="true"
+          :disabled="false"
         />
       </BaseInputGroup>
 
       <BaseInputGroup
         :label="isTransportReceiptTemplate ? numberLabel : $t('invoices.invoice_number')"
         :content-loading="isLoading"
-        :error="v.invoice_number.$error && v.invoice_number.$errors[0].$message"
+        :error="(v.invoice_number.$error && v.invoice_number.$errors[0].$message) || invoiceNumberExistsError"
         required
       >
         <BaseInput
           v-model="invoiceStore.newInvoice.invoice_number"
           :content-loading="isLoading"
-          @input="v.invoice_number.$touch()"
-        />
+          :disabled="isInvoiceNumberChecking"
+          @input="onInvoiceNumberInput"
+          @blur="checkInvoiceNumber"
+        >
+          <template v-if="isInvoiceNumberChecking" #right>
+            <BaseIcon name="ArrowPathIcon" class="animate-spin h-5 w-5 text-gray-400" />
+          </template>
+          <template v-else-if="invoiceNumberExists" #right>
+            <BaseIcon
+              name="ExclamationCircleIcon"
+              class="h-5 w-5 text-red-500 cursor-pointer"
+              title="Click to clear and retry"
+              @click="onInvoiceNumberInput(); invoiceStore.newInvoice.invoice_number = ''"
+            />
+          </template>
+        </BaseInput>
       </BaseInputGroup>
 
       <BaseInputGroup
@@ -222,6 +244,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import http from '@/scripts/http'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { useDebounceFn } from '@vueuse/core'
 import ExchangeRateConverter from '@/scripts/admin/components/estimate-invoice-common/ExchangeRateConverter.vue'
@@ -246,6 +269,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  allFieldsDisabled: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const invoiceStore = useInvoiceStore()
@@ -257,6 +284,9 @@ const router = useRouter()
 const selectedConsignee = ref(null)
 const consigneeSearch = ref('')
 const isInitialized = ref(false)
+const isInvoiceNumberChecking = ref(false)
+const invoiceNumberExists = ref(false)
+const invoiceNumberExistsError = ref('')
 
 const enableTime = computed(() => {
   return (
@@ -274,6 +304,9 @@ const isLrReceiptTemplate = computed(() => {
 })
 const isLorryReceiptTemplate = computed(() => {
   return invoiceStore.newInvoice.template_name === 'lorry_receipt'
+})
+const isOfficeInvoiceTemplate = computed(() => {
+  return invoiceStore.newInvoice.template_name === 'office_invoice'
 })
 const isTransportReceiptTemplate = computed(() => {
   return isLrReceiptTemplate.value || isLorryReceiptTemplate.value
@@ -576,4 +609,64 @@ watch(
   { immediate: true }
 )
 
+// ==================== INVOICE NUMBER DUPLICATE CHECK ====================
+async function checkInvoiceNumber() {
+  const invoiceNumber = invoiceStore.newInvoice.invoice_number?.trim()
+
+  if (!invoiceNumber || props.isEdit) {
+    return
+  }
+
+  isInvoiceNumberChecking.value = true
+  invoiceNumberExists.value = false
+  invoiceNumberExistsError.value = ''
+
+  try {
+    const response = await http.get('/api/v1/invoices/check-number', {
+      params: {
+        invoice_number: invoiceNumber,
+        template_name: invoiceStore.newInvoice.template_name,
+      },
+    })
+
+    if (response.data.exists) {
+      invoiceNumberExists.value = true
+      let fieldName = 'invoice number'
+      if (invoiceStore.newInvoice.template_name === 'lr_receipt') {
+        fieldName = 'docket number'
+      } else if (invoiceStore.newInvoice.template_name === 'lorry_receipt') {
+        fieldName = 'challan no'
+      }
+      invoiceNumberExistsError.value = `This ${fieldName} already exists. Please use a unique number.`
+      invoiceStore.setAllFieldsDisabled(true)
+    } else {
+      invoiceNumberExists.value = false
+      invoiceStore.setAllFieldsDisabled(false)
+    }
+  } catch (error) {
+    console.error('Failed to check invoice number:', error)
+    invoiceNumberExistsError.value = 'Failed to verify invoice number. Please try again.'
+    invoiceStore.setAllFieldsDisabled(true)
+  } finally {
+    isInvoiceNumberChecking.value = false
+  }
+}
+
+function onInvoiceNumberInput() {
+  // Reset states when user starts typing
+  invoiceNumberExists.value = false
+  invoiceNumberExistsError.value = ''
+  invoiceStore.setAllFieldsDisabled(true)
+}
+
+watch(
+  () => props.isLoading,
+  (loading) => {
+    if (!loading && !props.isEdit) {
+      // When loading completes on new form, ensure fields are disabled
+      invoiceStore.setAllFieldsDisabled(true)
+    }
+  },
+  { immediate: true }
+)
 </script>

@@ -1,7 +1,7 @@
 <template>
   <BaseMultiselect
     v-model="inputValue"
-    :options="options"
+    :options="computedOptions"
     :label="label"
     :value-prop="valueProp"
     :object="object"
@@ -41,5 +41,14 @@ const inputValue = computed({
   set: (value) => {
     emit('update:modelValue', value)
   },
+})
+
+const computedOptions = computed(() => {
+  return (props.options || []).map((option) => {
+    if (typeof option === 'string') {
+      return { name: option }
+    }
+    return option
+  })
 })
 </script>

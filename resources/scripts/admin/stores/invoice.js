@@ -32,6 +32,7 @@ export const useInvoiceStore = (useWindow = false) => {
       showExchangeRate: false,
       isFetchingInitialSettings: false,
       isFetchingInvoice: false,
+      allFieldsDisabled: true,
 
       newInvoice: {
         ...invoiceStub(),
@@ -99,6 +100,10 @@ export const useInvoiceStore = (useWindow = false) => {
     },
 
     actions: {
+      setAllFieldsDisabled(disabled) {
+        this.allFieldsDisabled = disabled
+      },
+
       resetCurrentInvoice() {
         this.newInvoice = {
           ...invoiceStub(),

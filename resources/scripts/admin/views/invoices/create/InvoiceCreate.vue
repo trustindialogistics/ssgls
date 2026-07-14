@@ -115,6 +115,7 @@
         :v="v$"
         :is-loading="isEdit ? isLoadingContent : false"
         :is-edit="isEdit"
+        :all-fields-disabled="allFieldsDisabled"
       />
 
       <div v-if="isTransportReceipt" class="mb-8">
@@ -128,6 +129,7 @@
           store-prop="newInvoice"
           :template-name="invoiceStore.newInvoice.template_name"
           :custom-field-scope="invoiceValidationScope"
+          :fields-disabled="allFieldsDisabled"
         />
 
         <div
@@ -192,6 +194,7 @@
               store-prop="newInvoice"
               :template-name="invoiceStore.newInvoice.template_name"
               :custom-field-scope="invoiceValidationScope"
+              :fields-disabled="allFieldsDisabled"
               class="mb-6"
             />
 
@@ -265,9 +268,14 @@ const { t } = useI18n()
 let route = useRoute()
 let router = useRouter()
 
+let isEdit = computed(
+  () => ['invoices.edit', 'lr-receipts.edit', 'lorry-receipts.edit'].includes(route.name)
+)
+
 const invoiceValidationScope = 'newInvoice'
 let isSaving = ref(false)
 const isMarkAsDefault = ref(false)
+const allFieldsDisabled = computed(() => invoiceStore.allFieldsDisabled)
 
 const isAutoFilling = ref(false)
 const fileInput = ref(null)
@@ -415,15 +423,12 @@ const isOfficeInvoiceTemplate = computed(() => {
 const isTransportEntryTemplate = computed(() => {
   return ['office_invoice', 'lr_receipt', 'lorry_receipt'].includes(invoiceStore.newInvoice.template_name)
 })
-
-let isEdit = computed(
-  () => ['invoices.edit', 'lr-receipts.edit', 'lorry-receipts.edit'].includes(route.name)
-)
 watch(
   () => route.name,
   () => {
     // Keep original behavior: the create/edit component is shared across routes.
     isMarkAsDefault.value = false
+    invoiceStore.setAllFieldsDisabled(!isEdit.value)
   }
 )
 
@@ -468,6 +473,7 @@ if (isTransportReceipt.value) {
   invoiceStore.newInvoice.template_name = transportTemplateName.value
 }
 invoiceStore.fetchInvoiceInitialSettings(isEdit.value)
+invoiceStore.setAllFieldsDisabled(!isEdit.value)
 
 watch(
   () => invoiceStore.newInvoice.customer,

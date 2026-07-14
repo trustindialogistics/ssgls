@@ -38,6 +38,7 @@
         </div>
         <div class="flex flex-wrap justify-end gap-x-4 gap-y-2">
           <a
+            v-if="!disabled"
             class="
               relative
               my-0
@@ -55,6 +56,7 @@
             {{ $t('general.edit') }}
           </a>
           <a
+            v-if="!disabled"
             class="
               relative
               my-0
@@ -201,14 +203,16 @@
 
     <Popover v-else v-slot="{ open }" class="relative flex flex-col rounded-md">
       <PopoverButton
+        :disabled="disabled"
         :class="{
           '': open,
           'border border-solid border-red-500 focus:ring-red-500 rounded':
             valid.$error,
           'focus:ring-2 focus:ring-primary-400': !valid.$error,
+          'opacity-60 cursor-not-allowed': disabled,
         }"
         class="w-full outline-hidden rounded-md"
-        @click="ensureCustomersLoaded"
+        @click="disabled ? $event.preventDefault() : ensureCustomersLoaded"
       >
         <div
           class="
@@ -455,6 +459,10 @@ const props = defineProps({
   label: {
     type: String,
     default: '',
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 })
 

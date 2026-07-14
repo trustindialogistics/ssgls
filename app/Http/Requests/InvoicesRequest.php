@@ -449,7 +449,7 @@ class InvoicesRequest extends FormRequest
 
         $existingInvoice = $this->route('invoice');
 
-        return collect($this->except('items', 'taxes', 'lorry_documents'))
+        $payload = collect($this->except('items', 'taxes', 'lorry_documents'))
             ->merge([
                 'status' => $this->invoiceStatus($existingInvoice),
                 'paid_status' => $this->invoicePaidStatus($existingInvoice),
@@ -470,6 +470,12 @@ class InvoicesRequest extends FormRequest
                 'currency_id' => $currency,
             ])
             ->toArray();
+
+        if (in_array($this->input('template_name'), ['lr_receipt', 'office_invoice'], true)) {
+            $payload['due_date'] = null;
+        }
+
+        return $payload;
     }
 
     private function lorryReceiptFinalAmountPayable(): ?float

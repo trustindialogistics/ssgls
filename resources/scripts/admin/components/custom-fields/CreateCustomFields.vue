@@ -4,8 +4,58 @@
       store[storeProp] && store[storeProp].customFields.length > 0 && !isLoading
     "
   >
+    <!-- LR Receipt template sections -->
+    <div v-if="isLrReceiptTemplate" class="space-y-6">
+      <!-- Flat Trip Details Fields at the top -->
+      <BaseInputGrid :layout="gridLayout">
+        <SingleField
+          v-for="entry in lrTripFields"
+          :key="entry.field.id"
+          :custom-field-scope="customFieldScope"
+          :store="store"
+          :store-prop="storeProp"
+          :index="entry.index"
+          :field="entry.field"
+          :disabled="fieldsDisabled"
+        />
+      </BaseInputGrid>
+
+      <!-- Remaining Section Cards -->
+      <section
+        v-for="section in lrFieldSections"
+        :key="section.key"
+        class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg"
+      >
+        <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <BaseIcon
+            v-if="section.icon"
+            :name="section.icon"
+            class="w-5 h-5 text-gray-500"
+          />
+          <div class="text-left">
+            <h6 class="m-0 text-sm font-semibold tracking-wide text-gray-900 uppercase">
+              {{ section.title }}
+            </h6>
+          </div>
+        </div>
+
+        <BaseInputGrid :layout="gridLayout" class="p-4">
+          <SingleField
+            v-for="entry in section.fields"
+            :key="entry.field.id"
+            :custom-field-scope="customFieldScope"
+            :store="store"
+            :store-prop="storeProp"
+            :index="entry.index"
+            :field="entry.field"
+            :disabled="fieldsDisabled"
+          />
+        </BaseInputGrid>
+      </section>
+    </div>
+
     <!-- Lorry Receipt template sections -->
-    <div v-if="isLorryReceiptTemplate" class="space-y-6">
+    <div v-else-if="isLorryReceiptTemplate" class="space-y-6">
       <section
         v-if="docketNoFieldEntry"
         class="overflow-hidden bg-white border border-gray-200 border-solid rounded-lg"
@@ -17,6 +67,7 @@
             :store-prop="storeProp"
             :index="docketNoFieldEntry.index"
             :field="docketNoFieldEntry.field"
+            :disabled="fieldsDisabled"
           />
         </BaseInputGrid>
       </section>
@@ -49,6 +100,7 @@
             :store-prop="storeProp"
             :index="entry.index"
             :field="entry.field"
+            :disabled="fieldsDisabled"
           />
         </BaseInputGrid>
       </section>
@@ -63,6 +115,7 @@
         :store-prop="storeProp"
         :index="index"
         :field="field"
+        :disabled="fieldsDisabled"
       />
     </BaseInputGrid>
   </div>
@@ -110,6 +163,10 @@ const props = defineProps({
   templateName: {
     type: String,
     default: null,
+  },
+  fieldsDisabled: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -168,6 +225,57 @@ const lorryVehicleAutofillLabels = [
   'Paid To',
   'Final Paid To',
 ]
+
+// ==================== LR RECEIPT SECTION DEFINITIONS ====================
+const lrFieldSectionDefinitions = [
+  {
+    key: 'consignment',
+    title: 'Consignment Details',
+    icon: 'ClipboardDocumentListIcon',
+    labels: [
+      'Description of Goods',
+      'HSN Code',
+      'E-way Bill No',
+      'Actual Weight',
+      'Charged Weight',
+      'No of Articles',
+      'Packing',
+      'Invoice No',
+    ],
+  },
+  {
+    key: 'freight',
+    title: 'Freight Details',
+    icon: 'CurrencyRupeeIcon',
+    labels: [
+      'Basic Freight',
+      'Hamali',
+      'FOV',
+      'Local Collection',
+      'Door Delivery',
+      'Other Charge',
+      'Net Amount',
+    ],
+  },
+]
+
+const lrReceiptChargeFields = [
+  'Basic Freight',
+  'Local Collection',
+  'Door Delivery',
+  'Hamali',
+  'Docket Charge',
+  'Other Charge',
+  'FOV',
+]
+
+function getLrFieldValue(label) {
+  const field = props.store[props.storeProp]?.customFields?.find(
+    (f) => f.label === label
+  )
+  const num = Number(field?.value ?? 0)
+  return isNaN(num) ? 0 : num
+}
 
 const lorryFieldSectionDefinitions = [
   {
@@ -310,6 +418,62 @@ const lorryFieldSections = computed(() => {
 
   return sections
 })
+
+const lrFieldSections = computed(() => {
+  return lrFieldSectionDefinitions
+    .map((section) => {
+      const fields = section.labels
+        .map((label) => {
+          const field = customFieldsWithIndex.value.find(
+            (entry) => entry.field.label === label
+          )
+          return field
+        })
+        .filter(Boolean)
+
+      return {
+        ...section,
+        fields,
+      }
+    })
+    .filter((section) => section.fields.length)
+})
+
+const lrTripFields = computed(() => {
+  const tripLabels = ['From', 'To', 'Truck No', 'Mode of Payment', 'GST Tax Payable By']
+  return customFieldsWithIndex.value.filter((entry) => tripLabels.includes(entry.field.label))
+})
+
+// ==================== LR RECEIPT: NET AMOUNT AUTO-CALCULATION ====================
+function recalcLrNetAmount() {
+  if (!isLrReceiptTemplate.value) {
+    return
+  }
+
+  const netAmountField = props.store[props.storeProp]?.customFields?.find(
+    (f) => f.label === 'Net Amount'
+  )
+  if (!netAmountField) {
+    return
+  }
+
+  const sum = lrReceiptChargeFields.reduce(
+    (acc, label) => acc + getLrFieldValue(label),
+    0
+  )
+  netAmountField.value = sum
+}
+
+watch(
+  () => props.store[props.storeProp]?.customFields?.map((f) => ({
+    label: f.label,
+    value: f.value,
+  })),
+  () => {
+    recalcLrNetAmount()
+  },
+  { deep: true }
+)
 
 function mergeExistingValues() {
   if (props.isEdit) {

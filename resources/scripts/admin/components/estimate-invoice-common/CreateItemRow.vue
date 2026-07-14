@@ -777,6 +777,10 @@ function applyLrReceiptDetails(details) {
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Consignment Date', details.invoice_date) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Pkg', itemFields.Pkg) || itemUpdated
   itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Charged Weight Kgs', itemFields['Charged Weight Kgs']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Rate', itemFields.Rate) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'Other Charge', itemFields['Other Charge']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'LR Charge', itemFields['LR Charge']) || itemUpdated
+  itemUpdated = setCustomFieldValue(itemCustomFields.value, 'DD Charge', itemFields['DD Charge']) || itemUpdated
 
   if (itemUpdated) {
     props.store.$patch((state) => {
@@ -996,7 +1000,25 @@ async function loadItemCustomFields() {
 .office-consignment-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .office-consignment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .office-consignment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .office-consignment-grid {
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+  }
 }
 
 .office-row-actions {

@@ -394,7 +394,7 @@ class Invoice extends Model implements HasMedia
             $end = Carbon::parse($filters['to_date']);
             $query->invoicesBetween($start, $end);
         })->when($filters['customer_id'] ?? null, function ($query, $customerId) {
-            $query->where('customer_id', $customerId);
+            $query->whereCustomer($customerId);
         })->when($filters['orderByField'] ?? null, function ($query, $orderByField) use ($filters) {
             $orderBy = $filters['orderBy'] ?? 'desc';
             if ($orderByField === 'name') {

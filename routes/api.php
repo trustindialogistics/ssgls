@@ -50,6 +50,7 @@ use App\Http\Controllers\V1\Admin\Invoice\DownloadLorryReceiptWithDocumentsContr
 use App\Http\Controllers\V1\Admin\Invoice\InvoicesController;
 use App\Http\Controllers\V1\Admin\Invoice\InvoiceTemplatesController;
 use App\Http\Controllers\V1\Admin\Invoice\LorryReceiptVehicleLookupController;
+use App\Http\Controllers\V1\Admin\Invoice\CheckInvoiceNumberController;
 use App\Http\Controllers\V1\Admin\Invoice\LrReceiptAutoFillController;
 use App\Http\Controllers\V1\Admin\Invoice\LrReceiptLookupController;
 use App\Http\Controllers\V1\Admin\Invoice\SendInvoiceController;
@@ -309,6 +310,8 @@ Route::prefix('/v1')->group(function () {
             Route::post('/invoices/auto-fill', LrReceiptAutoFillController::class);
 
             Route::get('/invoices/lorry-receipt-vehicle-lookup', LorryReceiptVehicleLookupController::class);
+
+            Route::get('/invoices/check-number', CheckInvoiceNumberController::class);
 
             Route::get('/invoices/templates', InvoiceTemplatesController::class);
 

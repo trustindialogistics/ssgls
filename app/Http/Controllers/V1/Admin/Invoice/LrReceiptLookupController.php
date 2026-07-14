@@ -64,6 +64,15 @@ class LrReceiptLookupController extends Controller
                 'Invoice No' => $item ? $this->customFieldValue($item->fields, 'Invoice No') : null,
                 'Pkg' => $item ? $this->customFieldValue($item->fields, 'No of Articles') : null,
                 'Charged Weight Kgs' => $item ? $this->customFieldValue($item->fields, 'Charged Weight') : null,
+                'Rate' => $this->customFieldValue($lrReceipt->fields, 'Basic Freight'),
+                'Other Charge' => (
+                    (float) $this->customFieldValue($lrReceipt->fields, 'Hamali') +
+                    (float) $this->customFieldValue($lrReceipt->fields, 'FOV') +
+                    (float) $this->customFieldValue($lrReceipt->fields, 'Local Collection') +
+                    (float) $this->customFieldValue($lrReceipt->fields, 'Other Charge')
+                ),
+                'LR Charge' => $this->customFieldValue($lrReceipt->fields, 'Docket Charge'),
+                'DD Charge' => $this->customFieldValue($lrReceipt->fields, 'Door Delivery'),
             ],
         ]);
     }

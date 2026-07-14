@@ -36,6 +36,7 @@
     <slot v-if="showCalendarIcon && hasIconSlot" name="icon" />
 
     <FlatPickr
+      :key="disabled"
       ref="dp"
       v-model="date"
       v-bind="$attrs"

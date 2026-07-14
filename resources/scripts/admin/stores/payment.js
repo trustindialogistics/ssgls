@@ -64,7 +64,7 @@ export const usePaymentStore = (useWindow = false) => {
         if (isEdit) {
           actions = [this.fetchPayment(route.params.id)]
         }
-        Promise.all([
+        return Promise.all([
           this.fetchPaymentModes({ limit: 'all' }),
           this.getNextNumber(),
           ...actions,
@@ -89,7 +89,7 @@ export const usePaymentStore = (useWindow = false) => {
               await notesStore.fetchNotes()
               this.currentPayment.notes = notesStore.getDefaultNoteForType('Payment')?.notes
               this.currentPayment.payment_date = moment().format('YYYY-MM-DD')
-              this.currentPayment.payment_number = res2.data.nextNumber
+              this.currentPayment.payment_number = ''
               this.currentPayment.currency =
                 companyStore.selectedCompanyCurrency
             }
